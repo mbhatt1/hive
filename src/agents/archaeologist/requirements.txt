@@ -1,0 +1,8 @@
+# AWS SDK
+boto3>=1.28.0
+
+# Redis for agent coordination
+redis>=4.5.0
+
+# Code analysis (for deep researcher)
+tiktoken>=0.5.1

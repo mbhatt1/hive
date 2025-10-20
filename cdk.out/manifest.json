@@ -1,0 +1,2388 @@
+{
+  "version": "48.0.0",
+  "artifacts": {
+    "HivemindPrism-Network.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HivemindPrism-Network.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HivemindPrism-Network": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "HivemindPrism-Network.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "Production",
+          "ManagedBy": "CDK",
+          "Project": "Hivemind-Prism"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/06edc34e74972425973546a587641e01a1e1b532b184663147f30a8729620130.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HivemindPrism-Network.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "HivemindPrism-Network.assets"
+      ],
+      "metadata": {
+        "/HivemindPrism-Network": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "Production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Project",
+                "Value": "Hivemind-Prism"
+              }
+            ]
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpc63A10AFB"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet1Subnet595DA15C"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet1RouteTableA849C5AB"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet1RouteTableAssociation279E13C0"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet1DefaultRoute71CE1587"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/EIP": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet1EIP1AFE2783"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/NATGateway": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet1NATGateway7062C7E7"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet2Subnet0590139A"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet2RouteTableCF7671C5"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet2RouteTableAssociation28B1B8A5"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPublicSubnet2DefaultRoute97B05E66"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet1RouteTable6760B120"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet1RouteTableAssociation9DBFFD90"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet1DefaultRoute94C8077C"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet2Subnet3DF9DED0"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet2RouteTableC0CB98E2"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet2RouteTableAssociationEA8285E1"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/DefaultRoute": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcPrivateSubnet2DefaultRoute7998389F"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet1/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIsolatedSubnet1Subnet01ABE97E"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet1/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIsolatedSubnet1RouteTable0D338655"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet1/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIsolatedSubnet1RouteTableAssociationB6F4B831"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet2/Subnet": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIsolatedSubnet2SubnetC3A23F9E"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet2/RouteTable": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIsolatedSubnet2RouteTableF7CBA305"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet2/RouteTableAssociation": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIsolatedSubnet2RouteTableAssociationD250D1E2"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/IGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcIGW5BC705E4"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/VPCGW": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcVPCGWD2997AA7"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/RestrictDefaultSecurityGroupCustomResource/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcRestrictDefaultSecurityGroupCustomResourceC38F3672"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/S3Endpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcS3EndpointF1738A76"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/DynamoDbEndpoint/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcDynamoDbEndpointA3A3E209"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/EcrApi/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcEcrApiSecurityGroup6AD98DCE"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/EcrApi/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcEcrApi9D0AB230"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/EcrDocker/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcEcrDockerSecurityGroup7D50F6EC"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/EcrDocker/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcEcrDocker405B244D"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/CloudWatchLogs/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcCloudWatchLogsSecurityGroup7E0EB03A"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/CloudWatchLogs/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcCloudWatchLogs2E158E32"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/SecretsManager/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcSecretsManagerSecurityGroup23612D9C"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/SecretsManager/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcSecretsManagerD03BB291"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Sts/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcStsSecurityGroupDC027C45"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Sts/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcSts3A76C1A1"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/StepFunctions/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcStepFunctionsSecurityGroup7594477B"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/StepFunctions/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcStepFunctionsF2D892F2"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/EventBridge/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcEventBridgeSecurityGroup1AA0AC91"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/EventBridge/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcEventBridgeB9B6D141"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Sns/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcSnsSecurityGroupCFAD3FEF"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Sns/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcSns0927B97E"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Kms/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcKmsSecurityGroup9E9BC97D"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/Kms/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcKmsC11180EF"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/BedrockRuntime/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcBedrockRuntimeSecurityGroupB3A47095"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/BedrockRuntime/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcBedrockRuntimeE7F992F6"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/CloudWatchMonitoring/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcCloudWatchMonitoringSecurityGroupE15A20D1"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/CloudWatchMonitoring/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcCloudWatchMonitoringCDC3AF49"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/XRay/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcXRaySecurityGroup604EE429"
+          }
+        ],
+        "/HivemindPrism-Network/HivemindVpc/XRay/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindVpcXRayC33C71A7"
+          }
+        ],
+        "/HivemindPrism-Network/Custom::VpcRestrictDefaultSGCustomResourceProvider": [
+          {
+            "type": "aws:cdk:is-custom-resource-handler-customResourceProvider",
+            "data": true
+          }
+        ],
+        "/HivemindPrism-Network/Custom::VpcRestrictDefaultSGCustomResourceProvider/Role": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomVpcRestrictDefaultSGCustomResourceProviderRole26592FE0"
+          }
+        ],
+        "/HivemindPrism-Network/Custom::VpcRestrictDefaultSGCustomResourceProvider/Handler": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E"
+          }
+        ],
+        "/HivemindPrism-Network/VpcId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcId"
+          }
+        ],
+        "/HivemindPrism-Network/VpcCidr": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcCidr"
+          }
+        ],
+        "/HivemindPrism-Network/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HivemindPrism-Network/Exports/Output{\"Ref\":\"HivemindVpc63A10AFB\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+          }
+        ],
+        "/HivemindPrism-Network/Exports/Output{\"Ref\":\"HivemindVpcPrivateSubnet1Subnet5BE540C4\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+          }
+        ],
+        "/HivemindPrism-Network/Exports/Output{\"Ref\":\"HivemindVpcPrivateSubnet2Subnet3DF9DED0\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+          }
+        ],
+        "/HivemindPrism-Network/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HivemindPrism-Network/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HivemindPrism-Network"
+    },
+    "HivemindPrism-Security.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HivemindPrism-Security.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HivemindPrism-Security": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "HivemindPrism-Security.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "Production",
+          "ManagedBy": "CDK",
+          "Project": "Hivemind-Prism"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/03200d440b040751463c5f916be2d7b9f9f2bfa28c830e59de06b081cfb067fe.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HivemindPrism-Security.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "HivemindPrism-Network",
+        "HivemindPrism-Security.assets"
+      ],
+      "metadata": {
+        "/HivemindPrism-Security": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "Production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Project",
+                "Value": "Hivemind-Prism"
+              }
+            ]
+          }
+        ],
+        "/HivemindPrism-Security/HivemindKey/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindKeyB4006B32"
+          }
+        ],
+        "/HivemindPrism-Security/HivemindKey/Alias/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindKeyAliasC1C00BAC"
+          }
+        ],
+        "/HivemindPrism-Security/VpcEndpointsSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcEndpointsSgB7473DD6"
+          }
+        ],
+        "/HivemindPrism-Security/VpcEndpointsSg/from HivemindPrismSecurityAgentTasksSg5E275263:443": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcEndpointsSgfromHivemindPrismSecurityAgentTasksSg5E2752634430ED0719C"
+          }
+        ],
+        "/HivemindPrism-Security/VpcEndpointsSg/from HivemindPrismSecurityMcpToolsSgC1AB003E:443": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcEndpointsSgfromHivemindPrismSecurityMcpToolsSgC1AB003E443B2B2E990"
+          }
+        ],
+        "/HivemindPrism-Security/AgentTasksSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AgentTasksSg17243AF5"
+          }
+        ],
+        "/HivemindPrism-Security/AgentTasksSg/to HivemindPrismSecurityVpcEndpointsSg8F4092F8:443": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AgentTasksSgtoHivemindPrismSecurityVpcEndpointsSg8F4092F844346F98F91"
+          }
+        ],
+        "/HivemindPrism-Security/McpToolsSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "McpToolsSg1B279A8A"
+          }
+        ],
+        "/HivemindPrism-Security/McpToolsSg/to HivemindPrismSecurityVpcEndpointsSg8F4092F8:443": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "McpToolsSgtoHivemindPrismSecurityVpcEndpointsSg8F4092F844379C8C5F0"
+          }
+        ],
+        "/HivemindPrism-Security/ElastiCacheSg/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ElastiCacheSg3DA9FF1D"
+          }
+        ],
+        "/HivemindPrism-Security/ElastiCacheSg/from HivemindPrismSecurityAgentTasksSg5E275263:6379": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ElastiCacheSgfromHivemindPrismSecurityAgentTasksSg5E2752636379A0CD5953"
+          }
+        ],
+        "/HivemindPrism-Security/HivemindCliUserRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindCliUserRoleD02399F7"
+          }
+        ],
+        "/HivemindPrism-Security/KmsKeyId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KmsKeyId"
+          }
+        ],
+        "/HivemindPrism-Security/KmsKeyArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KmsKeyArn"
+          }
+        ],
+        "/HivemindPrism-Security/CliUserRoleArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CliUserRoleArn"
+          }
+        ],
+        "/HivemindPrism-Security/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HivemindPrism-Security/Exports/Output{\"Fn::GetAtt\":[\"HivemindKeyB4006B32\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+          }
+        ],
+        "/HivemindPrism-Security/Exports/Output{\"Fn::GetAtt\":[\"ElastiCacheSg3DA9FF1D\",\"GroupId\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttElastiCacheSg3DA9FF1DGroupId0AE1DF35"
+          }
+        ],
+        "/HivemindPrism-Security/Exports/Output{\"Fn::GetAtt\":[\"AgentTasksSg17243AF5\",\"GroupId\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+          }
+        ],
+        "/HivemindPrism-Security/Exports/Output{\"Fn::GetAtt\":[\"McpToolsSg1B279A8A\",\"GroupId\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2"
+          }
+        ],
+        "/HivemindPrism-Security/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HivemindPrism-Security/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HivemindPrism-Security"
+    },
+    "HivemindPrism-Storage.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HivemindPrism-Storage.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HivemindPrism-Storage": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "HivemindPrism-Storage.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "Production",
+          "ManagedBy": "CDK",
+          "Project": "Hivemind-Prism"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/633e8b4809220796d4e1d471b6cfbafd6a6ca936d37b7af3594f46df5b9b3455.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HivemindPrism-Storage.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "HivemindPrism-Security",
+        "HivemindPrism-Network",
+        "HivemindPrism-Storage.assets"
+      ],
+      "metadata": {
+        "/HivemindPrism-Storage": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "Production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Project",
+                "Value": "Hivemind-Prism"
+              }
+            ]
+          }
+        ],
+        "/HivemindPrism-Storage/UploadsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UploadsBucket5E5E9B64"
+          }
+        ],
+        "/HivemindPrism-Storage/UploadsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UploadsBucketPolicy34A32B0B"
+          }
+        ],
+        "/HivemindPrism-Storage/UploadsBucket/Notifications/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UploadsBucketNotifications4592A072"
+          }
+        ],
+        "/HivemindPrism-Storage/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleB6FB88EC"
+          }
+        ],
+        "/HivemindPrism-Storage/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Role/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db834RoleDefaultPolicy2CF63D36"
+          }
+        ],
+        "/HivemindPrism-Storage/BucketNotificationsHandler050a0587b7544547bf325f094a3db834/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BucketNotificationsHandler050a0587b7544547bf325f094a3db8347ECC3691"
+          }
+        ],
+        "/HivemindPrism-Storage/ArtifactsBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArtifactsBucket2AAC5544"
+          }
+        ],
+        "/HivemindPrism-Storage/ArtifactsBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArtifactsBucketPolicy852CB646"
+          }
+        ],
+        "/HivemindPrism-Storage/KendraBucket/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraBucket8BF62693"
+          }
+        ],
+        "/HivemindPrism-Storage/KendraBucket/Policy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraBucketPolicy68B740C0"
+          }
+        ],
+        "/HivemindPrism-Storage/MissionStatusTable": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "MissionStatusTable4039F7D7"
+            }
+          }
+        ],
+        "/HivemindPrism-Storage/MissionStatusTable/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MissionStatusTable4039F7D7"
+          }
+        ],
+        "/HivemindPrism-Storage/ToolResultsTable": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "ToolResultsTable82CE91FE"
+            }
+          }
+        ],
+        "/HivemindPrism-Storage/ToolResultsTable/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ToolResultsTable82CE91FE"
+          }
+        ],
+        "/HivemindPrism-Storage/FindingsArchiveTable": [
+          {
+            "type": "aws:cdk:hasPhysicalName",
+            "data": {
+              "Ref": "FindingsArchiveTable557F1EE3"
+            }
+          }
+        ],
+        "/HivemindPrism-Storage/FindingsArchiveTable/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FindingsArchiveTable557F1EE3"
+          }
+        ],
+        "/HivemindPrism-Storage/RedisSubnetGroup": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RedisSubnetGroup"
+          }
+        ],
+        "/HivemindPrism-Storage/RedisCluster": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RedisCluster"
+          }
+        ],
+        "/HivemindPrism-Storage/HivemindEventBus/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindEventBus4FE0861A"
+          }
+        ],
+        "/HivemindPrism-Storage/UploadsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UploadsBucketName"
+          }
+        ],
+        "/HivemindPrism-Storage/ArtifactsBucketName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArtifactsBucketName"
+          }
+        ],
+        "/HivemindPrism-Storage/MissionStatusTableName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MissionStatusTableName"
+          }
+        ],
+        "/HivemindPrism-Storage/FindingsArchiveTableName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FindingsArchiveTableName"
+          }
+        ],
+        "/HivemindPrism-Storage/RedisEndpoint": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RedisEndpoint"
+          }
+        ],
+        "/HivemindPrism-Storage/RedisPort": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "RedisPort"
+          }
+        ],
+        "/HivemindPrism-Storage/EventBusName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EventBusName"
+          }
+        ],
+        "/HivemindPrism-Storage/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"KendraBucket8BF62693\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"KendraBucket8BF62693\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefKendraBucket8BF6269392D44149"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"ArtifactsBucket2AAC5544\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"MissionStatusTable4039F7D7\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"FindingsArchiveTable557F1EE3\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"ToolResultsTable82CE91FE\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"UploadsBucket5E5E9B64\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"ArtifactsBucket2AAC5544\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"MissionStatusTable4039F7D7\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"ToolResultsTable82CE91FE\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"FindingsArchiveTable557F1EE3\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"RedisCluster\",\"RedisEndpoint.Address\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"RedisCluster\",\"RedisEndpoint.Port\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+          }
+        ],
+        "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"UploadsBucket5E5E9B64\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefUploadsBucket5E5E9B64F2F56CC2"
+          }
+        ],
+        "/HivemindPrism-Storage/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HivemindPrism-Storage/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HivemindPrism-Storage"
+    },
+    "HivemindPrism-Intelligence.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HivemindPrism-Intelligence.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HivemindPrism-Intelligence": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "HivemindPrism-Intelligence.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "Production",
+          "ManagedBy": "CDK",
+          "Project": "Hivemind-Prism"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/c46c1db0552b3b5e12dd1c619ae6ab9d54f1229a0807939bcc057347928e80ce.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HivemindPrism-Intelligence.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "HivemindPrism-Storage",
+        "HivemindPrism-Security",
+        "HivemindPrism-Intelligence.assets"
+      ],
+      "metadata": {
+        "/HivemindPrism-Intelligence": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "Production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Project",
+                "Value": "Hivemind-Prism"
+              }
+            ]
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraIndexRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraIndexRoleDB7DF3D0"
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraIndexRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraIndexRoleDefaultPolicyBE26FCDC"
+          }
+        ],
+        "/HivemindPrism-Intelligence/InstitutionalMemoryIndex": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "InstitutionalMemoryIndex"
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraDataSourceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraDataSourceRole9BBDC271"
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraDataSourceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraDataSourceRoleDefaultPolicy2EAF086C"
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraS3DataSource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraS3DataSource"
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraIndexId": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraIndexId"
+          }
+        ],
+        "/HivemindPrism-Intelligence/KendraIndexArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "KendraIndexArn"
+          }
+        ],
+        "/HivemindPrism-Intelligence/BedrockNote": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BedrockNote"
+          }
+        ],
+        "/HivemindPrism-Intelligence/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HivemindPrism-Intelligence/Exports/Output{\"Fn::GetAtt\":[\"InstitutionalMemoryIndex\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttInstitutionalMemoryIndexArnF0ADD5F8"
+          }
+        ],
+        "/HivemindPrism-Intelligence/Exports/Output{\"Fn::GetAtt\":[\"InstitutionalMemoryIndex\",\"Id\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+          }
+        ],
+        "/HivemindPrism-Intelligence/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HivemindPrism-Intelligence/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HivemindPrism-Intelligence"
+    },
+    "HivemindPrism-Compute.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HivemindPrism-Compute.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HivemindPrism-Compute": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "HivemindPrism-Compute.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "Production",
+          "ManagedBy": "CDK",
+          "Project": "Hivemind-Prism"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/9017ce3a33ed664ca77c9e4a1e8c52d0dd95c28695175f7285710ef93409a5cd.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HivemindPrism-Compute.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "HivemindPrism-Intelligence",
+        "HivemindPrism-Network",
+        "HivemindPrism-Storage",
+        "HivemindPrism-Security",
+        "HivemindPrism-Compute.assets"
+      ],
+      "metadata": {
+        "/HivemindPrism-Compute": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "Production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Project",
+                "Value": "Hivemind-Prism"
+              }
+            ]
+          }
+        ],
+        "/HivemindPrism-Compute/ArchaeologistTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArchaeologistTaskRole8B61F93D"
+          }
+        ],
+        "/HivemindPrism-Compute/ArchaeologistTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArchaeologistTaskRoleDefaultPolicy2650B1AE"
+          }
+        ],
+        "/HivemindPrism-Compute/StrategistTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StrategistTaskRole541CBCB4"
+          }
+        ],
+        "/HivemindPrism-Compute/StrategistTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StrategistTaskRoleDefaultPolicyBEA49F05"
+          }
+        ],
+        "/HivemindPrism-Compute/CoordinatorTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CoordinatorTaskRole9462B0FA"
+          }
+        ],
+        "/HivemindPrism-Compute/CoordinatorTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CoordinatorTaskRoleDefaultPolicy09F64788"
+          }
+        ],
+        "/HivemindPrism-Compute/SynthesizerTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SynthesizerTaskRole69378926"
+          }
+        ],
+        "/HivemindPrism-Compute/SynthesizerTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "SynthesizerTaskRoleDefaultPolicy8C34C861"
+          }
+        ],
+        "/HivemindPrism-Compute/CriticTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CriticTaskRoleCAC1AFB2"
+          }
+        ],
+        "/HivemindPrism-Compute/CriticTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CriticTaskRoleDefaultPolicy280285C1"
+          }
+        ],
+        "/HivemindPrism-Compute/ArchivistTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArchivistTaskRoleEE36BB64"
+          }
+        ],
+        "/HivemindPrism-Compute/ArchivistTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ArchivistTaskRoleDefaultPolicy9BFAD426"
+          }
+        ],
+        "/HivemindPrism-Compute/McpServerTaskRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "McpServerTaskRoleB19E5A08"
+          }
+        ],
+        "/HivemindPrism-Compute/McpServerTaskRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "McpServerTaskRoleDefaultPolicy8E624EA6"
+          }
+        ],
+        "/HivemindPrism-Compute/UnpackLambdaRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnpackLambdaRoleCC4ECDC5"
+          }
+        ],
+        "/HivemindPrism-Compute/UnpackLambdaRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnpackLambdaRoleDefaultPolicy1DBA011B"
+          }
+        ],
+        "/HivemindPrism-Compute/MemoryIngestorLambdaRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemoryIngestorLambdaRole2E29E0F0"
+          }
+        ],
+        "/HivemindPrism-Compute/MemoryIngestorLambdaRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemoryIngestorLambdaRoleDefaultPolicyCF82680F"
+          }
+        ],
+        "/HivemindPrism-Compute/FailureHandlerLambdaRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FailureHandlerLambdaRole13A21A6B"
+          }
+        ],
+        "/HivemindPrism-Compute/FailureHandlerLambdaRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FailureHandlerLambdaRoleDefaultPolicy85083960"
+          }
+        ],
+        "/HivemindPrism-Compute/HivemindCluster/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindCluster94255979"
+          }
+        ],
+        "/HivemindPrism-Compute/HivemindCluster/HivemindCluster": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindCluster54EA7101"
+          }
+        ],
+        "/HivemindPrism-Compute/archaeologistExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archaeologistExecutionRoleE7945B2B"
+          }
+        ],
+        "/HivemindPrism-Compute/archaeologistExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archaeologistExecutionRoleDefaultPolicyB5713F6B"
+          }
+        ],
+        "/HivemindPrism-Compute/archaeologistTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archaeologistTaskDef0C0F4ADA"
+          }
+        ],
+        "/HivemindPrism-Compute/archaeologistLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archaeologistLogGroupE40905D9"
+          }
+        ],
+        "/HivemindPrism-Compute/strategistExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "strategistExecutionRole47F607FB"
+          }
+        ],
+        "/HivemindPrism-Compute/strategistExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "strategistExecutionRoleDefaultPolicy51317C07"
+          }
+        ],
+        "/HivemindPrism-Compute/strategistTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "strategistTaskDef40F5F609"
+          }
+        ],
+        "/HivemindPrism-Compute/strategistLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "strategistLogGroupEE1A63CD"
+          }
+        ],
+        "/HivemindPrism-Compute/coordinatorExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "coordinatorExecutionRoleEBF9EEF6"
+          }
+        ],
+        "/HivemindPrism-Compute/coordinatorExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "coordinatorExecutionRoleDefaultPolicy649DFACB"
+          }
+        ],
+        "/HivemindPrism-Compute/coordinatorTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "coordinatorTaskDefD6FC88DD"
+          }
+        ],
+        "/HivemindPrism-Compute/coordinatorLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "coordinatorLogGroupC38D7199"
+          }
+        ],
+        "/HivemindPrism-Compute/synthesizerExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "synthesizerExecutionRoleCB81EBAD"
+          }
+        ],
+        "/HivemindPrism-Compute/synthesizerExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "synthesizerExecutionRoleDefaultPolicy193A7E62"
+          }
+        ],
+        "/HivemindPrism-Compute/synthesizerTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "synthesizerTaskDef22D2EEBC"
+          }
+        ],
+        "/HivemindPrism-Compute/synthesizerLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "synthesizerLogGroup1B251BC4"
+          }
+        ],
+        "/HivemindPrism-Compute/criticExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "criticExecutionRole5F426FC7"
+          }
+        ],
+        "/HivemindPrism-Compute/criticExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "criticExecutionRoleDefaultPolicy0D1D11FD"
+          }
+        ],
+        "/HivemindPrism-Compute/criticTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "criticTaskDef3B08E328"
+          }
+        ],
+        "/HivemindPrism-Compute/criticLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "criticLogGroup91479CCF"
+          }
+        ],
+        "/HivemindPrism-Compute/archivistExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archivistExecutionRole522CA1A4"
+          }
+        ],
+        "/HivemindPrism-Compute/archivistExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archivistExecutionRoleDefaultPolicy492E3059"
+          }
+        ],
+        "/HivemindPrism-Compute/archivistTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archivistTaskDef1B107691"
+          }
+        ],
+        "/HivemindPrism-Compute/archivistLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "archivistLogGroupFC914BE5"
+          }
+        ],
+        "/HivemindPrism-Compute/semgrep-mcpExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "semgrepmcpExecutionRole97487FBA"
+          }
+        ],
+        "/HivemindPrism-Compute/semgrep-mcpExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "semgrepmcpExecutionRoleDefaultPolicy04F2C78D"
+          }
+        ],
+        "/HivemindPrism-Compute/semgrep-mcpTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "semgrepmcpTaskDef4F4E8F78"
+          }
+        ],
+        "/HivemindPrism-Compute/semgrep-mcpLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "semgrepmcpLogGroupC4C639F6"
+          }
+        ],
+        "/HivemindPrism-Compute/gitleaks-mcpExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "gitleaksmcpExecutionRoleD51A8FB4"
+          }
+        ],
+        "/HivemindPrism-Compute/gitleaks-mcpExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "gitleaksmcpExecutionRoleDefaultPolicy6739C5A9"
+          }
+        ],
+        "/HivemindPrism-Compute/gitleaks-mcpTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "gitleaksmcpTaskDef7694B260"
+          }
+        ],
+        "/HivemindPrism-Compute/gitleaks-mcpLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "gitleaksmcpLogGroup4914FC3F"
+          }
+        ],
+        "/HivemindPrism-Compute/trivy-mcpExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "trivymcpExecutionRole6C379FEC"
+          }
+        ],
+        "/HivemindPrism-Compute/trivy-mcpExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "trivymcpExecutionRoleDefaultPolicy229E5C52"
+          }
+        ],
+        "/HivemindPrism-Compute/trivy-mcpTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "trivymcpTaskDefBB97ECFC"
+          }
+        ],
+        "/HivemindPrism-Compute/trivy-mcpLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "trivymcpLogGroupE8CDE4CC"
+          }
+        ],
+        "/HivemindPrism-Compute/UnpackLambda/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnpackLambdaSecurityGroup6A180B17"
+          }
+        ],
+        "/HivemindPrism-Compute/UnpackLambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnpackLambdaA542CFF8"
+          }
+        ],
+        "/HivemindPrism-Compute/UnpackLambda/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnpackLambdaLogRetention769C54C0"
+          }
+        ],
+        "/HivemindPrism-Compute/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+          }
+        ],
+        "/HivemindPrism-Compute/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB"
+          }
+        ],
+        "/HivemindPrism-Compute/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A"
+          }
+        ],
+        "/HivemindPrism-Compute/MemoryIngestorLambda/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemoryIngestorLambdaSecurityGroup14A25DDD"
+          }
+        ],
+        "/HivemindPrism-Compute/MemoryIngestorLambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemoryIngestorLambda8D4E08AD"
+          }
+        ],
+        "/HivemindPrism-Compute/MemoryIngestorLambda/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MemoryIngestorLambdaLogRetention261C0ED5"
+          }
+        ],
+        "/HivemindPrism-Compute/FailureHandlerLambda/SecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FailureHandlerLambdaSecurityGroupCADB30EF"
+          }
+        ],
+        "/HivemindPrism-Compute/FailureHandlerLambda/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FailureHandlerLambda9F818F09"
+          }
+        ],
+        "/HivemindPrism-Compute/FailureHandlerLambda/LogRetention/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "FailureHandlerLambdaLogRetention0309B06F"
+          }
+        ],
+        "/HivemindPrism-Compute/EcsClusterName": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "EcsClusterName"
+          }
+        ],
+        "/HivemindPrism-Compute/UnpackLambdaArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "UnpackLambdaArn"
+          }
+        ],
+        "/HivemindPrism-Compute/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"UnpackLambdaA542CFF8\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"archaeologistTaskDef0C0F4ADA\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"strategistTaskDef40F5F609\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"coordinatorTaskDefD6FC88DD\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"semgrepmcpTaskDef4F4E8F78\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"synthesizerTaskDef22D2EEBC\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"criticTaskDef3B08E328\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"archivistTaskDef1B107691\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"ArchaeologistTaskRole8B61F93D\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttArchaeologistTaskRole8B61F93DArn724F520B"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"StrategistTaskRole541CBCB4\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttStrategistTaskRole541CBCB4Arn97D1F2E4"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"CoordinatorTaskRole9462B0FA\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttCoordinatorTaskRole9462B0FAArn5330578F"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"SynthesizerTaskRole69378926\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttSynthesizerTaskRole69378926ArnBC79DC0F"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"CriticTaskRoleCAC1AFB2\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttCriticTaskRoleCAC1AFB2Arn6FE7F62A"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"ArchivistTaskRoleEE36BB64\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttArchivistTaskRoleEE36BB64Arn77DF6974"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"McpServerTaskRoleB19E5A08\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"archaeologistExecutionRoleE7945B2B\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttarchaeologistExecutionRoleE7945B2BArnCAEC5042"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"strategistExecutionRole47F607FB\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttstrategistExecutionRole47F607FBArn74D02AA8"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"coordinatorExecutionRoleEBF9EEF6\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttcoordinatorExecutionRoleEBF9EEF6Arn1213E3EF"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"synthesizerExecutionRoleCB81EBAD\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttsynthesizerExecutionRoleCB81EBADArn618B8CB0"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"criticExecutionRole5F426FC7\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttcriticExecutionRole5F426FC7Arn9919F376"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"archivistExecutionRole522CA1A4\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttarchivistExecutionRole522CA1A4Arn50372367"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"semgrepmcpExecutionRole97487FBA\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"gitleaksmcpExecutionRoleD51A8FB4\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"trivymcpExecutionRole6C379FEC\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"HivemindCluster94255979\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+          }
+        ],
+        "/HivemindPrism-Compute/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HivemindPrism-Compute/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HivemindPrism-Compute"
+    },
+    "HivemindPrism-Orchestration.assets": {
+      "type": "cdk:asset-manifest",
+      "properties": {
+        "file": "HivemindPrism-Orchestration.assets.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+      }
+    },
+    "HivemindPrism-Orchestration": {
+      "type": "aws:cloudformation:stack",
+      "environment": "aws://unknown-account/us-east-1",
+      "properties": {
+        "templateFile": "HivemindPrism-Orchestration.template.json",
+        "terminationProtection": false,
+        "tags": {
+          "Environment": "Production",
+          "ManagedBy": "CDK",
+          "Project": "Hivemind-Prism"
+        },
+        "validateOnSynth": false,
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/d594dbd7a3250c3cc6ec1c91dde07b8b3c06a9c6276ec4b66ff14f493984088e.json",
+        "requiresBootstrapStackVersion": 6,
+        "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
+        "additionalDependencies": [
+          "HivemindPrism-Orchestration.assets"
+        ],
+        "lookupRole": {
+          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "requiresBootstrapStackVersion": 8,
+          "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
+        }
+      },
+      "dependencies": [
+        "HivemindPrism-Compute",
+        "HivemindPrism-Network",
+        "HivemindPrism-Security",
+        "HivemindPrism-Storage",
+        "HivemindPrism-Orchestration.assets"
+      ],
+      "metadata": {
+        "/HivemindPrism-Orchestration": [
+          {
+            "type": "aws:cdk:stack-tags",
+            "data": [
+              {
+                "Key": "Environment",
+                "Value": "Production"
+              },
+              {
+                "Key": "ManagedBy",
+                "Value": "CDK"
+              },
+              {
+                "Key": "Project",
+                "Value": "Hivemind-Prism"
+              }
+            ]
+          }
+        ],
+        "/HivemindPrism-Orchestration/StepFunctionsOrchestratorRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StepFunctionsOrchestratorRole75D1882F"
+          }
+        ],
+        "/HivemindPrism-Orchestration/StepFunctionsOrchestratorRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StepFunctionsOrchestratorRoleDefaultPolicy73065EDC"
+          }
+        ],
+        "/HivemindPrism-Orchestration/CompletionTopic/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CompletionTopic50E1DF26"
+          }
+        ],
+        "/HivemindPrism-Orchestration/StateMachineLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StateMachineLogGroup15B91BCB"
+          }
+        ],
+        "/HivemindPrism-Orchestration/AgenticOrchestrator/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AgenticOrchestrator5676879C"
+          }
+        ],
+        "/HivemindPrism-Orchestration/AgenticOrchestrator/EventsRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AgenticOrchestratorEventsRole35F27B79"
+          }
+        ],
+        "/HivemindPrism-Orchestration/AgenticOrchestrator/EventsRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "AgenticOrchestratorEventsRoleDefaultPolicy1B206C19"
+          }
+        ],
+        "/HivemindPrism-Orchestration/CodeUploadTrigger/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CodeUploadTrigger67DF3E44"
+          }
+        ],
+        "/HivemindPrism-Orchestration/StateMachineArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "StateMachineArn"
+          }
+        ],
+        "/HivemindPrism-Orchestration/CompletionTopicArn": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CompletionTopicArn"
+          }
+        ],
+        "/HivemindPrism-Orchestration/CDKMetadata/Default": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CDKMetadata"
+          }
+        ],
+        "/HivemindPrism-Orchestration/BootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "BootstrapVersion"
+          }
+        ],
+        "/HivemindPrism-Orchestration/CheckBootstrapVersion": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "CheckBootstrapVersion"
+          }
+        ]
+      },
+      "displayName": "HivemindPrism-Orchestration"
+    },
+    "Tree": {
+      "type": "cdk:tree",
+      "properties": {
+        "file": "tree.json"
+      }
+    },
+    "aws-cdk-lib/feature-flag-report": {
+      "type": "cdk:feature-flag-report",
+      "properties": {
+        "module": "aws-cdk-lib",
+        "flags": {
+          "@aws-cdk/aws-signer:signingProfileNamePassedToCfn": {
+            "recommendedValue": true,
+            "explanation": "Pass signingProfileName to CfnSigningProfile"
+          },
+          "@aws-cdk/core:newStyleStackSynthesis": {
+            "recommendedValue": true,
+            "explanation": "Switch to new stack synthesis method which enables CI/CD",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:stackRelativeExports": {
+            "recommendedValue": true,
+            "explanation": "Name exports based on the construct paths relative to the stack, rather than the global construct path",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-ecs-patterns:secGroupsDisablesImplicitOpenListener": {
+            "recommendedValue": true,
+            "explanation": "Disable implicit openListener when custom security groups are provided"
+          },
+          "@aws-cdk/aws-rds:lowercaseDbIdentifier": {
+            "recommendedValue": true,
+            "explanation": "Force lowercasing of RDS Cluster names in CDK",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-apigateway:usagePlanKeyOrderInsensitiveId": {
+            "recommendedValue": true,
+            "explanation": "Allow adding/removing multiple UsagePlanKeys independently",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeVersionProps": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the  `fn.currentVersion`.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-lambda:recognizeLayerVersion": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to opt in to the updated logical id calculation for Lambda Version created using the `fn.currentVersion`."
+          },
+          "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": {
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have cloudfront distributions use the security policy TLSv1.2_2021 by default.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:checkSecretUsage": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this flag to make it impossible to accidentally use SecretValues in unsafe locations"
+          },
+          "@aws-cdk/core:target-partitions": {
+            "userValue": [
+              "aws",
+              "aws-cn"
+            ],
+            "recommendedValue": [
+              "aws",
+              "aws-cn"
+            ],
+            "explanation": "What regions to include in lookup tables of environment agnostic stacks"
+          },
+          "@aws-cdk-containers/ecs-service-extensions:enableDefaultLogDriver": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "ECS extensions will automatically add an `awslogs` driver if no logging is specified"
+          },
+          "@aws-cdk/aws-ec2:uniqueImdsv2TemplateName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to have Launch Templates generated by the `InstanceRequireImdsv2Aspect` use unique names."
+          },
+          "@aws-cdk/aws-ecs:arnFormatIncludesClusterName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "ARN format used by ECS. In the new ARN format, the cluster name is part of the resource ID."
+          },
+          "@aws-cdk/aws-iam:minimizePolicies": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Minimize IAM policies by combining Statements"
+          },
+          "@aws-cdk/core:validateSnapshotRemovalPolicy": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Error on snapshot removal policies on resources that do not support it."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeyAliasStackSafeResourceName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Generate key aliases that include the stack name"
+          },
+          "@aws-cdk/aws-s3:createDefaultLoggingPolicy": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature flag to create an S3 bucket policy by default in cases where an AWS service would automatically create the Policy if one does not exist."
+          },
+          "@aws-cdk/aws-sns-subscriptions:restrictSqsDescryption": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Restrict KMS key policy for encrypted Queues a bit more"
+          },
+          "@aws-cdk/aws-apigateway:disableCloudWatchRole": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Make default CloudWatch Role behavior safe for multiple API Gateways in one environment"
+          },
+          "@aws-cdk/core:enablePartitionLiterals": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Make ARNs concrete if AWS partition is known"
+          },
+          "@aws-cdk/aws-events:eventsTargetQueueSameAccount": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Event Rules may only push to encrypted SQS queues in the same account"
+          },
+          "@aws-cdk/aws-ecs:disableExplicitDeploymentControllerForCircuitBreaker": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Avoid setting the \"ECS\" deployment controller when adding a circuit breaker"
+          },
+          "@aws-cdk/aws-iam:importedRoleStackSafeDefaultPolicyName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable this feature to by default create default policy names for imported roles that depend on the stack the role is in."
+          },
+          "@aws-cdk/aws-s3:serverAccessLogsUseBucketPolicy": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Use S3 Bucket Policy instead of ACLs for Server Access Logging"
+          },
+          "@aws-cdk/aws-route53-patters:useCertificate": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Use the official `Certificate` resource instead of `DnsValidatedCertificate`"
+          },
+          "@aws-cdk/customresources:installLatestAwsSdkDefault": {
+            "userValue": false,
+            "recommendedValue": false,
+            "explanation": "Whether to install the latest SDK by default in AwsCustomResource"
+          },
+          "@aws-cdk/aws-rds:databaseProxyUniqueResourceName": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Use unique resource name for Database Proxy"
+          },
+          "@aws-cdk/aws-codedeploy:removeAlarmsFromDeploymentGroup": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Remove CloudWatch alarms from deployment group"
+          },
+          "@aws-cdk/aws-apigateway:authorizerChangeDeploymentLogicalId": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Include authorizer configuration in the calculation of the API deployment logical ID."
+          },
+          "@aws-cdk/aws-ec2:launchTemplateDefaultUserData": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Define user data for a launch template by default when a machine image is provided."
+          },
+          "@aws-cdk/aws-secretsmanager:useAttachedSecretResourcePolicyForSecretTargetAttachments": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "SecretTargetAttachments uses the ResourcePolicy of the attached Secret."
+          },
+          "@aws-cdk/aws-redshift:columnId": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Whether to use an ID to track Redshift column changes"
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:enableEmrServicePolicyV2": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enable AmazonEMRServicePolicy_v2 managed policies"
+          },
+          "@aws-cdk/aws-ec2:restrictDefaultSecurityGroup": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Restrict access to the VPC default security group"
+          },
+          "@aws-cdk/aws-apigateway:requestValidatorUniqueId": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Generate a unique id for each RequestValidator added to a method"
+          },
+          "@aws-cdk/aws-kms:aliasNameRef": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "KMS Alias name and keyArn will have implicit reference to KMS Key"
+          },
+          "@aws-cdk/aws-kms:applyImportedAliasPermissionsToPrincipal": {
+            "recommendedValue": true,
+            "explanation": "Enable grant methods on Aliases imported by name to use kms:ResourceAliases condition"
+          },
+          "@aws-cdk/aws-autoscaling:generateLaunchTemplateInsteadOfLaunchConfig": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Generate a launch template when creating an AutoScalingGroup"
+          },
+          "@aws-cdk/core:includePrefixInUniqueNameGeneration": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Include the stack prefix in the stack name generation process"
+          },
+          "@aws-cdk/aws-efs:denyAnonymousAccess": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "EFS denies anonymous clients accesses"
+          },
+          "@aws-cdk/aws-opensearchservice:enableOpensearchMultiAzWithStandby": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enables support for Multi-AZ with Standby deployment for opensearch domains"
+          },
+          "@aws-cdk/aws-lambda-nodejs:useLatestRuntimeVersion": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enables aws-lambda-nodejs.Function to use the latest available NodeJs runtime as the default"
+          },
+          "@aws-cdk/aws-efs:mountTargetOrderInsensitiveLogicalId": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, mount targets will have a stable logicalId that is linked to the associated subnet."
+          },
+          "@aws-cdk/aws-rds:auroraClusterChangeScopeOfInstanceParameterGroupWithEachParameters": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, a scope of InstanceParameterGroup for AuroraClusterInstance with each parameters will change."
+          },
+          "@aws-cdk/aws-appsync:useArnForSourceApiAssociationIdentifier": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, will always use the arn for identifiers for CfnSourceApiAssociation in the GraphqlApi construct rather than id."
+          },
+          "@aws-cdk/aws-rds:preventRenderingDeprecatedCredentials": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, creating an RDS database cluster from a snapshot will only render credentials for snapshot credentials."
+          },
+          "@aws-cdk/aws-codepipeline-actions:useNewDefaultBranchForCodeCommitSource": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, the CodeCommit source action is using the default branch name 'main'."
+          },
+          "@aws-cdk/aws-cloudwatch-actions:changeLambdaPermissionLogicalIdForLambdaAction": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, the logical ID of a Lambda permission for a Lambda action includes an alarm ID."
+          },
+          "@aws-cdk/aws-codepipeline:crossAccountKeysDefaultValueToFalse": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default value for crossAccountKeys to false."
+          },
+          "@aws-cdk/aws-codepipeline:defaultPipelineTypeToV2": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "Enables Pipeline to set the default pipeline type to V2."
+          },
+          "@aws-cdk/aws-kms:reduceCrossAccountRegionPolicyScope": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, IAM Policy created from KMS key grant will reduce the resource scope to this key only."
+          },
+          "@aws-cdk/pipelines:reduceAssetRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from PipelineAssetsFileRole trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-eks:nodegroupNameAttribute": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, nodegroupName attribute of the provisioned EKS NodeGroup will not have the cluster name prefix."
+          },
+          "@aws-cdk/aws-ec2:ebsDefaultGp3Volume": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, the default volume type of the EBS volume will be GP3"
+          },
+          "@aws-cdk/aws-ecs:removeDefaultDeploymentAlarm": {
+            "userValue": true,
+            "recommendedValue": true,
+            "explanation": "When enabled, remove default deployment alarm settings"
+          },
+          "@aws-cdk/custom-resources:logApiResponseDataPropertyTrueDefault": {
+            "userValue": false,
+            "recommendedValue": false,
+            "explanation": "When enabled, the custom resource used for `AwsCustomResource` will configure the `logApiResponseData` property as true by default"
+          },
+          "@aws-cdk/aws-s3:keepNotificationInImportedBucket": {
+            "userValue": false,
+            "recommendedValue": false,
+            "explanation": "When enabled, Adding notifications to a bucket in the current stack will not remove notification from imported stack."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:useNewS3UriParametersForBedrockInvokeModelTask": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use new props for S3 URI field in task definition of state machine for bedrock invoke model.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/core:explicitStackTags": {
+            "recommendedValue": true,
+            "explanation": "When enabled, stack tags need to be assigned explicitly on a Stack."
+          },
+          "@aws-cdk/aws-ecs:enableImdsBlockingDeprecatedFeature": {
+            "recommendedValue": false,
+            "explanation": "When set to true along with canContainersAccessInstanceRole=false in ECS cluster, new updated commands will be added to UserData to block container accessing IMDS. **Applicable to Linux only. IMPORTANT: See [details.](#aws-cdkaws-ecsenableImdsBlockingDeprecatedFeature)**"
+          },
+          "@aws-cdk/aws-ecs:disableEcsImdsBlocking": {
+            "recommendedValue": true,
+            "explanation": "When set to true, CDK synth will throw exception if canContainersAccessInstanceRole is false. **IMPORTANT: See [details.](#aws-cdkaws-ecsdisableEcsImdsBlocking)**"
+          },
+          "@aws-cdk/aws-ecs:reduceEc2FargateCloudWatchPermissions": {
+            "recommendedValue": true,
+            "explanation": "When enabled, we will only grant the necessary permissions when users specify cloudwatch log group through logConfiguration"
+          },
+          "@aws-cdk/aws-dynamodb:resourcePolicyPerReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled will allow you to specify a resource policy per replica, and not copy the source table policy to all replicas"
+          },
+          "@aws-cdk/aws-ec2:ec2SumTImeoutEnabled": {
+            "recommendedValue": true,
+            "explanation": "When enabled, initOptions.timeout and resourceSignalTimeout values will be summed together."
+          },
+          "@aws-cdk/aws-appsync:appSyncGraphQLAPIScopeLambdaPermission": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a Lambda authorizer Permission created when using GraphqlApi will be properly scoped with a SourceArn."
+          },
+          "@aws-cdk/aws-rds:setCorrectValueForDatabaseInstanceReadReplicaInstanceResourceId": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the value of property `instanceResourceId` in construct `DatabaseInstanceReadReplica` will be set to the correct value which is `DbiResourceId` instead of currently `DbInstanceArn`"
+          },
+          "@aws-cdk/core:cfnIncludeRejectComplexResourceUpdateCreatePolicyIntrinsics": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CFN templates added with `cfn-include` will error if the template contains Resource Update or Create policies with CFN Intrinsics that include non-primitive values."
+          },
+          "@aws-cdk/aws-lambda-nodejs:sdkV3ExcludeSmithyPackages": {
+            "recommendedValue": true,
+            "explanation": "When enabled, both `@aws-sdk` and `@smithy` packages will be excluded from the Lambda Node.js 18.x runtime to prevent version mismatches in bundled applications."
+          },
+          "@aws-cdk/aws-stepfunctions-tasks:fixRunEcsTaskPolicy": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resource of IAM Run Ecs policy generated by SFN EcsRunTask will reference the definition, instead of constructing ARN."
+          },
+          "@aws-cdk/aws-ec2:bastionHostUseAmazonLinux2023ByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the BastionHost construct will use the latest Amazon Linux 2023 AMI, instead of Amazon Linux 2."
+          },
+          "@aws-cdk/core:aspectStabilization": {
+            "recommendedValue": true,
+            "explanation": "When enabled, a stabilization loop will be run when invoking Aspects during synthesis.",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-route53-targets:userPoolDomainNameMethodWithoutCustomResource": {
+            "recommendedValue": true,
+            "explanation": "When enabled, use a new method for DNS Name of user pool domain target without creating a custom resource."
+          },
+          "@aws-cdk/aws-elasticloadbalancingV2:albDualstackWithoutPublicIpv4SecurityGroupRulesDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default security group ingress rules will allow IPv6 ingress from anywhere"
+          },
+          "@aws-cdk/aws-iam:oidcRejectUnauthorizedConnections": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the default behaviour of OIDC provider will reject unauthorized connections"
+          },
+          "@aws-cdk/core:enableAdditionalMetadataCollection": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will expand the scope of usage data collected to better inform CDK development and improve communication for security concerns and emerging issues."
+          },
+          "@aws-cdk/aws-lambda:createNewPoliciesWithAddToRolePolicy": {
+            "recommendedValue": false,
+            "explanation": "[Deprecated] When enabled, Lambda will create new inline policies with AddToRolePolicy instead of adding to the Default Policy Statement"
+          },
+          "@aws-cdk/aws-s3:setUniqueReplicationRoleName": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK will automatically generate a unique role name that is used for s3 object replication."
+          },
+          "@aws-cdk/pipelines:reduceStageRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "Remove the root account principal from Stage addActions trust policy",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-events:requireEventBusPolicySid": {
+            "recommendedValue": true,
+            "explanation": "When enabled, grantPutEventsTo() will use resource policies with Statement IDs for service principals."
+          },
+          "@aws-cdk/core:aspectPrioritiesMutating": {
+            "recommendedValue": true,
+            "explanation": "When set to true, Aspects added by the construct library on your behalf will be given a priority of MUTATING."
+          },
+          "@aws-cdk/aws-dynamodb:retainTableReplica": {
+            "recommendedValue": true,
+            "explanation": "When enabled, table replica will be default to the removal policy of source table unless specified otherwise."
+          },
+          "@aws-cdk/cognito:logUserPoolClientSecretValue": {
+            "recommendedValue": false,
+            "explanation": "When disabled, the value of the user pool client secret will not be logged in the custom resource lambda function logs."
+          },
+          "@aws-cdk/pipelines:reduceCrossAccountActionRoleTrustScope": {
+            "recommendedValue": true,
+            "explanation": "When enabled, scopes down the trust policy for the cross-account action role",
+            "unconfiguredBehavesLike": {
+              "v2": true
+            }
+          },
+          "@aws-cdk/aws-stepfunctions:useDistributedMapResultWriterV2": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the resultWriterV2 property of DistributedMap will be used insted of resultWriter"
+          },
+          "@aws-cdk/s3-notifications:addS3TrustKeyPolicyForSnsSubscriptions": {
+            "recommendedValue": true,
+            "explanation": "Add an S3 trust policy to a KMS key resource policy for SNS subscriptions."
+          },
+          "@aws-cdk/aws-ec2:requirePrivateSubnetsForEgressOnlyInternetGateway": {
+            "recommendedValue": true,
+            "explanation": "When enabled, the EgressOnlyGateway resource is only created if private subnets are defined in the dual-stack VPC."
+          },
+          "@aws-cdk/aws-ec2-alpha:useResourceIdForVpcV2Migration": {
+            "recommendedValue": false,
+            "explanation": "When enabled, use resource IDs for VPC V2 migration"
+          },
+          "@aws-cdk/aws-s3:publicAccessBlockedByDefault": {
+            "recommendedValue": true,
+            "explanation": "When enabled, setting any combination of options for BlockPublicAccess will automatically set true for any options not defined."
+          },
+          "@aws-cdk/aws-lambda:useCdkManagedLogGroup": {
+            "recommendedValue": true,
+            "explanation": "When enabled, CDK creates and manages loggroup for the lambda function"
+          }
+        }
+      }
+    }
+  },
+  "minimumCliVersion": "2.1030.0"
+}

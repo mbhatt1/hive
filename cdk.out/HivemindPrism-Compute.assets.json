@@ -1,0 +1,81 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f": {
+      "displayName": "UnpackLambda/Code",
+      "source": {
+        "path": "asset.741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-bc9ef331": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d": {
+      "displayName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Code",
+      "source": {
+        "path": "asset.2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-213451c5": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb": {
+      "displayName": "MemoryIngestorLambda/Code",
+      "source": {
+        "path": "asset.acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-60716493": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d": {
+      "displayName": "FailureHandlerLambda/Code",
+      "source": {
+        "path": "asset.99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d",
+        "packaging": "zip"
+      },
+      "destinations": {
+        "current_account-us-east-1-28589ee1": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d.zip",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    },
+    "9017ce3a33ed664ca77c9e4a1e8c52d0dd95c28695175f7285710ef93409a5cd": {
+      "displayName": "HivemindPrism-Compute Template",
+      "source": {
+        "path": "HivemindPrism-Compute.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-09221c86": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "9017ce3a33ed664ca77c9e4a1e8c52d0dd95c28695175f7285710ef93409a5cd.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

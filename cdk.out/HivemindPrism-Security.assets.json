@@ -1,0 +1,21 @@
+{
+  "version": "48.0.0",
+  "files": {
+    "03200d440b040751463c5f916be2d7b9f9f2bfa28c830e59de06b081cfb067fe": {
+      "displayName": "HivemindPrism-Security Template",
+      "source": {
+        "path": "HivemindPrism-Security.template.json",
+        "packaging": "file"
+      },
+      "destinations": {
+        "current_account-us-east-1-839ce8eb": {
+          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+          "objectKey": "03200d440b040751463c5f916be2d7b9f9f2bfa28c830e59de06b081cfb067fe.json",
+          "region": "us-east-1",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        }
+      }
+    }
+  },
+  "dockerImages": {}
+}

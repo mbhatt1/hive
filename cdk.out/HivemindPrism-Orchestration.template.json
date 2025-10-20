@@ -1,0 +1,1353 @@
+{
+ "Description": "Hivemind-Prism Orchestration Infrastructure - Step Functions and EventBridge",
+ "Resources": {
+  "StepFunctionsOrchestratorRole75D1882F": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "states.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Role for Step Functions state machine orchestration",
+    "RoleName": "HivemindStepFunctionsRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/StepFunctionsOrchestratorRole/Resource"
+   }
+  },
+  "StepFunctionsOrchestratorRoleDefaultPolicy73065EDC": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "lambda:InvokeFunction",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "ecs:RunTask",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           "arn:",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             2,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             3,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             4,
+             {
+              "Fn::Split": [
+               ":",
+               {
+                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+               }
+              ]
+             }
+            ]
+           },
+           ":",
+           {
+            "Fn::Select": [
+             0,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "/",
+           {
+            "Fn::Select": [
+             1,
+             {
+              "Fn::Split": [
+               "/",
+               {
+                "Fn::Select": [
+                 5,
+                 {
+                  "Fn::Split": [
+                   ":",
+                   {
+                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+                   }
+                  ]
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           ":*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "ecs:DescribeTasks",
+        "ecs:RunTask",
+        "ecs:StopTask",
+        "events:DescribeRule",
+        "events:PutRule",
+        "events:PutTargets",
+        "logs:CreateLogDelivery",
+        "logs:DeleteLogDelivery",
+        "logs:DescribeLogGroups",
+        "logs:DescribeResourcePolicies",
+        "logs:GetLogDelivery",
+        "logs:ListLogDeliveries",
+        "logs:PutResourcePolicy",
+        "logs:UpdateLogDelivery",
+        "xray:GetSamplingRules",
+        "xray:GetSamplingTargets",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "iam:PassRole",
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttArchaeologistTaskRole8B61F93DArn724F520B"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttArchivistTaskRoleEE36BB64Arn77DF6974"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttCoordinatorTaskRole9462B0FAArn5330578F"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttCriticTaskRoleCAC1AFB2Arn6FE7F62A"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttStrategistTaskRole541CBCB4Arn97D1F2E4"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttSynthesizerTaskRole69378926ArnBC79DC0F"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttarchaeologistExecutionRoleE7945B2BArnCAEC5042"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttarchivistExecutionRole522CA1A4Arn50372367"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttcoordinatorExecutionRoleEBF9EEF6Arn1213E3EF"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttcriticExecutionRole5F426FC7Arn9919F376"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttstrategistExecutionRole47F607FBArn74D02AA8"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttsynthesizerExecutionRoleCB81EBADArn618B8CB0"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "events:DescribeRule",
+        "events:PutRule",
+        "events:PutTargets"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:events:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":rule/StepFunctionsGetEventsForECSTaskRule"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": "sns:Publish",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "CompletionTopic50E1DF26"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "StepFunctionsOrchestratorRoleDefaultPolicy73065EDC",
+    "Roles": [
+     {
+      "Ref": "StepFunctionsOrchestratorRole75D1882F"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/StepFunctionsOrchestratorRole/DefaultPolicy/Resource"
+   }
+  },
+  "CompletionTopic50E1DF26": {
+   "Type": "AWS::SNS::Topic",
+   "Properties": {
+    "DisplayName": "Hivemind Mission Completion Notifications",
+    "TopicName": "HivemindMissionCompletions"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/CompletionTopic/Resource"
+   }
+  },
+  "StateMachineLogGroup15B91BCB": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/aws/stepfunctions/HivemindOrchestrator",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/StateMachineLogGroup/Resource"
+   }
+  },
+  "AgenticOrchestrator5676879C": {
+   "Type": "AWS::StepFunctions::StateMachine",
+   "Properties": {
+    "DefinitionString": {
+     "Fn::Join": [
+      "",
+      [
+       "{\"StartAt\":\"UnpackAndValidate\",\"States\":{\"UnpackAndValidate\":{\"Next\":\"DeployContextAgents\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"ResultPath\":\"$.error\",\"Next\":\"HandleFailure\"}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+       },
+       "\",\"Payload.$\":\"$\"}},\"DeployContextAgents\":{\"Type\":\"Parallel\",\"ResultPath\":\"$.context_results\",\"Next\":\"CoordinatorDecision\",\"Branches\":[{\"StartAt\":\"ArchaeologistTask\",\"States\":{\"ArchaeologistTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.archaeologisttask_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-archaeologist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"archaeologist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}},{\"StartAt\":\"StrategistTask\",\"States\":{\"StrategistTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.strategisttask_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-strategist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"strategist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}}]},\"CoordinatorDecision\":{\"Next\":\"DynamicMCPInvocation\",\"Type\":\"Task\",\"ResultPath\":\"$.coordinatordecision_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-coordinator-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"coordinator-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"DynamicMCPInvocation\":{\"Type\":\"Map\",\"ResultPath\":\"$.mcp_results\",\"Next\":\"WaitForAllTools\",\"ItemsPath\":\"$.execution_plan.tools\",\"MaxConcurrency\":5,\"Iterator\":{\"StartAt\":\"InvokeMCPTool\",\"States\":{\"InvokeMCPTool\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-semgrep-mcp\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"semgrep-mcp\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}}},\"WaitForAllTools\":{\"Type\":\"Wait\",\"Seconds\":5,\"Next\":\"LaunchSynthesisCrucible\"},\"LaunchSynthesisCrucible\":{\"Type\":\"Parallel\",\"ResultPath\":\"$.synthesis_results\",\"Next\":\"WaitForConsensus\",\"Branches\":[{\"StartAt\":\"SynthesizerTask\",\"States\":{\"SynthesizerTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.synthesizertask_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-synthesizer-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"synthesizer-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}},{\"StartAt\":\"CriticTask\",\"States\":{\"CriticTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.critictask_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-critic-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"critic-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}}]},\"WaitForConsensus\":{\"Type\":\"Wait\",\"Seconds\":10,\"Next\":\"ArchivistTask\"},\"ArchivistTask\":{\"Next\":\"NotifyCompletion\",\"Type\":\"Task\",\"ResultPath\":\"$.archivisttask_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-archivist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"archivist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"NotifyCompletion\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::sns:publish\",\"Parameters\":{\"TopicArn\":\"",
+       {
+        "Ref": "CompletionTopic50E1DF26"
+       },
+       "\",\"Message\":{\"mission_id.$\":\"$.mission_id\",\"status\":\"COMPLETED\",\"findings_count.$\":\"$.archival_result.count\"}}},\"HandleFailure\":{\"Next\":\"FailureRecorded\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Type\":\"Task\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+       },
+       "\",\"Payload\":{\"mission_id.$\":\"$.mission_id\",\"error.$\":\"$.error\"}}},\"FailureRecorded\":{\"Type\":\"Succeed\"}},\"TimeoutSeconds\":3600}"
+      ]
+     ]
+    },
+    "LoggingConfiguration": {
+     "Destinations": [
+      {
+       "CloudWatchLogsLogGroup": {
+        "LogGroupArn": {
+         "Fn::GetAtt": [
+          "StateMachineLogGroup15B91BCB",
+          "Arn"
+         ]
+        }
+       }
+      }
+     ],
+     "Level": "ALL"
+    },
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "StepFunctionsOrchestratorRole75D1882F",
+      "Arn"
+     ]
+    },
+    "StateMachineName": "HivemindAgenticOrchestrator",
+    "TracingConfiguration": {
+     "Enabled": true
+    }
+   },
+   "DependsOn": [
+    "StepFunctionsOrchestratorRoleDefaultPolicy73065EDC",
+    "StepFunctionsOrchestratorRole75D1882F"
+   ],
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/AgenticOrchestrator/Resource"
+   }
+  },
+  "AgenticOrchestratorEventsRole35F27B79": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "events.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/AgenticOrchestrator/EventsRole/Resource"
+   }
+  },
+  "AgenticOrchestratorEventsRoleDefaultPolicy1B206C19": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "states:StartExecution",
+       "Effect": "Allow",
+       "Resource": {
+        "Ref": "AgenticOrchestrator5676879C"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "AgenticOrchestratorEventsRoleDefaultPolicy1B206C19",
+    "Roles": [
+     {
+      "Ref": "AgenticOrchestratorEventsRole35F27B79"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/AgenticOrchestrator/EventsRole/DefaultPolicy/Resource"
+   }
+  },
+  "CodeUploadTrigger67DF3E44": {
+   "Type": "AWS::Events::Rule",
+   "Properties": {
+    "Description": "Triggers Step Functions when code is uploaded to S3",
+    "EventPattern": {
+     "source": [
+      "aws.s3"
+     ],
+     "detail-type": [
+      "Object Created"
+     ],
+     "detail": {
+      "bucket": {
+       "name": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefUploadsBucket5E5E9B64F2F56CC2"
+        }
+       ]
+      },
+      "object": {
+       "key": [
+        {
+         "prefix": "uploads/"
+        }
+       ]
+      }
+     }
+    },
+    "Name": "HivemindCodeUploadTrigger",
+    "State": "ENABLED",
+    "Targets": [
+     {
+      "Arn": {
+       "Ref": "AgenticOrchestrator5676879C"
+      },
+      "Id": "Target0",
+      "InputPath": "$",
+      "RoleArn": {
+       "Fn::GetAtt": [
+        "AgenticOrchestratorEventsRole35F27B79",
+        "Arn"
+       ]
+      }
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/CodeUploadTrigger/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/11P22rDMAz9lr6rXhf6B2OMwcpCUthjURy1VePIIbIzRvC/z0k3GHs6NwkdFaYodma3wU/d2rbbOm7MXAe0HWTrNDP2Zq68I3g6y4qld2y/FnlnCVTUzEc/sF3clWQz0HCOYgN70VNA7fLQG/ZNi68y+Y7g2WoV5ZgTqEXL2DjW679FM5c4onPk4IADfCAHqKO1RC3kloEOaK8sa7u/OoHzl+Wgv7yMPg5L/ssT0EQSclrFn78ypgQVqY+jXa33GIYYEohvydz0YSr2Zm8eNzdl3o5RAvdkqjt+A1PpLGpEAQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "StateMachineArn": {
+   "Description": "Step Functions State Machine ARN",
+   "Value": {
+    "Ref": "AgenticOrchestrator5676879C"
+   },
+   "Export": {
+    "Name": "HivemindPrism-StateMachineArn"
+   }
+  },
+  "CompletionTopicArn": {
+   "Description": "SNS Topic for completion notifications",
+   "Value": {
+    "Ref": "CompletionTopic50E1DF26"
+   },
+   "Export": {
+    "Name": "HivemindPrism-CompletionTopicArn"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

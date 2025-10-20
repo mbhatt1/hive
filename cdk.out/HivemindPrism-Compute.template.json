@@ -1,0 +1,4305 @@
+{
+ "Description": "Hivemind-Prism Compute Infrastructure - ECS, Fargate, and Lambda",
+ "Resources": {
+  "ArchaeologistTaskRole8B61F93D": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for Archaeologist agent: Context discovery and metadata extraction",
+    "RoleName": "HivemindArchaeologistTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/ArchaeologistTaskRole/Resource"
+   }
+  },
+  "ArchaeologistTaskRoleDefaultPolicy2650B1AE": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "kendra:Query",
+        "kendra:Retrieve",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:secretsmanager:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":secret:hivemind/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/agent-outputs/archaeologist/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ArchaeologistTaskRoleDefaultPolicy2650B1AE",
+    "Roles": [
+     {
+      "Ref": "ArchaeologistTaskRole8B61F93D"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/ArchaeologistTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "StrategistTaskRole541CBCB4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for Strategist agent: Planning and tool selection",
+    "RoleName": "HivemindStrategistTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/StrategistTaskRole/Resource"
+   }
+  },
+  "StrategistTaskRoleDefaultPolicyBEA49F05": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "kendra:Query",
+        "kendra:Retrieve",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:secretsmanager:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":secret:hivemind/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/agent-outputs/strategist/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "StrategistTaskRoleDefaultPolicyBEA49F05",
+    "Roles": [
+     {
+      "Ref": "StrategistTaskRole541CBCB4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/StrategistTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "CoordinatorTaskRole9462B0FA": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for Coordinator agent: Resource allocation and scheduling",
+    "RoleName": "HivemindCoordinatorTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/CoordinatorTaskRole/Resource"
+   }
+  },
+  "CoordinatorTaskRoleDefaultPolicy09F64788": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "kendra:Query",
+        "kendra:Retrieve",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:secretsmanager:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":secret:hivemind/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/agent-outputs/coordinator/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "CoordinatorTaskRoleDefaultPolicy09F64788",
+    "Roles": [
+     {
+      "Ref": "CoordinatorTaskRole9462B0FA"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/CoordinatorTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "SynthesizerTaskRole69378926": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for Synthesizer agent: Finding generation from tool results",
+    "RoleName": "HivemindSynthesizerTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/SynthesizerTaskRole/Resource"
+   }
+  },
+  "SynthesizerTaskRoleDefaultPolicy8C34C861": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "kendra:Query",
+        "kendra:Retrieve",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:secretsmanager:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":secret:hivemind/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/agent-outputs/synthesizer/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "SynthesizerTaskRoleDefaultPolicy8C34C861",
+    "Roles": [
+     {
+      "Ref": "SynthesizerTaskRole69378926"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/SynthesizerTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "CriticTaskRoleCAC1AFB2": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for Critic agent: Finding validation and challenge",
+    "RoleName": "HivemindCriticTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/CriticTaskRole/Resource"
+   }
+  },
+  "CriticTaskRoleDefaultPolicy280285C1": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "kendra:Query",
+        "kendra:Retrieve",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:secretsmanager:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":secret:hivemind/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/agent-outputs/critic/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "CriticTaskRoleDefaultPolicy280285C1",
+    "Roles": [
+     {
+      "Ref": "CriticTaskRoleCAC1AFB2"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/CriticTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "ArchivistTaskRoleEE36BB64": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "ECS task role for Archivist agent: Final storage and memory formation",
+    "RoleName": "HivemindArchivistTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/ArchivistTaskRole/Resource"
+   }
+  },
+  "ArchivistTaskRoleDefaultPolicy9BFAD426": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream",
+        "kendra:Query",
+        "kendra:Retrieve",
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:secretsmanager:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":secret:hivemind/*"
+         ]
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/agent-outputs/archivist/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "ArchivistTaskRoleDefaultPolicy9BFAD426",
+    "Roles": [
+     {
+      "Ref": "ArchivistTaskRoleEE36BB64"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/ArchivistTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "McpServerTaskRoleB19E5A08": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Role for MCP tool server tasks (read-only code access)",
+    "RoleName": "HivemindMcpServerTaskRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/McpServerTaskRole/Resource"
+   }
+  },
+  "McpServerTaskRoleDefaultPolicy8E624EA6": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/unzipped/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/tool-results/gitleaks-mcp/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/tool-results/semgrep-mcp/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/tool-results/trivy-mcp/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchWriteItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "McpServerTaskRoleDefaultPolicy8E624EA6",
+    "Roles": [
+     {
+      "Ref": "McpServerTaskRoleB19E5A08"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/McpServerTaskRole/DefaultPolicy/Resource"
+   }
+  },
+  "UnpackLambdaRoleCC4ECDC5": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Lambda execution role: Unpack and validate uploaded code",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "HivemindUnpackLambdaRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/UnpackLambdaRole/Resource"
+   }
+  },
+  "UnpackLambdaRoleDefaultPolicy1DBA011B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "UnpackLambdaRoleDefaultPolicy1DBA011B",
+    "Roles": [
+     {
+      "Ref": "UnpackLambdaRoleCC4ECDC5"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/UnpackLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "MemoryIngestorLambdaRole2E29E0F0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Lambda execution role: Create Kendra memory documents",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "HivemindMemoryIngestorRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/MemoryIngestorLambdaRole/Resource"
+   }
+  },
+  "MemoryIngestorLambdaRoleDefaultPolicyCF82680F": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:Query",
+        "dynamodb:Scan"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
+           },
+           "/index/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": "kendra:BatchPutDocument",
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexArnF0ADD5F8"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "MemoryIngestorLambdaRoleDefaultPolicyCF82680F",
+    "Roles": [
+     {
+      "Ref": "MemoryIngestorLambdaRole2E29E0F0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/MemoryIngestorLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "FailureHandlerLambdaRole13A21A6B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Lambda execution role: Handle mission failures",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     },
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
+       ]
+      ]
+     }
+    ],
+    "RoleName": "HivemindFailureHandlerRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/FailureHandlerLambdaRole/Resource"
+   }
+  },
+  "FailureHandlerLambdaRoleDefaultPolicy85083960": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "xray:PutTelemetryRecords",
+        "xray:PutTraceSegments"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "dynamodb:BatchGetItem",
+        "dynamodb:BatchWriteItem",
+        "dynamodb:ConditionCheckItem",
+        "dynamodb:DeleteItem",
+        "dynamodb:DescribeTable",
+        "dynamodb:GetItem",
+        "dynamodb:GetRecords",
+        "dynamodb:GetShardIterator",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:Scan",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
+        },
+        {
+         "Ref": "AWS::NoValue"
+        }
+       ]
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "FailureHandlerLambdaRoleDefaultPolicy85083960",
+    "Roles": [
+     {
+      "Ref": "FailureHandlerLambdaRole13A21A6B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/FailureHandlerLambdaRole/DefaultPolicy/Resource"
+   }
+  },
+  "HivemindCluster94255979": {
+   "Type": "AWS::ECS::Cluster",
+   "Properties": {
+    "ClusterName": "HivemindPrism",
+    "ClusterSettings": [
+     {
+      "Name": "containerInsights",
+      "Value": "enabled"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/HivemindCluster/Resource"
+   }
+  },
+  "HivemindCluster54EA7101": {
+   "Type": "AWS::ECS::ClusterCapacityProviderAssociations",
+   "Properties": {
+    "CapacityProviders": [
+     "FARGATE",
+     "FARGATE_SPOT"
+    ],
+    "Cluster": {
+     "Ref": "HivemindCluster94255979"
+    },
+    "DefaultCapacityProviderStrategy": []
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/HivemindCluster/HivemindCluster"
+   }
+  },
+  "archaeologistExecutionRoleE7945B2B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archaeologistExecutionRole/Resource"
+   }
+  },
+  "archaeologistExecutionRoleDefaultPolicyB5713F6B": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "archaeologistLogGroupE40905D9",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "archaeologistExecutionRoleDefaultPolicyB5713F6B",
+    "Roles": [
+     {
+      "Ref": "archaeologistExecutionRoleE7945B2B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archaeologistExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "archaeologistTaskDef0C0F4ADA": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "S3_KENDRA_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+        }
+       },
+       {
+        "Name": "DYNAMODB_MISSION_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "DYNAMODB_FINDINGS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+        }
+       },
+       {
+        "Name": "REDIS_ENDPOINT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+        }
+       },
+       {
+        "Name": "REDIS_PORT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+        }
+       },
+       {
+        "Name": "KENDRA_INDEX_ID",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+        }
+       },
+       {
+        "Name": "BEDROCK_MODEL_ID",
+        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+       },
+       {
+        "Name": "AGENT_NAME",
+        "Value": "archaeologist"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-archaeologist:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "archaeologistLogGroupE40905D9"
+        },
+        "awslogs-stream-prefix": "archaeologist",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "archaeologist-agent"
+     }
+    ],
+    "Cpu": "1024",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "archaeologistExecutionRoleE7945B2B",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-archaeologist-agent",
+    "Memory": "2048",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "ArchaeologistTaskRole8B61F93D",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archaeologistTaskDef/Resource"
+   }
+  },
+  "archaeologistLogGroupE40905D9": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/archaeologist-agent",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archaeologistLogGroup/Resource"
+   }
+  },
+  "strategistExecutionRole47F607FB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/strategistExecutionRole/Resource"
+   }
+  },
+  "strategistExecutionRoleDefaultPolicy51317C07": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "strategistLogGroupEE1A63CD",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "strategistExecutionRoleDefaultPolicy51317C07",
+    "Roles": [
+     {
+      "Ref": "strategistExecutionRole47F607FB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/strategistExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "strategistTaskDef40F5F609": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "S3_KENDRA_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+        }
+       },
+       {
+        "Name": "DYNAMODB_MISSION_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "DYNAMODB_FINDINGS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+        }
+       },
+       {
+        "Name": "REDIS_ENDPOINT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+        }
+       },
+       {
+        "Name": "REDIS_PORT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+        }
+       },
+       {
+        "Name": "KENDRA_INDEX_ID",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+        }
+       },
+       {
+        "Name": "BEDROCK_MODEL_ID",
+        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+       },
+       {
+        "Name": "AGENT_NAME",
+        "Value": "strategist"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-strategist:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "strategistLogGroupEE1A63CD"
+        },
+        "awslogs-stream-prefix": "strategist",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "strategist-agent"
+     }
+    ],
+    "Cpu": "1024",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "strategistExecutionRole47F607FB",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-strategist-agent",
+    "Memory": "2048",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "StrategistTaskRole541CBCB4",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/strategistTaskDef/Resource"
+   }
+  },
+  "strategistLogGroupEE1A63CD": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/strategist-agent",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/strategistLogGroup/Resource"
+   }
+  },
+  "coordinatorExecutionRoleEBF9EEF6": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/coordinatorExecutionRole/Resource"
+   }
+  },
+  "coordinatorExecutionRoleDefaultPolicy649DFACB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "coordinatorLogGroupC38D7199",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "coordinatorExecutionRoleDefaultPolicy649DFACB",
+    "Roles": [
+     {
+      "Ref": "coordinatorExecutionRoleEBF9EEF6"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/coordinatorExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "coordinatorTaskDefD6FC88DD": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "S3_KENDRA_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+        }
+       },
+       {
+        "Name": "DYNAMODB_MISSION_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "DYNAMODB_FINDINGS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+        }
+       },
+       {
+        "Name": "REDIS_ENDPOINT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+        }
+       },
+       {
+        "Name": "REDIS_PORT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+        }
+       },
+       {
+        "Name": "KENDRA_INDEX_ID",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+        }
+       },
+       {
+        "Name": "BEDROCK_MODEL_ID",
+        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+       },
+       {
+        "Name": "AGENT_NAME",
+        "Value": "coordinator"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-coordinator:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "coordinatorLogGroupC38D7199"
+        },
+        "awslogs-stream-prefix": "coordinator",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "coordinator-agent"
+     }
+    ],
+    "Cpu": "1024",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "coordinatorExecutionRoleEBF9EEF6",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-coordinator-agent",
+    "Memory": "2048",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "CoordinatorTaskRole9462B0FA",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/coordinatorTaskDef/Resource"
+   }
+  },
+  "coordinatorLogGroupC38D7199": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/coordinator-agent",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/coordinatorLogGroup/Resource"
+   }
+  },
+  "synthesizerExecutionRoleCB81EBAD": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/synthesizerExecutionRole/Resource"
+   }
+  },
+  "synthesizerExecutionRoleDefaultPolicy193A7E62": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "synthesizerLogGroup1B251BC4",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "synthesizerExecutionRoleDefaultPolicy193A7E62",
+    "Roles": [
+     {
+      "Ref": "synthesizerExecutionRoleCB81EBAD"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/synthesizerExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "synthesizerTaskDef22D2EEBC": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "S3_KENDRA_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+        }
+       },
+       {
+        "Name": "DYNAMODB_MISSION_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "DYNAMODB_FINDINGS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+        }
+       },
+       {
+        "Name": "REDIS_ENDPOINT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+        }
+       },
+       {
+        "Name": "REDIS_PORT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+        }
+       },
+       {
+        "Name": "KENDRA_INDEX_ID",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+        }
+       },
+       {
+        "Name": "BEDROCK_MODEL_ID",
+        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+       },
+       {
+        "Name": "AGENT_NAME",
+        "Value": "synthesizer"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-synthesizer:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "synthesizerLogGroup1B251BC4"
+        },
+        "awslogs-stream-prefix": "synthesizer",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "synthesizer-agent"
+     }
+    ],
+    "Cpu": "1024",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "synthesizerExecutionRoleCB81EBAD",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-synthesizer-agent",
+    "Memory": "2048",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "SynthesizerTaskRole69378926",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/synthesizerTaskDef/Resource"
+   }
+  },
+  "synthesizerLogGroup1B251BC4": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/synthesizer-agent",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/synthesizerLogGroup/Resource"
+   }
+  },
+  "criticExecutionRole5F426FC7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/criticExecutionRole/Resource"
+   }
+  },
+  "criticExecutionRoleDefaultPolicy0D1D11FD": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "criticLogGroup91479CCF",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "criticExecutionRoleDefaultPolicy0D1D11FD",
+    "Roles": [
+     {
+      "Ref": "criticExecutionRole5F426FC7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/criticExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "criticTaskDef3B08E328": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "S3_KENDRA_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+        }
+       },
+       {
+        "Name": "DYNAMODB_MISSION_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "DYNAMODB_FINDINGS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+        }
+       },
+       {
+        "Name": "REDIS_ENDPOINT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+        }
+       },
+       {
+        "Name": "REDIS_PORT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+        }
+       },
+       {
+        "Name": "KENDRA_INDEX_ID",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+        }
+       },
+       {
+        "Name": "BEDROCK_MODEL_ID",
+        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+       },
+       {
+        "Name": "AGENT_NAME",
+        "Value": "critic"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-critic:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "criticLogGroup91479CCF"
+        },
+        "awslogs-stream-prefix": "critic",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "critic-agent"
+     }
+    ],
+    "Cpu": "1024",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "criticExecutionRole5F426FC7",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-critic-agent",
+    "Memory": "2048",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "CriticTaskRoleCAC1AFB2",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/criticTaskDef/Resource"
+   }
+  },
+  "criticLogGroup91479CCF": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/critic-agent",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/criticLogGroup/Resource"
+   }
+  },
+  "archivistExecutionRole522CA1A4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archivistExecutionRole/Resource"
+   }
+  },
+  "archivistExecutionRoleDefaultPolicy492E3059": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "archivistLogGroupFC914BE5",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "archivistExecutionRoleDefaultPolicy492E3059",
+    "Roles": [
+     {
+      "Ref": "archivistExecutionRole522CA1A4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archivistExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "archivistTaskDef1B107691": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "S3_KENDRA_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+        }
+       },
+       {
+        "Name": "DYNAMODB_MISSION_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "DYNAMODB_FINDINGS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+        }
+       },
+       {
+        "Name": "REDIS_ENDPOINT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointAddress2C712DA2"
+        }
+       },
+       {
+        "Name": "REDIS_PORT",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttRedisClusterRedisEndpointPortD2710AFC"
+        }
+       },
+       {
+        "Name": "KENDRA_INDEX_ID",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+        }
+       },
+       {
+        "Name": "BEDROCK_MODEL_ID",
+        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+       },
+       {
+        "Name": "AGENT_NAME",
+        "Value": "archivist"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-archivist:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "archivistLogGroupFC914BE5"
+        },
+        "awslogs-stream-prefix": "archivist",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "archivist-agent"
+     }
+    ],
+    "Cpu": "1024",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "archivistExecutionRole522CA1A4",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-archivist-agent",
+    "Memory": "2048",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "ArchivistTaskRoleEE36BB64",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archivistTaskDef/Resource"
+   }
+  },
+  "archivistLogGroupFC914BE5": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/archivist-agent",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/archivistLogGroup/Resource"
+   }
+  },
+  "semgrepmcpExecutionRole97487FBA": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/semgrep-mcpExecutionRole/Resource"
+   }
+  },
+  "semgrepmcpExecutionRoleDefaultPolicy04F2C78D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "semgrepmcpLogGroupC4C639F6",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "semgrepmcpExecutionRoleDefaultPolicy04F2C78D",
+    "Roles": [
+     {
+      "Ref": "semgrepmcpExecutionRole97487FBA"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/semgrep-mcpExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "semgrepmcpTaskDef4F4E8F78": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "TOOL_NAME",
+        "Value": "semgrep-mcp"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/semgrep-mcp:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "semgrepmcpLogGroupC4C639F6"
+        },
+        "awslogs-stream-prefix": "semgrep-mcp",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "semgrep-mcp"
+     }
+    ],
+    "Cpu": "2048",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "semgrepmcpExecutionRole97487FBA",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-semgrep-mcp",
+    "Memory": "4096",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "McpServerTaskRoleB19E5A08",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/semgrep-mcpTaskDef/Resource"
+   }
+  },
+  "semgrepmcpLogGroupC4C639F6": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/semgrep-mcp",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/semgrep-mcpLogGroup/Resource"
+   }
+  },
+  "gitleaksmcpExecutionRoleD51A8FB4": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/gitleaks-mcpExecutionRole/Resource"
+   }
+  },
+  "gitleaksmcpExecutionRoleDefaultPolicy6739C5A9": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "gitleaksmcpLogGroup4914FC3F",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "gitleaksmcpExecutionRoleDefaultPolicy6739C5A9",
+    "Roles": [
+     {
+      "Ref": "gitleaksmcpExecutionRoleD51A8FB4"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/gitleaks-mcpExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "gitleaksmcpTaskDef7694B260": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "TOOL_NAME",
+        "Value": "gitleaks-mcp"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/gitleaks-mcp:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "gitleaksmcpLogGroup4914FC3F"
+        },
+        "awslogs-stream-prefix": "gitleaks-mcp",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "gitleaks-mcp"
+     }
+    ],
+    "Cpu": "2048",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "gitleaksmcpExecutionRoleD51A8FB4",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-gitleaks-mcp",
+    "Memory": "4096",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "McpServerTaskRoleB19E5A08",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/gitleaks-mcpTaskDef/Resource"
+   }
+  },
+  "gitleaksmcpLogGroup4914FC3F": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/gitleaks-mcp",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/gitleaks-mcpLogGroup/Resource"
+   }
+  },
+  "trivymcpExecutionRole6C379FEC": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/trivy-mcpExecutionRole/Resource"
+   }
+  },
+  "trivymcpExecutionRoleDefaultPolicy229E5C52": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "trivymcpLogGroupE8CDE4CC",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "trivymcpExecutionRoleDefaultPolicy229E5C52",
+    "Roles": [
+     {
+      "Ref": "trivymcpExecutionRole6C379FEC"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/trivy-mcpExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "trivymcpTaskDefBB97ECFC": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-east-1"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "TOOL_NAME",
+        "Value": "trivy-mcp"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         {
+          "Ref": "AWS::AccountId"
+         },
+         ".dkr.ecr.us-east-1.amazonaws.com/trivy-mcp:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "trivymcpLogGroupE8CDE4CC"
+        },
+        "awslogs-stream-prefix": "trivy-mcp",
+        "awslogs-region": "us-east-1"
+       }
+      },
+      "Name": "trivy-mcp"
+     }
+    ],
+    "Cpu": "2048",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "trivymcpExecutionRole6C379FEC",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-trivy-mcp",
+    "Memory": "4096",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "McpServerTaskRoleB19E5A08",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/trivy-mcpTaskDef/Resource"
+   }
+  },
+  "trivymcpLogGroupE8CDE4CC": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/trivy-mcp",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/trivy-mcpLogGroup/Resource"
+   }
+  },
+  "UnpackLambdaSecurityGroup6A180B17": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Automatic security group for Lambda Function HivemindPrismComputeUnpackLambdaBFE930D9",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/UnpackLambda/SecurityGroup/Resource"
+   }
+  },
+  "UnpackLambdaA542CFF8": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "UPLOADS_BUCKET": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefUploadsBucket5E5E9B64F2F56CC2"
+      },
+      "ARTIFACTS_BUCKET": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+      },
+      "MISSION_TABLE": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+      }
+     }
+    },
+    "FunctionName": "HivemindUnpackAndValidate",
+    "Handler": "index.handler",
+    "MemorySize": 512,
+    "Role": {
+     "Fn::GetAtt": [
+      "UnpackLambdaRoleCC4ECDC5",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 300,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "UnpackLambdaSecurityGroup6A180B17",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+      },
+      {
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "UnpackLambdaRoleDefaultPolicy1DBA011B",
+    "UnpackLambdaRoleCC4ECDC5"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/UnpackLambda/Resource",
+    "aws:asset:path": "asset.741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "UnpackLambdaLogRetention769C54C0": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "UnpackLambdaA542CFF8"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/UnpackLambda/LogRetention/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "lambda.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "logs:DeleteRetentionPolicy",
+        "logs:PutRetentionPolicy"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "Roles": [
+     {
+      "Ref": "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/ServiceRole/DefaultPolicy/Resource"
+   }
+  },
+  "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Handler": "index.handler",
+    "Runtime": "nodejs22.x",
+    "Timeout": 900,
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip"
+    },
+    "Role": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB",
+      "Arn"
+     ]
+    }
+   },
+   "DependsOn": [
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRoleDefaultPolicyADDA7DEB",
+    "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aServiceRole9741ECFB"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8a/Resource",
+    "aws:asset:path": "asset.2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "MemoryIngestorLambdaSecurityGroup14A25DDD": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Automatic security group for Lambda Function HivemindPrismComputeMemoryIngestorLambda3781C584",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/MemoryIngestorLambda/SecurityGroup/Resource"
+   }
+  },
+  "MemoryIngestorLambda8D4E08AD": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "FINDINGS_TABLE": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefFindingsArchiveTable557F1EE361AAD2FC"
+      },
+      "KENDRA_BUCKET": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+      },
+      "KENDRA_INDEX_ID": {
+       "Fn::ImportValue": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+      }
+     }
+    },
+    "FunctionName": "HivemindMemoryIngestor",
+    "Handler": "index.handler",
+    "MemorySize": 256,
+    "Role": {
+     "Fn::GetAtt": [
+      "MemoryIngestorLambdaRole2E29E0F0",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 120,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "MemoryIngestorLambdaSecurityGroup14A25DDD",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+      },
+      {
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "MemoryIngestorLambdaRoleDefaultPolicyCF82680F",
+    "MemoryIngestorLambdaRole2E29E0F0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/MemoryIngestorLambda/Resource",
+    "aws:asset:path": "asset.acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "MemoryIngestorLambdaLogRetention261C0ED5": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "MemoryIngestorLambda8D4E08AD"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/MemoryIngestorLambda/LogRetention/Resource"
+   }
+  },
+  "FailureHandlerLambdaSecurityGroupCADB30EF": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Automatic security group for Lambda Function HivemindPrismComputeFailureHandlerLambda81E7153B",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/FailureHandlerLambda/SecurityGroup/Resource"
+   }
+  },
+  "FailureHandlerLambda9F818F09": {
+   "Type": "AWS::Lambda::Function",
+   "Properties": {
+    "Code": {
+     "S3Bucket": {
+      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
+     },
+     "S3Key": "99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d.zip"
+    },
+    "Environment": {
+     "Variables": {
+      "MISSION_TABLE": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefMissionStatusTable4039F7D7C921D396"
+      }
+     }
+    },
+    "FunctionName": "HivemindFailureHandler",
+    "Handler": "index.handler",
+    "MemorySize": 128,
+    "Role": {
+     "Fn::GetAtt": [
+      "FailureHandlerLambdaRole13A21A6B",
+      "Arn"
+     ]
+    },
+    "Runtime": "python3.12",
+    "Timeout": 60,
+    "VpcConfig": {
+     "SecurityGroupIds": [
+      {
+       "Fn::GetAtt": [
+        "FailureHandlerLambdaSecurityGroupCADB30EF",
+        "GroupId"
+       ]
+      }
+     ],
+     "SubnetIds": [
+      {
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+      },
+      {
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+      }
+     ]
+    }
+   },
+   "DependsOn": [
+    "FailureHandlerLambdaRoleDefaultPolicy85083960",
+    "FailureHandlerLambdaRole13A21A6B"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/FailureHandlerLambda/Resource",
+    "aws:asset:path": "asset.99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d",
+    "aws:asset:is-bundled": false,
+    "aws:asset:property": "Code"
+   }
+  },
+  "FailureHandlerLambdaLogRetention0309B06F": {
+   "Type": "Custom::LogRetention",
+   "Properties": {
+    "ServiceToken": {
+     "Fn::GetAtt": [
+      "LogRetentionaae0aa3c5b4d4f87b02d85b201efdd8aFD4BFC8A",
+      "Arn"
+     ]
+    },
+    "LogGroupName": {
+     "Fn::Join": [
+      "",
+      [
+       "/aws/lambda/",
+       {
+        "Ref": "FailureHandlerLambda9F818F09"
+       }
+      ]
+     ]
+    },
+    "RetentionInDays": 7
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/FailureHandlerLambda/LogRetention/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WQ0U7DMAxFv2XvmRllP7AVjRckpsL75KVe5bVNqjgZmqr8O0lHh4AnX5/EufEtoChWsFrgpyx13S47PsL47lG3KqHDyNjDWNmOVHkyU93bjvU1tzcVFWmBseyCeHKZ/5clDqjZX/fOXrgmtxGxmtGzNaJ26Br09IHSPtOJDWech/8SazyyIffDoupsk8xfbfPibBjy1F0nUZEn830R+2ONMO6C0bPBrKOSpwOKkBfY5JJ62Abdkt+iUFqwSKGQDi7tcDf6BWJUFYkNTpOankgZNmyaKbb5IOm34IfgozK2JjjLw6VYwxoeF2dhXrqQPtsTVLf6BXAp8WqcAQAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "EcsClusterName": {
+   "Description": "ECS Cluster name",
+   "Value": {
+    "Ref": "HivemindCluster94255979"
+   },
+   "Export": {
+    "Name": "HivemindPrism-EcsCluster"
+   }
+  },
+  "UnpackLambdaArn": {
+   "Description": "Unpack Lambda ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "UnpackLambdaA542CFF8",
+     "Arn"
+    ]
+   }
+  },
+  "ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3": {
+   "Value": {
+    "Fn::GetAtt": [
+     "UnpackLambdaA542CFF8",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+   }
+  },
+  "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875": {
+   "Value": {
+    "Ref": "archaeologistTaskDef0C0F4ADA"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+   }
+  },
+  "ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0": {
+   "Value": {
+    "Ref": "strategistTaskDef40F5F609"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
+   }
+  },
+  "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0": {
+   "Value": {
+    "Ref": "coordinatorTaskDefD6FC88DD"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+   }
+  },
+  "ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8": {
+   "Value": {
+    "Ref": "semgrepmcpTaskDef4F4E8F78"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
+   }
+  },
+  "ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC": {
+   "Value": {
+    "Ref": "synthesizerTaskDef22D2EEBC"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC"
+   }
+  },
+  "ExportsOutputRefcriticTaskDef3B08E328D2B42F4C": {
+   "Value": {
+    "Ref": "criticTaskDef3B08E328"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefcriticTaskDef3B08E328D2B42F4C"
+   }
+  },
+  "ExportsOutputRefarchivistTaskDef1B10769189C15DAF": {
+   "Value": {
+    "Ref": "archivistTaskDef1B107691"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefarchivistTaskDef1B10769189C15DAF"
+   }
+  },
+  "ExportsOutputFnGetAttArchaeologistTaskRole8B61F93DArn724F520B": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ArchaeologistTaskRole8B61F93D",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttArchaeologistTaskRole8B61F93DArn724F520B"
+   }
+  },
+  "ExportsOutputFnGetAttStrategistTaskRole541CBCB4Arn97D1F2E4": {
+   "Value": {
+    "Fn::GetAtt": [
+     "StrategistTaskRole541CBCB4",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttStrategistTaskRole541CBCB4Arn97D1F2E4"
+   }
+  },
+  "ExportsOutputFnGetAttCoordinatorTaskRole9462B0FAArn5330578F": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CoordinatorTaskRole9462B0FA",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttCoordinatorTaskRole9462B0FAArn5330578F"
+   }
+  },
+  "ExportsOutputFnGetAttSynthesizerTaskRole69378926ArnBC79DC0F": {
+   "Value": {
+    "Fn::GetAtt": [
+     "SynthesizerTaskRole69378926",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttSynthesizerTaskRole69378926ArnBC79DC0F"
+   }
+  },
+  "ExportsOutputFnGetAttCriticTaskRoleCAC1AFB2Arn6FE7F62A": {
+   "Value": {
+    "Fn::GetAtt": [
+     "CriticTaskRoleCAC1AFB2",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttCriticTaskRoleCAC1AFB2Arn6FE7F62A"
+   }
+  },
+  "ExportsOutputFnGetAttArchivistTaskRoleEE36BB64Arn77DF6974": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ArchivistTaskRoleEE36BB64",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttArchivistTaskRoleEE36BB64Arn77DF6974"
+   }
+  },
+  "ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC": {
+   "Value": {
+    "Fn::GetAtt": [
+     "McpServerTaskRoleB19E5A08",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC"
+   }
+  },
+  "ExportsOutputFnGetAttarchaeologistExecutionRoleE7945B2BArnCAEC5042": {
+   "Value": {
+    "Fn::GetAtt": [
+     "archaeologistExecutionRoleE7945B2B",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttarchaeologistExecutionRoleE7945B2BArnCAEC5042"
+   }
+  },
+  "ExportsOutputFnGetAttstrategistExecutionRole47F607FBArn74D02AA8": {
+   "Value": {
+    "Fn::GetAtt": [
+     "strategistExecutionRole47F607FB",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttstrategistExecutionRole47F607FBArn74D02AA8"
+   }
+  },
+  "ExportsOutputFnGetAttcoordinatorExecutionRoleEBF9EEF6Arn1213E3EF": {
+   "Value": {
+    "Fn::GetAtt": [
+     "coordinatorExecutionRoleEBF9EEF6",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttcoordinatorExecutionRoleEBF9EEF6Arn1213E3EF"
+   }
+  },
+  "ExportsOutputFnGetAttsynthesizerExecutionRoleCB81EBADArn618B8CB0": {
+   "Value": {
+    "Fn::GetAtt": [
+     "synthesizerExecutionRoleCB81EBAD",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttsynthesizerExecutionRoleCB81EBADArn618B8CB0"
+   }
+  },
+  "ExportsOutputFnGetAttcriticExecutionRole5F426FC7Arn9919F376": {
+   "Value": {
+    "Fn::GetAtt": [
+     "criticExecutionRole5F426FC7",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttcriticExecutionRole5F426FC7Arn9919F376"
+   }
+  },
+  "ExportsOutputFnGetAttarchivistExecutionRole522CA1A4Arn50372367": {
+   "Value": {
+    "Fn::GetAtt": [
+     "archivistExecutionRole522CA1A4",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttarchivistExecutionRole522CA1A4Arn50372367"
+   }
+  },
+  "ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0": {
+   "Value": {
+    "Fn::GetAtt": [
+     "semgrepmcpExecutionRole97487FBA",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0"
+   }
+  },
+  "ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3": {
+   "Value": {
+    "Fn::GetAtt": [
+     "gitleaksmcpExecutionRoleD51A8FB4",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3"
+   }
+  },
+  "ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0": {
+   "Value": {
+    "Fn::GetAtt": [
+     "trivymcpExecutionRole6C379FEC",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0"
+   }
+  },
+  "ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5": {
+   "Value": {
+    "Fn::GetAtt": [
+     "HivemindCluster94255979",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

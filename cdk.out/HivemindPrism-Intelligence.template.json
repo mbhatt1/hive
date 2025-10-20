@@ -1,0 +1,364 @@
+{
+ "Description": "Hivemind-Prism Intelligence Infrastructure - Bedrock and Kendra",
+ "Resources": {
+  "KendraIndexRoleDB7DF3D0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "kendra.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Role for Kendra index operations"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/KendraIndexRole/Resource"
+   }
+  },
+  "KendraIndexRoleDefaultPolicyBE26FCDC": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": "cloudwatch:PutMetricData",
+       "Condition": {
+        "StringEquals": {
+         "cloudwatch:namespace": "AWS/Kendra"
+        }
+       },
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::Join": [
+         "",
+         [
+          "arn:aws:logs:us-east-1:",
+          {
+           "Ref": "AWS::AccountId"
+          },
+          ":log-group:/aws/kendra/*"
+         ]
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "KendraIndexRoleDefaultPolicyBE26FCDC",
+    "Roles": [
+     {
+      "Ref": "KendraIndexRoleDB7DF3D0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/KendraIndexRole/DefaultPolicy/Resource"
+   }
+  },
+  "InstitutionalMemoryIndex": {
+   "Type": "AWS::Kendra::Index",
+   "Properties": {
+    "Description": "Institutional memory index for security findings and patterns",
+    "DocumentMetadataConfigurations": [
+     {
+      "Name": "_severity",
+      "Search": {
+       "Displayable": true,
+       "Facetable": true,
+       "Searchable": true,
+       "Sortable": true
+      },
+      "Type": "STRING_VALUE"
+     },
+     {
+      "Name": "_repo_name",
+      "Search": {
+       "Displayable": true,
+       "Facetable": true,
+       "Searchable": true,
+       "Sortable": true
+      },
+      "Type": "STRING_VALUE"
+     },
+     {
+      "Name": "_timestamp",
+      "Search": {
+       "Displayable": true,
+       "Facetable": true,
+       "Searchable": false,
+       "Sortable": true
+      },
+      "Type": "DATE_VALUE"
+     },
+     {
+      "Name": "_pattern_type",
+      "Search": {
+       "Displayable": true,
+       "Facetable": true,
+       "Searchable": true,
+       "Sortable": false
+      },
+      "Type": "STRING_VALUE"
+     },
+     {
+      "Name": "_agent_consensus_score",
+      "Search": {
+       "Displayable": true,
+       "Facetable": false,
+       "Searchable": false,
+       "Sortable": true
+      },
+      "Type": "LONG_VALUE"
+     }
+    ],
+    "Edition": "DEVELOPER_EDITION",
+    "Name": "HivemindInstitutionalMemory",
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "KendraIndexRoleDB7DF3D0",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/InstitutionalMemoryIndex"
+   }
+  },
+  "KendraDataSourceRole9BBDC271": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "kendra.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Role for Kendra S3 data source"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/KendraDataSourceRole/Resource"
+   }
+  },
+  "KendraDataSourceRoleDefaultPolicy2EAF086C": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
+       ],
+       "Effect": "Allow",
+       "Resource": [
+        {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
+           },
+           "/*"
+          ]
+         ]
+        }
+       ]
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+       }
+      },
+      {
+       "Action": [
+        "kendra:BatchDeleteDocument",
+        "kendra:BatchPutDocument"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "InstitutionalMemoryIndex",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "KendraDataSourceRoleDefaultPolicy2EAF086C",
+    "Roles": [
+     {
+      "Ref": "KendraDataSourceRole9BBDC271"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/KendraDataSourceRole/DefaultPolicy/Resource"
+   }
+  },
+  "KendraS3DataSource": {
+   "Type": "AWS::Kendra::DataSource",
+   "Properties": {
+    "DataSourceConfiguration": {
+     "S3Configuration": {
+      "BucketName": {
+       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
+      },
+      "InclusionPrefixes": [
+       "findings/",
+       "patterns/",
+       "policies/"
+      ]
+     }
+    },
+    "IndexId": {
+     "Fn::GetAtt": [
+      "InstitutionalMemoryIndex",
+      "Id"
+     ]
+    },
+    "Name": "InstitutionalMemoryS3Source",
+    "RoleArn": {
+     "Fn::GetAtt": [
+      "KendraDataSourceRole9BBDC271",
+      "Arn"
+     ]
+    },
+    "Schedule": "cron(0/15 * * * ? *)",
+    "Type": "S3"
+   },
+   "DependsOn": [
+    "InstitutionalMemoryIndex"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/KendraS3DataSource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yWJSw7CIBRF19I5fVbSHejEkYYuwCA8k1coGD5+Qti7pR2dc8/lwPkAQyc/sVfa9JYeUKYklWFruheSCxThLbLT0228eUvq1+ZulRl0Okgoa7o4jd/2nWWSk89BYa1MYNy0HdecXjlV5rxGmOPhzUcY4djNkagP2SVaEMTOP1yGdCWdAAAA"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Intelligence/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "KendraIndexId": {
+   "Description": "Kendra Index ID for institutional memory",
+   "Value": {
+    "Fn::GetAtt": [
+     "InstitutionalMemoryIndex",
+     "Id"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-KendraIndexId"
+   }
+  },
+  "KendraIndexArn": {
+   "Description": "Kendra Index ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "InstitutionalMemoryIndex",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-KendraIndexArn"
+   }
+  },
+  "BedrockNote": {
+   "Description": "Amazon Bedrock is accessed via API with IAM authentication",
+   "Value": "Bedrock access configured via IAM policies"
+  },
+  "ExportsOutputFnGetAttInstitutionalMemoryIndexArnF0ADD5F8": {
+   "Value": {
+    "Fn::GetAtt": [
+     "InstitutionalMemoryIndex",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexArnF0ADD5F8"
+   }
+  },
+  "ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE": {
+   "Value": {
+    "Fn::GetAtt": [
+     "InstitutionalMemoryIndex",
+     "Id"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Intelligence:ExportsOutputFnGetAttInstitutionalMemoryIndexId7D0FD2EE"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}

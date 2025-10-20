@@ -1,0 +1,432 @@
+{
+ "Description": "Hivemind-Prism Security Infrastructure - KMS, IAM, and Security Groups",
+ "Resources": {
+  "HivemindKeyB4006B32": {
+   "Type": "AWS::KMS::Key",
+   "Properties": {
+    "Description": "KMS key for Hivemind-Prism platform encryption",
+    "EnableKeyRotation": true,
+    "KeyPolicy": {
+     "Statement": [
+      {
+       "Action": "kms:*",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:iam::",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":root"
+          ]
+         ]
+        }
+       },
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+       ],
+       "Condition": {
+        "StringEquals": {
+         "kms:ViaService": "s3.us-east-1.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "s3.amazonaws.com"
+       },
+       "Resource": "*",
+       "Sid": "Allow S3 to use key"
+      },
+      {
+       "Action": [
+        "kms:CreateGrant",
+        "kms:Decrypt",
+        "kms:DescribeKey"
+       ],
+       "Condition": {
+        "StringEquals": {
+         "kms:ViaService": "dynamodb.us-east-1.amazonaws.com"
+        }
+       },
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "dynamodb.amazonaws.com"
+       },
+       "Resource": "*",
+       "Sid": "Allow DynamoDB to use key"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PendingWindowInDays": 30
+   },
+   "UpdateReplacePolicy": "Retain",
+   "DeletionPolicy": "Retain",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/HivemindKey/Resource"
+   }
+  },
+  "HivemindKeyAliasC1C00BAC": {
+   "Type": "AWS::KMS::Alias",
+   "Properties": {
+    "AliasName": "alias/hivemind-platform",
+    "TargetKeyId": {
+     "Fn::GetAtt": [
+      "HivemindKeyB4006B32",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/HivemindKey/Alias/Resource"
+   }
+  },
+  "VpcEndpointsSgB7473DD6": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for VPC interface endpoints",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "0.0.0.0/0",
+      "Description": "Allow all outbound traffic by default",
+      "IpProtocol": "-1"
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/VpcEndpointsSg/Resource"
+   }
+  },
+  "VpcEndpointsSgfromHivemindPrismSecurityAgentTasksSg5E2752634430ED0719C": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow agents to access endpoints",
+    "FromPort": 443,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "VpcEndpointsSgB7473DD6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AgentTasksSg17243AF5",
+      "GroupId"
+     ]
+    },
+    "ToPort": 443
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/VpcEndpointsSg/from HivemindPrismSecurityAgentTasksSg5E275263:443"
+   }
+  },
+  "VpcEndpointsSgfromHivemindPrismSecurityMcpToolsSgC1AB003E443B2B2E990": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow MCP tools to access endpoints",
+    "FromPort": 443,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "VpcEndpointsSgB7473DD6",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "McpToolsSg1B279A8A",
+      "GroupId"
+     ]
+    },
+    "ToPort": 443
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/VpcEndpointsSg/from HivemindPrismSecurityMcpToolsSgC1AB003E:443"
+   }
+  },
+  "AgentTasksSg17243AF5": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for AI agent Fargate tasks",
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/AgentTasksSg/Resource"
+   }
+  },
+  "AgentTasksSgtoHivemindPrismSecurityVpcEndpointsSg8F4092F844346F98F91": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "Allow HTTPS to VPC endpoints",
+    "DestinationSecurityGroupId": {
+     "Fn::GetAtt": [
+      "VpcEndpointsSgB7473DD6",
+      "GroupId"
+     ]
+    },
+    "FromPort": 443,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "AgentTasksSg17243AF5",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "ToPort": 443
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/AgentTasksSg/to HivemindPrismSecurityVpcEndpointsSg8F4092F8:443"
+   }
+  },
+  "McpToolsSg1B279A8A": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for MCP tool Fargate tasks",
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/McpToolsSg/Resource"
+   }
+  },
+  "McpToolsSgtoHivemindPrismSecurityVpcEndpointsSg8F4092F844379C8C5F0": {
+   "Type": "AWS::EC2::SecurityGroupEgress",
+   "Properties": {
+    "Description": "Allow HTTPS to VPC endpoints",
+    "DestinationSecurityGroupId": {
+     "Fn::GetAtt": [
+      "VpcEndpointsSgB7473DD6",
+      "GroupId"
+     ]
+    },
+    "FromPort": 443,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "McpToolsSg1B279A8A",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "ToPort": 443
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/McpToolsSg/to HivemindPrismSecurityVpcEndpointsSg8F4092F8:443"
+   }
+  },
+  "ElastiCacheSg3DA9FF1D": {
+   "Type": "AWS::EC2::SecurityGroup",
+   "Properties": {
+    "GroupDescription": "Security group for ElastiCache Redis cluster",
+    "SecurityGroupEgress": [
+     {
+      "CidrIp": "255.255.255.255/32",
+      "Description": "Disallow all traffic",
+      "FromPort": 252,
+      "IpProtocol": "icmp",
+      "ToPort": 86
+     }
+    ],
+    "VpcId": {
+     "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/ElastiCacheSg/Resource"
+   }
+  },
+  "ElastiCacheSgfromHivemindPrismSecurityAgentTasksSg5E2752636379A0CD5953": {
+   "Type": "AWS::EC2::SecurityGroupIngress",
+   "Properties": {
+    "Description": "Allow agents to access Redis",
+    "FromPort": 6379,
+    "GroupId": {
+     "Fn::GetAtt": [
+      "ElastiCacheSg3DA9FF1D",
+      "GroupId"
+     ]
+    },
+    "IpProtocol": "tcp",
+    "SourceSecurityGroupId": {
+     "Fn::GetAtt": [
+      "AgentTasksSg17243AF5",
+      "GroupId"
+     ]
+    },
+    "ToPort": 6379
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/ElastiCacheSg/from HivemindPrismSecurityAgentTasksSg5E275263:6379"
+   }
+  },
+  "HivemindCliUserRoleD02399F7": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "AWS": {
+         "Fn::Join": [
+          "",
+          [
+           "arn:aws:iam::",
+           {
+            "Ref": "AWS::AccountId"
+           },
+           ":root"
+          ]
+         ]
+        }
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "Description": "Role assumed by developers and CI/CD to upload code",
+    "MaxSessionDuration": 3600,
+    "RoleName": "HivemindCliUserRole"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/HivemindCliUserRole/Resource"
+   }
+  },
+  "CDKMetadata": {
+   "Type": "AWS::CDK::Metadata",
+   "Properties": {
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/32KTQrCMBCFz9J9OtbQC4iIiAuhHkBiOsr0JymZRCkhd7epS8HV9973ngQpK6gK9eZSt3050B3i1Svdi0XdYj8yxDPOYv8wGbuBFOeyhiRQy+WPOjjy89HZMOXxvziZp0PmH39YdRKkRoiNHTA/MlMSDbINTq/qEvwUfBLGtggdb16yhhq2RcdEpQvG04jQfPkBu2Xw8+AAAAA="
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/CDKMetadata/Default"
+   }
+  }
+ },
+ "Outputs": {
+  "KmsKeyId": {
+   "Description": "KMS Key ID for platform encryption",
+   "Value": {
+    "Ref": "HivemindKeyB4006B32"
+   },
+   "Export": {
+    "Name": "HivemindPrism-KmsKeyId"
+   }
+  },
+  "KmsKeyArn": {
+   "Description": "KMS Key ARN",
+   "Value": {
+    "Fn::GetAtt": [
+     "HivemindKeyB4006B32",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-KmsKeyArn"
+   }
+  },
+  "CliUserRoleArn": {
+   "Description": "CLI User Role ARN for AssumeRole",
+   "Value": {
+    "Fn::GetAtt": [
+     "HivemindCliUserRoleD02399F7",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-CliUserRoleArn"
+   }
+  },
+  "ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005": {
+   "Value": {
+    "Fn::GetAtt": [
+     "HivemindKeyB4006B32",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
+   }
+  },
+  "ExportsOutputFnGetAttElastiCacheSg3DA9FF1DGroupId0AE1DF35": {
+   "Value": {
+    "Fn::GetAtt": [
+     "ElastiCacheSg3DA9FF1D",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Security:ExportsOutputFnGetAttElastiCacheSg3DA9FF1DGroupId0AE1DF35"
+   }
+  },
+  "ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8": {
+   "Value": {
+    "Fn::GetAtt": [
+     "AgentTasksSg17243AF5",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+   }
+  },
+  "ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2": {
+   "Value": {
+    "Fn::GetAtt": [
+     "McpToolsSg1B279A8A",
+     "GroupId"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Security:ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2"
+   }
+  }
+ },
+ "Parameters": {
+  "BootstrapVersion": {
+   "Type": "AWS::SSM::Parameter::Value<String>",
+   "Default": "/cdk-bootstrap/hnb659fds/version",
+   "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]"
+  }
+ },
+ "Rules": {
+  "CheckBootstrapVersion": {
+   "Assertions": [
+    {
+     "Assert": {
+      "Fn::Not": [
+       {
+        "Fn::Contains": [
+         [
+          "1",
+          "2",
+          "3",
+          "4",
+          "5"
+         ],
+         {
+          "Ref": "BootstrapVersion"
+         }
+        ]
+       }
+      ]
+     },
+     "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI."
+    }
+   ]
+  }
+ }
+}
