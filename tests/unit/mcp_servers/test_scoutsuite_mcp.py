@@ -24,7 +24,9 @@ class TestScoutSuiteMCP:
             'AWS_ACCOUNT_ID': '123456789012',
             'AWS_TARGET_REGION': 'us-east-1'
         }):
-            server = ScoutSuiteMCPServer()
+            with patch('boto3.client') as mock_boto:
+                mock_boto.return_value = Mock()
+                server = ScoutSuiteMCPServer()
         
         assert server is not None
         assert hasattr(server, 'run')
@@ -35,7 +37,9 @@ class TestScoutSuiteMCP:
         """Test ScoutSuite severity level mapping."""
         from src.mcp_servers.scoutsuite_mcp.server import ScoutSuiteMCPServer
         with patch.dict('os.environ', mock_environment):
-            server = ScoutSuiteMCPServer()
+            with patch('boto3.client') as mock_boto:
+                mock_boto.return_value = Mock()
+                server = ScoutSuiteMCPServer()
         
         assert server._map_severity('danger') == 'critical'
         assert server._map_severity('warning') == 'high'
@@ -47,7 +51,9 @@ class TestScoutSuiteMCP:
         """Test parsing of ScoutSuite scan data."""
         from src.mcp_servers.scoutsuite_mcp.server import ScoutSuiteMCPServer
         with patch.dict('os.environ', mock_environment):
-            server = ScoutSuiteMCPServer()
+            with patch('boto3.client') as mock_boto:
+                mock_boto.return_value = Mock()
+                server = ScoutSuiteMCPServer()
         
         scan_data = {
             'services': {
@@ -306,14 +312,16 @@ class TestScoutSuiteMCP:
         mock_report_content = 'scoutsuite_results = { invalid json here }'
         
         with patch.dict('os.environ', mock_environment):
-            with patch('subprocess.run', return_value=mock_result):
-                with patch('pathlib.Path.exists', return_value=True):
-                    with patch('builtins.open', MagicMock(return_value=MagicMock(
-                        __enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value=mock_report_content))),
-                        __exit__=MagicMock(return_value=False)
-                    ))):
-                        server = ScoutSuiteMCPServer()
-                        results = server._run_scoutsuite()
+            with patch('boto3.client') as mock_boto:
+                mock_boto.return_value = Mock()
+                with patch('subprocess.run', return_value=mock_result):
+                    with patch('pathlib.Path.exists', return_value=True):
+                        with patch('builtins.open', MagicMock(return_value=MagicMock(
+                            __enter__=MagicMock(return_value=MagicMock(read=MagicMock(return_value=mock_report_content))),
+                            __exit__=MagicMock(return_value=False)
+                        ))):
+                            server = ScoutSuiteMCPServer()
+                            results = server._run_scoutsuite()
         
         # Should handle error gracefully
         assert 'error' in results

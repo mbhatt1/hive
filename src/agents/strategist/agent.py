@@ -241,11 +241,12 @@ For AWS scans, use scoutsuite-mcp (priority 1) and pacu-mcp (priority 2)."""
             'tools': [{
                 'name': 'scoutsuite-mcp',
                 'task_definition': 'hivemind-scoutsuite-mcp',
-                'priority': 1
+                'priority': 1,
+                'dependencies': []
             }],
             'parallel_execution': False,
             'estimated_duration_minutes': 5,
-            'reasoning': 'Initial AWS discovery scan with ScoutSuite',
+            'reasoning': 'Initial AWS discovery scan with ScoutSuite. After completion, Strategist will re-run to analyze findings and plan Pacu validation.',
             'confidence': 0.9
         }
     
@@ -270,6 +271,7 @@ For AWS scans, use scoutsuite-mcp (priority 1) and pacu-mcp (priority 2)."""
                 'name': 'pacu-mcp',
                 'task_definition': 'hivemind-pacu-mcp',
                 'priority': 1,
+                'dependencies': ['scoutsuite-mcp'],  # Pacu depends on ScoutSuite findings
                 'context': {
                     'priority_findings': high_priority_findings[:10],  # Top 10
                     'attack_paths': analysis.get('attack_paths', [])

@@ -11,6 +11,8 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as sns from 'aws-cdk-lib/aws-sns';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as cloudwatch from 'aws-cdk-lib/aws-cloudwatch';
+import * as cloudwatch_actions from 'aws-cdk-lib/aws-cloudwatch-actions';
 import { Construct } from 'constructs';
 
 export interface OrchestrationStackProps extends cdk.StackProps {
@@ -102,36 +104,33 @@ export class OrchestrationStack extends cdk.Stack {
       .otherwise(contextAgentsParallel);
 
     // 4. Dynamic MCP Invocation (Map State)
+    // Create a Choice state to route to the correct MCP tool based on tool name
     const mcpInvocationMap = new sfn.Map(this, 'DynamicMCPInvocation', {
       maxConcurrency: 5,
       itemsPath: '$.execution_plan.tools',
       resultPath: '$.mcp_results',
     });
 
-    // Create MCP task (will be dynamically selected)
-    const mcpTask = new tasks.EcsRunTask(this, 'InvokeMCPTool', {
-      integrationPattern: sfn.IntegrationPattern.RUN_JOB,
-      cluster: props.ecsCluster,
-      taskDefinition: props.mcpTaskDefinitions['semgrep-mcp'], // Default, will be overridden
-      launchTarget: new tasks.EcsFargateLaunchTarget({
-        platformVersion: ecs.FargatePlatformVersion.LATEST,
-      }),
-      containerOverrides: [
-        {
-          containerDefinition: props.mcpTaskDefinitions['semgrep-mcp'].defaultContainer!,
-          environment: [
-            {
-              name: 'MISSION_ID',
-              value: sfn.JsonPath.stringAt('$.mission_id'),
-            },
-          ],
-        },
-      ],
-      securityGroups: [props.mcpToolsSecurityGroup],
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-    });
+    // Create tasks for each MCP tool
+    const semgrepTask = this.createMCPTask('SemgrepMCP', props.mcpTaskDefinitions['semgrep-mcp'], props);
+    const gitleaksTask = this.createMCPTask('GitleaksMCP', props.mcpTaskDefinitions['gitleaks-mcp'], props);
+    const trivyTask = this.createMCPTask('TrivyMCP', props.mcpTaskDefinitions['trivy-mcp'], props);
+    const scoutsuiteTask = this.createMCPTask('ScoutSuiteMCP', props.mcpTaskDefinitions['scoutsuite-mcp'], props);
+    const pacuTask = this.createMCPTask('PacuMCP', props.mcpTaskDefinitions['pacu-mcp'], props);
 
-    mcpInvocationMap.iterator(mcpTask);
+    // Create choice state to select the appropriate tool
+    const toolChoice = new sfn.Choice(this, 'SelectMCPTool')
+      .when(sfn.Condition.stringEquals('$.name', 'semgrep-mcp'), semgrepTask)
+      .when(sfn.Condition.stringEquals('$.name', 'gitleaks-mcp'), gitleaksTask)
+      .when(sfn.Condition.stringEquals('$.name', 'trivy-mcp'), trivyTask)
+      .when(sfn.Condition.stringEquals('$.name', 'scoutsuite-mcp'), scoutsuiteTask)
+      .when(sfn.Condition.stringEquals('$.name', 'pacu-mcp'), pacuTask)
+      .otherwise(new sfn.Fail(this, 'UnknownMCPTool', {
+        error: 'UnknownTool',
+        cause: 'The specified MCP tool is not recognized',
+      }));
+
+    mcpInvocationMap.iterator(toolChoice);
 
     // 5. Wait for S3 Consistency
     const waitForTools = new sfn.Wait(this, 'WaitForAllTools', {
@@ -297,6 +296,70 @@ export class OrchestrationStack extends cdk.Stack {
       })
     );
 
+    // ========== CLOUDWATCH ALARMS ==========
+
+    // Alarm for Step Functions execution failures
+    const executionFailureAlarm = new cloudwatch.Alarm(this, 'ExecutionFailureAlarm', {
+      alarmName: 'Hivemind-StateMachine-Failures',
+      alarmDescription: 'Alert when Step Functions execution fails',
+      metric: this.stateMachine.metricFailed({
+        statistic: 'Sum',
+        period: cdk.Duration.minutes(5),
+      }),
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    executionFailureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.completionTopic));
+
+    // Alarm for long-running executions (> 45 minutes)
+    const executionDurationMetric = new cloudwatch.Metric({
+      namespace: 'AWS/States',
+      metricName: 'ExecutionTime',
+      dimensionsMap: {
+        StateMachineArn: this.stateMachine.stateMachineArn,
+      },
+      statistic: 'Maximum',
+      period: cdk.Duration.minutes(5),
+    });
+
+    const longRunningAlarm = new cloudwatch.Alarm(this, 'LongRunningExecutionAlarm', {
+      alarmName: 'Hivemind-StateMachine-LongRunning',
+      alarmDescription: 'Alert when Step Functions execution runs longer than 45 minutes',
+      metric: executionDurationMetric,
+      threshold: 45 * 60 * 1000, // 45 minutes in milliseconds
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    longRunningAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.completionTopic));
+
+    // Alarm for MCP task failures (ScoutSuite and Pacu)
+    const mcpFailureMetric = new cloudwatch.Metric({
+      namespace: 'AWS/ECS',
+      metricName: 'TasksFailed',
+      dimensionsMap: {
+        ClusterName: props.ecsCluster.clusterName,
+      },
+      statistic: 'Sum',
+      period: cdk.Duration.minutes(5),
+    });
+
+    const mcpTaskFailureAlarm = new cloudwatch.Alarm(this, 'MCPTaskFailureAlarm', {
+      alarmName: 'Hivemind-MCP-Task-Failures',
+      alarmDescription: 'Alert when MCP tasks fail',
+      metric: mcpFailureMetric,
+      threshold: 1,
+      evaluationPeriods: 1,
+      comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
+      treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
+    });
+
+    mcpTaskFailureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.completionTopic));
+
     // ========== OUTPUTS ==========
 
     new cdk.CfnOutput(this, 'StateMachineArn', {
@@ -338,6 +401,39 @@ export class OrchestrationStack extends cdk.Stack {
       securityGroups: [props.agentSecurityGroup],
       subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       resultPath: `$.${id.toLowerCase()}_result`,
+    });
+  }
+
+  private createMCPTask(
+    id: string,
+    taskDefinition: ecs.FargateTaskDefinition,
+    props: OrchestrationStackProps
+  ): tasks.EcsRunTask {
+    return new tasks.EcsRunTask(this, id, {
+      integrationPattern: sfn.IntegrationPattern.RUN_JOB,
+      cluster: props.ecsCluster,
+      taskDefinition,
+      launchTarget: new tasks.EcsFargateLaunchTarget({
+        platformVersion: ecs.FargatePlatformVersion.LATEST,
+      }),
+      containerOverrides: [
+        {
+          containerDefinition: taskDefinition.defaultContainer!,
+          environment: [
+            {
+              name: 'MISSION_ID',
+              value: sfn.JsonPath.stringAt('$.mission_id'),
+            },
+            {
+              name: 'TOOL_NAME',
+              value: sfn.JsonPath.stringAt('$.name'),
+            },
+          ],
+        },
+      ],
+      securityGroups: [props.mcpToolsSecurityGroup],
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      resultPath: '$.tool_result',
     });
   }
 }

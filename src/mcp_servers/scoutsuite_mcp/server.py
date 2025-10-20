@@ -28,12 +28,44 @@ class ScoutSuiteMCPServer:
         self.aws_region = os.environ.get('AWS_TARGET_REGION', 'us-east-1')
         self.aws_profile = os.environ.get('AWS_PROFILE', 'default')
         self.services = os.environ.get('SERVICES', '').split(',') if os.environ.get('SERVICES') else []
+        self.scan_timeout = int(os.environ.get('SCAN_TIMEOUT_MINUTES', '30'))  # Default 30 minutes
+        self.cross_account_role_arn = os.environ.get('CROSS_ACCOUNT_ROLE_ARN', '')
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
         self.dynamodb_client = boto3.client('dynamodb', region_name=region)
+        self.secrets_client = boto3.client('secretsmanager', region_name=region)
+        
+        # Load credentials from Secrets Manager if configured
+        self._load_scan_credentials()
+        
         logger.info(f"ScoutSuiteMCPServer initialized for mission: {self.mission_id}")
         logger.info(f"Target AWS Account: {self.aws_account}, Region: {self.aws_region}")
+    
+    def _load_scan_credentials(self):
+        """Load AWS scan credentials from Secrets Manager if configured."""
+        secret_name = os.environ.get('AWS_SCAN_CREDENTIALS_SECRET')
+        if not secret_name:
+            logger.info("No AWS_SCAN_CREDENTIALS_SECRET configured, using default credentials")
+            return
+        
+        try:
+            response = self.secrets_client.get_secret_value(SecretId=secret_name)
+            credentials = json.loads(response['SecretString'])
+            
+            # Set environment variables for ScoutSuite to use
+            if 'access_key_id' in credentials:
+                os.environ['AWS_ACCESS_KEY_ID'] = credentials['access_key_id']
+            if 'secret_access_key' in credentials:
+                os.environ['AWS_SECRET_ACCESS_KEY'] = credentials['secret_access_key']
+            if 'session_token' in credentials:
+                os.environ['AWS_SESSION_TOKEN'] = credentials['session_token']
+            if 'role_arn' in credentials:
+                os.environ['AWS_ROLE_ARN'] = credentials['role_arn']
+            
+            logger.info(f"Loaded scan credentials from Secrets Manager: {secret_name}")
+        except Exception as e:
+            logger.warning(f"Failed to load credentials from Secrets Manager: {e}")
     
     def run(self):
         try:
@@ -84,13 +116,20 @@ class ScoutSuiteMCPServer:
             if self.services and self.services[0]:
                 cmd.extend(['--services'] + self.services)
             
+            # Add cross-account role if configured
+            if self.cross_account_role_arn:
+                logger.info(f"Using cross-account role: {self.cross_account_role_arn}")
+                cmd.extend(['--assume-role', self.cross_account_role_arn])
+            
             logger.info(f"Running ScoutSuite: {' '.join(cmd)}")
+            timeout_seconds = self.scan_timeout * 60
+            logger.info(f"Scan timeout: {self.scan_timeout} minutes ({timeout_seconds} seconds)")
             
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=1800  # 30 minutes timeout
+                timeout=timeout_seconds
             )
             
             if result.returncode != 0:

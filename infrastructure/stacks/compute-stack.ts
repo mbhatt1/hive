@@ -54,8 +54,59 @@ export class ComputeStack extends cdk.Stack {
     this.mcpServerTaskRole = new iam.Role(this, 'McpServerTaskRole', {
       assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
       roleName: 'HivemindMcpServerTaskRole',
-      description: 'Role for MCP tool server tasks (read-only code access)',
+      description: 'Role for MCP tool server tasks (code scanning + AWS security auditing)',
     });
+
+    // Add AWS SecurityAudit managed policy for ScoutSuite/Pacu
+    this.mcpServerTaskRole.addManagedPolicy(
+      iam.ManagedPolicy.fromAwsManagedPolicyName('SecurityAudit')
+    );
+
+    // Additional permissions for ScoutSuite/Pacu AWS scanning
+    this.mcpServerTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          // IAM read permissions
+          'iam:GetAccountPasswordPolicy',
+          'iam:GetAccountSummary',
+          'iam:ListAccessKeys',
+          'iam:ListMFADevices',
+          'iam:ListVirtualMFADevices',
+          // EC2 read permissions
+          'ec2:DescribeImages',
+          'ec2:DescribeSnapshots',
+          'ec2:DescribeSnapshotAttribute',
+          // S3 read permissions
+          's3:GetBucketPublicAccessBlock',
+          's3:GetBucketPolicyStatus',
+          's3:GetAccountPublicAccessBlock',
+          // Lambda read permissions
+          'lambda:GetFunction',
+          'lambda:GetFunctionConfiguration',
+          'lambda:GetPolicy',
+          // CloudTrail read permissions
+          'cloudtrail:GetEventSelectors',
+          'cloudtrail:GetTrailStatus',
+          'cloudtrail:ListTags',
+          // Config read permissions
+          'config:DescribeConfigurationRecorders',
+          'config:DescribeConfigurationRecorderStatus',
+        ],
+        resources: ['*'],
+      })
+    );
+
+    // Secrets Manager access for AWS credentials
+    this.mcpServerTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['secretsmanager:GetSecretValue'],
+        resources: [
+          `arn:aws:secretsmanager:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:secret:hivemind/aws-scan-credentials-*`,
+        ],
+      })
+    );
 
     // Base policy for all agents - access to Bedrock and Kendra
     const bedrockKendraPolicy = new iam.PolicyStatement({
@@ -198,7 +249,8 @@ export class ComputeStack extends cdk.Stack {
     // ========== MCP TOOL TASK DEFINITIONS ==========
     this.mcpTaskDefinitions = {};
 
-    const mcpTools = ['semgrep-mcp', 'gitleaks-mcp', 'trivy-mcp'];
+    // Code scanning tools
+    const mcpTools = ['semgrep-mcp', 'gitleaks-mcp', 'trivy-mcp', 'scoutsuite-mcp', 'pacu-mcp'];
 
     mcpTools.forEach((toolName) => {
       const taskDef = new ecs.FargateTaskDefinition(this, `${toolName}TaskDef`, {
