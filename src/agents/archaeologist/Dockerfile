@@ -9,8 +9,8 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy shared libraries
-COPY src/shared /app/shared
+# Copy shared libraries (maintain src directory structure)
+COPY src/shared /app/src/shared
 
 # Copy agent code
 COPY src/agents/archaeologist /app/agent

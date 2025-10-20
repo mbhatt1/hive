@@ -7,8 +7,8 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy shared modules first (for layer caching)
-COPY src/shared/ /app/shared/
+# Copy shared modules first (maintain src directory structure for imports)
+COPY src/shared/ /app/src/shared/
 
 # Copy agent code
 COPY src/agents/strategist/ /app/agent/
