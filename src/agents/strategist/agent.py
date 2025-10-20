@@ -91,31 +91,67 @@ class StrategistAgent:
         return json.loads(response['Body'].read())
     
     def _plan_execution(self, context: Dict) -> Dict:
-        """Plan tool execution using AI."""
-        # Query Kendra for similar missions
-        query = f"security analysis {context['service_name']} {' '.join(context['primary_languages'])}"
+        """Plan tool execution using AI with intelligent analysis."""
+        scan_type = context.get('scan_type', 'code')
+        
+        # For AWS scans, check if we have ScoutSuite findings to analyze
+        if scan_type == 'aws':
+            scoutsuite_findings = self._get_scoutsuite_findings_if_exist()
+            if scoutsuite_findings:
+                # Intelligent path: analyze findings with Claude
+                return self._plan_aws_execution_with_analysis(context, scoutsuite_findings)
+            else:
+                # First run: just ScoutSuite discovery
+                return self._plan_initial_aws_scan(context)
+        
+        # Query Kendra for similar missions (code scans)
+        query = f"security analysis {context.get('service_name', '')} {' '.join(context.get('primary_languages', []))}"
         kendra_context = self.cognitive_kernel.retrieve_from_kendra(query, top_k=5)
         
         system_prompt = """You are the StrategistAgent. Your role is to analyze the codebase context and select the appropriate security analysis tools.
 
 Available MCP Tools:
+
+Code Security:
 - semgrep-mcp: Static analysis for code patterns (supports Python, JS, Java, Go)
 - gitleaks-mcp: Secret and credential scanning
 - trivy-mcp: Dependency vulnerability scanning
 
+AWS Security:
+- scoutsuite-mcp: AWS security posture scanning (IAM, S3, EC2, Lambda, RDS, etc.)
+- pacu-mcp: AWS exploit validation and privilege escalation testing
+
 Consider:
+- Scan type: 'code' for application code, 'aws' for AWS infrastructure
 - Service criticality tier (0=critical requires all tools)
-- Languages present
+- Languages present (for code scans)
+- AWS services in use (for AWS scans)
 - Handles PII/payment (requires thorough scanning)
 - Past findings for similar services"""
 
-        user_prompt = f"""Context:
+        # Detect scan type from context
+        scan_type = context.get('scan_type', 'code')
+        
+        # Build context string based on scan type
+        if scan_type == 'aws':
+            context_str = f"""Context:
+Scan Type: AWS Infrastructure
+Account ID: {context.get('aws_account_id', 'N/A')}
+Region: {context.get('aws_region', 'N/A')}
+Services to Scan: {', '.join(context.get('aws_services', ['all']))}
+Criticality: Tier {context.get('criticality_tier', 1)}
+Environment: {context.get('environment', 'production')}"""
+        else:
+            context_str = f"""Context:
+Scan Type: Application Code
 Service: {context['service_name']}
 Criticality: Tier {context['criticality_tier']}
 Handles PII: {context['handles_pii']}
 Handles Payment: {context['handles_payment']}
 Languages: {', '.join(context['primary_languages'])}
-File Count: {context['file_count']}
+File Count: {context['file_count']}"""
+
+        user_prompt = f"""{context_str}
 
 Historical Context from Kendra:
 {self._format_kendra(kendra_context)}
@@ -130,7 +166,9 @@ Generate execution plan in JSON:
   "estimated_duration_minutes": 5,
   "reasoning": "explanation",
   "confidence": 0.0-1.0
-}}"""
+}}
+
+For AWS scans, use scoutsuite-mcp (priority 1) and pacu-mcp (priority 2)."""
 
         response = self.cognitive_kernel.invoke_claude(
             system_prompt=system_prompt,
@@ -181,17 +219,252 @@ Generate execution plan in JSON:
             state['error_message'] = error
         self.redis_client.hset(self.agent_state_key, mapping=state)
     
+    def _get_scoutsuite_findings_if_exist(self) -> List[Dict]:
+        """Check if ScoutSuite findings exist from a previous scan."""
+        try:
+            # Check S3 for ScoutSuite results
+            key = f"mcp-outputs/scoutsuite/{self.mission_id}/findings.json"
+            response = self.s3_client.get_object(
+                Bucket=self.s3_artifacts_bucket,
+                Key=key
+            )
+            findings = json.loads(response['Body'].read())
+            logger.info(f"Found {len(findings.get('findings', []))} ScoutSuite findings for analysis")
+            return findings.get('findings', [])
+        except Exception as e:
+            logger.debug(f"No existing ScoutSuite findings: {str(e)}")
+            return []
+    
+    def _plan_initial_aws_scan(self, context: Dict) -> Dict:
+        """Plan initial AWS scan (just ScoutSuite)."""
+        return {
+            'tools': [{
+                'name': 'scoutsuite-mcp',
+                'task_definition': 'hivemind-scoutsuite-mcp',
+                'priority': 1
+            }],
+            'parallel_execution': False,
+            'estimated_duration_minutes': 5,
+            'reasoning': 'Initial AWS discovery scan with ScoutSuite',
+            'confidence': 0.9
+        }
+    
+    def _plan_aws_execution_with_analysis(self, context: Dict, findings: List[Dict]) -> Dict:
+        """Plan AWS execution with Claude-based finding analysis."""
+        logger.info("Analyzing ScoutSuite findings with Claude for intelligent Pacu selection")
+        
+        # Analyze findings with Claude
+        analysis = self._analyze_findings_with_claude(findings)
+        
+        tools = []
+        
+        # Check if we need Pacu validation
+        high_priority_findings = [
+            f for f in analysis.get('priority_findings', [])
+            if f.get('priority_score', 0) >= 7
+        ]
+        
+        if high_priority_findings:
+            # Include Pacu with intelligent module selection
+            tools.append({
+                'name': 'pacu-mcp',
+                'task_definition': 'hivemind-pacu-mcp',
+                'priority': 1,
+                'context': {
+                    'priority_findings': high_priority_findings[:10],  # Top 10
+                    'attack_paths': analysis.get('attack_paths', [])
+                }
+            })
+            
+            reasoning = f"Identified {len(high_priority_findings)} high-priority findings requiring Pacu validation. "
+            if analysis.get('attack_paths'):
+                reasoning += f"Detected {len(analysis['attack_paths'])} potential attack paths. "
+            
+            return {
+                'tools': tools,
+                'parallel_execution': False,
+                'estimated_duration_minutes': 10 + len(high_priority_findings),
+                'reasoning': reasoning,
+                'confidence': 0.85,
+                'analysis': analysis
+            }
+        else:
+            logger.info("No high-priority exploitable findings detected, skipping Pacu")
+            return {
+                'tools': [],
+                'parallel_execution': False,
+                'estimated_duration_minutes': 0,
+                'reasoning': 'ScoutSuite findings analyzed - no critical exploitable issues requiring Pacu validation',
+                'confidence': 0.8,
+                'analysis': analysis
+            }
+    
+    def _analyze_findings_with_claude(self, findings: List[Dict]) -> Dict:
+        """Analyze AWS findings using Claude to prioritize and select Pacu modules.
+        
+        Adapted from AutoPurple's ClaudePlanner.analyze_findings().
+        """
+        if not findings:
+            return {'priority_findings': [], 'attack_paths': []}
+        
+        try:
+            # Prepare findings summary (limit to prevent token overflow)
+            findings_summary = []
+            for f in findings[:20]:
+                findings_summary.append({
+                    'id': f.get('finding_id', 'unknown'),
+                    'service': f.get('service', 'unknown'),
+                    'title': f.get('title', ''),
+                    'severity': f.get('severity', 'MEDIUM'),
+                    'description': f.get('description', '')[:200]
+                })
+            
+            system_prompt = """You are an AWS security expert analyzing security findings from ScoutSuite.
+
+Your expertise includes:
+- Identifying genuinely exploitable misconfigurations vs false positives
+- Recognizing privilege escalation paths
+- Understanding attack chain opportunities
+- Prioritizing by business impact"""
+
+            user_prompt = f"""Analyze these AWS security findings and prioritize them by exploitability.
+
+Available Pacu modules for validation:
+- iam__privesc_scan: Test for IAM privilege escalation paths
+- iam__enum_permissions: Enumerate IAM user/role permissions
+- iam__detect_honeytokens: Detect honeytokens
+- s3__bucket_finder: Find accessible S3 buckets
+- s3__download_bucket: Test S3 bucket data access
+- ec2__enum_lateral_movement: Enumerate EC2 lateral movement opportunities
+- lambda__enum: Enumerate Lambda functions and permissions
+- rds__enum: Enumerate RDS instances and access
+- rds__explore_snapshots: Check RDS snapshot access
+
+Findings to analyze:
+{json.dumps(findings_summary, indent=2)}
+
+Provide your analysis as JSON:
+{{
+  "priority_findings": [
+    {{
+      "finding_id": "string",
+      "priority_score": 1-10,
+      "exploitability": "low|medium|high|critical",
+      "recommended_modules": ["module1", "module2"],
+      "rationale": "why this is exploitable and which modules would confirm it"
+    }}
+  ],
+  "attack_paths": [
+    {{
+      "description": "attack path description (e.g., S3 read -> IAM escalation -> admin)",
+      "findings_involved": ["finding_id1", "finding_id2"],
+      "modules_needed": ["module1"]
+    }}
+  ]
+}}
+
+Focus on:
+1. Real exploitability (can an attacker actually use this?)
+2. Privilege escalation opportunities
+3. Data access paths
+4. Attack chains across multiple findings"""
+
+            response = self.cognitive_kernel.invoke_claude(
+                system_prompt=system_prompt,
+                user_prompt=user_prompt,
+                temperature=0.3
+            )
+            
+            # Parse Claude's response
+            try:
+                analysis = json.loads(response.content)
+                logger.info(f"Claude analysis: {len(analysis.get('priority_findings', []))} findings prioritized, "
+                          f"{len(analysis.get('attack_paths', []))} attack paths identified")
+                return analysis
+            except json.JSONDecodeError:
+                logger.warning("Claude response not valid JSON, using fallback")
+                return self._fallback_analysis(findings)
+                
+        except Exception as e:
+            logger.error(f"Claude analysis failed: {str(e)}")
+            return self._fallback_analysis(findings)
+    
+    def _fallback_analysis(self, findings: List[Dict]) -> Dict:
+        """Fallback analysis when Claude is unavailable."""
+        priority_findings = []
+        
+        # Simple severity-based prioritization
+        severity_scores = {'CRITICAL': 10, 'HIGH': 8, 'MEDIUM': 5, 'LOW': 3}
+        
+        for f in findings:
+            severity = f.get('severity', 'MEDIUM')
+            service = f.get('service', '').lower()
+            
+            # Map to Pacu modules using simple rules
+            modules = self._map_service_to_modules(service, f.get('title', ''))
+            
+            priority_findings.append({
+                'finding_id': f.get('finding_id', 'unknown'),
+                'priority_score': severity_scores.get(severity, 5),
+                'exploitability': severity.lower(),
+                'recommended_modules': modules,
+                'rationale': f'Rule-based mapping for {service} {severity} finding'
+            })
+        
+        # Sort by priority
+        priority_findings.sort(key=lambda x: x['priority_score'], reverse=True)
+        
+        return {
+            'priority_findings': priority_findings,
+            'attack_paths': []
+        }
+    
+    def _map_service_to_modules(self, service: str, title: str) -> List[str]:
+        """Map AWS service to Pacu modules (fallback logic)."""
+        title_lower = title.lower()
+        
+        if service == 'iam':
+            if 'privilege' in title_lower or 'escalat' in title_lower:
+                return ['iam__privesc_scan', 'iam__enum_permissions']
+            return ['iam__enum_permissions']
+        elif service == 's3':
+            if 'public' in title_lower:
+                return ['s3__bucket_finder', 's3__download_bucket']
+            return ['s3__bucket_finder']
+        elif service == 'ec2':
+            return ['ec2__enum_lateral_movement']
+        elif service == 'lambda':
+            return ['lambda__enum']
+        elif service == 'rds':
+            return ['rds__enum', 'rds__explore_snapshots']
+        else:
+            return []
+    
     def _format_kendra(self, context) -> str:
         """Format Kendra results."""
         if not context or not context.documents:
             return "No historical context"
         return "\n".join([f"- {d['title']}: {d['excerpt'][:150]}..." for d in context.documents[:3]])
     
-    def _select_tools_for_patterns(self, patterns: List[str]) -> List[Dict]:
-        """Select appropriate tools based on detected code patterns."""
+    def _select_tools_for_patterns(self, patterns: List[str], scan_type: str = 'code') -> List[Dict]:
+        """Select appropriate tools based on detected patterns and scan type."""
         tools = []
         
-        # Map patterns to tools
+        # AWS infrastructure scan
+        if scan_type == 'aws':
+            tools.append({
+                'name': 'scoutsuite-mcp',
+                'task_definition': 'hivemind-scoutsuite-mcp',
+                'priority': 1
+            })
+            tools.append({
+                'name': 'pacu-mcp',
+                'task_definition': 'hivemind-pacu-mcp',
+                'priority': 2
+            })
+            return tools
+        
+        # Code security scan - map patterns to tools
         if any(p in ['secrets', 'credentials', 'api_keys'] for p in patterns):
             tools.append({
                 'name': 'gitleaks-mcp',

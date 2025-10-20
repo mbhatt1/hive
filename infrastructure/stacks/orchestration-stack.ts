@@ -57,7 +57,22 @@ export class OrchestrationStack extends cdk.Stack {
       retryOnServiceExceptions: true,
     });
 
-    // 2. Deploy Context Agents (Parallel)
+    // 2. Coordinator Decision
+    const coordinatorTask = this.createAgentTask(
+      'CoordinatorDecision',
+      props.agentTaskDefinitions.coordinator,
+      props
+    );
+
+    // 3a. AWS Scan Path - Just Strategist (skip Archaeologist)
+    const strategistTaskAWS = this.createAgentTask(
+      'StrategistTaskAWS',
+      props.agentTaskDefinitions.strategist,
+      props
+    );
+    strategistTaskAWS.next(coordinatorTask);
+
+    // 3b. Code Scan Path - Deploy Context Agents (Parallel)
     const archaeologistTask = this.createAgentTask(
       'ArchaeologistTask',
       props.agentTaskDefinitions.archaeologist,
@@ -76,13 +91,15 @@ export class OrchestrationStack extends cdk.Stack {
 
     contextAgentsParallel.branch(archaeologistTask);
     contextAgentsParallel.branch(strategistTask);
+    contextAgentsParallel.next(coordinatorTask);
 
-    // 3. Coordinator Decision
-    const coordinatorTask = this.createAgentTask(
-      'CoordinatorDecision',
-      props.agentTaskDefinitions.coordinator,
-      props
-    );
+    // 3c. Scan Type Decision - Branch to appropriate path
+    const scanTypeChoice = new sfn.Choice(this, 'ScanTypeDecision')
+      .when(
+        sfn.Condition.stringEquals('$.scan_type', 'aws'),
+        strategistTaskAWS
+      )
+      .otherwise(contextAgentsParallel);
 
     // 4. Dynamic MCP Invocation (Map State)
     const mcpInvocationMap = new sfn.Map(this, 'DynamicMCPInvocation', {
@@ -174,10 +191,12 @@ export class OrchestrationStack extends cdk.Stack {
 
     const failureEnd = new sfn.Succeed(this, 'FailureRecorded');
 
-    // Chain the states
+    // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> rest
     const definition = unpackTask
-      .next(contextAgentsParallel)
-      .next(coordinatorTask)
+      .next(scanTypeChoice);
+    
+    // After coordinator, continue with common path
+    coordinatorTask
       .next(mcpInvocationMap)
       .next(waitForTools)
       .next(synthesisCrucible)

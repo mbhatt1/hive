@@ -1,0 +1,3 @@
+scoutsuite>=5.12.0
+boto3>=1.26.0
+botocore>=1.29.0

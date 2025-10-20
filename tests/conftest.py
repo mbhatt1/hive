@@ -54,6 +54,30 @@ def mock_dynamodb_client():
         client = boto3.client('dynamodb', region_name='us-east-1')
         # Create test tables
         client.create_table(
+            TableName='HivemindFindingsArchive',
+            KeySchema=[
+                {'AttributeName': 'finding_id', 'KeyType': 'HASH'},
+                {'AttributeName': 'timestamp', 'KeyType': 'RANGE'}
+            ],
+            AttributeDefinitions=[
+                {'AttributeName': 'finding_id', 'AttributeType': 'S'},
+                {'AttributeName': 'timestamp', 'AttributeType': 'N'},
+                {'AttributeName': 'mission_id', 'AttributeType': 'S'}
+            ],
+            GlobalSecondaryIndexes=[
+                {
+                    'IndexName': 'mission_id-timestamp-index',
+                    'KeySchema': [
+                        {'AttributeName': 'mission_id', 'KeyType': 'HASH'},
+                        {'AttributeName': 'timestamp', 'KeyType': 'RANGE'}
+                    ],
+                    'Projection': {'ProjectionType': 'ALL'}
+                }
+            ],
+            BillingMode='PAY_PER_REQUEST'
+        )
+        # Also create HivemindFindings for backward compatibility
+        client.create_table(
             TableName='HivemindFindings',
             KeySchema=[
                 {'AttributeName': 'finding_id', 'KeyType': 'HASH'},
@@ -223,6 +247,26 @@ def mock_ecs_client():
 
 
 # ========== TEST DATA FIXTURES ==========
+
+@pytest.fixture
+def mock_environment():
+    """Mock environment variables for testing."""
+    return {
+        'MISSION_ID': 'test-mission-123',
+        'S3_ARTIFACTS_BUCKET': 'test-bucket',
+        'DYNAMODB_TOOL_RESULTS_TABLE': 'test-table',
+        'AWS_REGION': 'us-east-1'
+    }
+
+
+@pytest.fixture
+def mock_subprocess():
+    """Mock subprocess for tool execution."""
+    mock = Mock()
+    return mock
+
+
+
 
 @pytest.fixture
 def sample_scan_data():

@@ -28,7 +28,7 @@
 
 ## 🎯 Overview
 
-Hivemind-Prism is a **zero-API, event-driven security intelligence platform** that deploys specialized AI agents to autonomously analyze code repositories. Unlike traditional security pipelines, our agents:
+Hivemind-Prism is a **zero-API, event-driven security intelligence platform** that deploys specialized AI agents to autonomously analyze code repositories and AWS infrastructure. Unlike traditional security pipelines, our agents:
 
 - 🤖 **Make Independent Decisions** based on context, not pre-programmed rules
 - 🗣️ **Negotiate Conclusions** through multi-agent consensus and voting
@@ -249,9 +249,17 @@ Each agent operates autonomously using this 5-phase cycle:
 ### 🔧 MCP Tool Integration
 
 Model Context Protocol servers for security scanning:
+
+**Code Security:**
 - **Semgrep MCP** - Static analysis for vulnerabilities
 - **Gitleaks MCP** - Secret detection
 - **Trivy MCP** - Container and dependency scanning
+
+**AWS Security (NEW):**
+- **ScoutSuite MCP** - AWS security posture scanning (IAM, S3, EC2, Lambda, RDS, etc.)
+- **Pacu MCP** - AWS exploit validation with intelligent module selection
+
+> 💡 **Intelligence Layer**: The Strategist agent uses Claude to analyze ScoutSuite findings and intelligently select which Pacu modules to run, prioritizing by exploitability rather than just severity.
 
 ### 📚 Institutional Memory (RAG)
 
@@ -339,7 +347,7 @@ pip install -r requirements-test.txt
 # Run all tests with coverage
 pytest tests/ -v --cov=src --cov-report=html
 
-# Expected: 109 passed, 80%+ coverage
+# Expected: 136 passed, 72%+ coverage
 ```
 
 ### 3. Deploy to AWS
@@ -498,6 +506,11 @@ hivemind-prism/
 │   │   ├── memory_ingestor/
 │   │   └── failure_handler/
 │   ├── mcp_servers/                # Security tool servers
+│   │   ├── semgrep_mcp/           # Code static analysis
+│   │   ├── gitleaks_mcp/          # Secret detection
+│   │   ├── trivy_mcp/             # Container scanning
+│   │   ├── scoutsuite_mcp/        # AWS security scanning
+│   │   └── pacu_mcp/              # AWS exploit validation
 │   │   ├── semgrep_mcp/
 │   │   ├── gitleaks_mcp/
 │   │   └── trivy_mcp/
