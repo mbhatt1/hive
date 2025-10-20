@@ -4024,12 +4024,12 @@
     "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
    }
   },
-  "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875": {
+  "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0": {
    "Value": {
-    "Ref": "archaeologistTaskDef0C0F4ADA"
+    "Ref": "coordinatorTaskDefD6FC88DD"
    },
    "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+    "Name": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
    }
   },
   "ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0": {
@@ -4040,12 +4040,12 @@
     "Name": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
    }
   },
-  "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0": {
+  "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875": {
    "Value": {
-    "Ref": "coordinatorTaskDefD6FC88DD"
+    "Ref": "archaeologistTaskDef0C0F4ADA"
    },
    "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+    "Name": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
    }
   },
   "ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8": {

@@ -986,7 +986,7 @@
      "Fn::Join": [
       "",
       [
-       "{\"StartAt\":\"UnpackAndValidate\",\"States\":{\"UnpackAndValidate\":{\"Next\":\"DeployContextAgents\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"ResultPath\":\"$.error\",\"Next\":\"HandleFailure\"}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
+       "{\"StartAt\":\"UnpackAndValidate\",\"States\":{\"UnpackAndValidate\":{\"Next\":\"ScanTypeDecision\",\"Retry\":[{\"ErrorEquals\":[\"Lambda.ClientExecutionTimeoutException\",\"Lambda.ServiceException\",\"Lambda.AWSLambdaException\",\"Lambda.SdkClientException\"],\"IntervalSeconds\":2,\"MaxAttempts\":6,\"BackoffRate\":2}],\"Catch\":[{\"ErrorEquals\":[\"States.ALL\"],\"ResultPath\":\"$.error\",\"Next\":\"HandleFailure\"}],\"Type\":\"Task\",\"OutputPath\":\"$.Payload\",\"Resource\":\"arn:",
        {
         "Ref": "AWS::Partition"
        },
@@ -994,7 +994,7 @@
        {
         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
        },
-       "\",\"Payload.$\":\"$\"}},\"DeployContextAgents\":{\"Type\":\"Parallel\",\"ResultPath\":\"$.context_results\",\"Next\":\"CoordinatorDecision\",\"Branches\":[{\"StartAt\":\"ArchaeologistTask\",\"States\":{\"ArchaeologistTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.archaeologisttask_result\",\"Resource\":\"arn:",
+       "\",\"Payload.$\":\"$\"}},\"ScanTypeDecision\":{\"Type\":\"Choice\",\"Choices\":[{\"Variable\":\"$.scan_type\",\"StringEquals\":\"aws\",\"Next\":\"StrategistTaskAWS\"}],\"Default\":\"DeployContextAgents\"},\"DeployContextAgents\":{\"Type\":\"Parallel\",\"ResultPath\":\"$.context_results\",\"Next\":\"CoordinatorDecision\",\"Branches\":[{\"StartAt\":\"ArchaeologistTask\",\"States\":{\"ArchaeologistTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.archaeologisttask_result\",\"Resource\":\"arn:",
        {
         "Ref": "AWS::Partition"
        },
@@ -1054,7 +1054,27 @@
        {
         "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
        },
-       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"coordinator-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"DynamicMCPInvocation\":{\"Type\":\"Map\",\"ResultPath\":\"$.mcp_results\",\"Next\":\"WaitForAllTools\",\"ItemsPath\":\"$.execution_plan.tools\",\"MaxConcurrency\":5,\"Iterator\":{\"StartAt\":\"InvokeMCPTool\",\"States\":{\"InvokeMCPTool\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"arn:",
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"coordinator-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"StrategistTaskAWS\":{\"Next\":\"CoordinatorDecision\",\"Type\":\"Task\",\"ResultPath\":\"$.strategisttaskaws_result\",\"Resource\":\"arn:",
+       {
+        "Ref": "AWS::Partition"
+       },
+       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+       },
+       "\",\"TaskDefinition\":\"hivemind-strategist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
+       },
+       "\",\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       },
+       "\"],\"SecurityGroups\":[\"",
+       {
+        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
+       },
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"strategist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"DynamicMCPInvocation\":{\"Type\":\"Map\",\"ResultPath\":\"$.mcp_results\",\"Next\":\"WaitForAllTools\",\"ItemsPath\":\"$.execution_plan.tools\",\"MaxConcurrency\":5,\"Iterator\":{\"StartAt\":\"InvokeMCPTool\",\"States\":{\"InvokeMCPTool\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"arn:",
        {
         "Ref": "AWS::Partition"
        },
@@ -1289,7 +1309,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/11P22rDMAz9lr6rXhf6B2OMwcpCUthjURy1VePIIbIzRvC/z0k3GHs6NwkdFaYodma3wU/d2rbbOm7MXAe0HWTrNDP2Zq68I3g6y4qld2y/FnlnCVTUzEc/sF3clWQz0HCOYgN70VNA7fLQG/ZNi68y+Y7g2WoV5ZgTqEXL2DjW679FM5c4onPk4IADfCAHqKO1RC3kloEOaK8sa7u/OoHzl+Wgv7yMPg5L/ssT0EQSclrFn78ypgQVqY+jXa33GIYYEohvydz0YSr2Zm8eNzdl3o5RAvdkqjt+A1PpLGpEAQAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/11P22rDMAz9lr4rXhf6B2WMwUpDUuhjURy1UePYIbJTRvC/z0k3GHs6Nwkd5SrPt2q7wYdkuukyw7WaK4+6g2RdZsZezaUzBPurXbFwhvXXIp8sglhR88kNrBd3Jcn0NFyD1Z6dlYtH6dLQJ/Z1gx92ch3Bm5Yy2FNKoLJShNqwtP8W1VzgiMaQgX3rWBMccIAzsocqaE3UQCrr6YC6ZbuW/KsjGHdb7rrb++jCsOS/PAJNZH1Ky/DzXsIYoSRxYdSrdQx+CD6CdQ2pu7xM+U7t1OvmLszZGKznnlT5xG+1xz7nSwEAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Orchestration/CDKMetadata/Default"

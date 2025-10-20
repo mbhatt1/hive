@@ -183,6 +183,344 @@ class TestPacuMCP:
             
             # Just verify no exceptions were raised
             assert True
+    
+    def test_intelligent_module_selection(self, mock_environment):
+        """Test validation with Claude-recommended modules."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            server = PacuMCPServer()
+            
+            finding = {
+                'finding_id': 'iam-001',
+                'service': 'iam',
+                'title': 'Privilege Escalation Path'
+            }
+            
+            recommended_modules = ['iam__privesc_scan', 'iam__enum_permissions']
+            rationale = 'IAM role allows privilege escalation to admin'
+            
+            with patch.object(server, '_run_pacu_module') as mock_run:
+                mock_run.return_value = {
+                    'success': True,
+                    'output': 'Found privilege escalation path to admin role',
+                    'errors': ''
+                }
+                
+                validation = server._validate_with_intelligent_modules(
+                    finding, recommended_modules, rationale
+                )
+                
+                assert validation['finding_id'] == 'iam-001'
+                assert validation['exploitable'] is True
+                assert validation['module'] == 'iam__privesc_scan'
+                assert validation['claude_rationale'] == rationale
+                assert validation['validation_method'] == 'intelligent_claude_selection'
+    
+    def test_intelligent_module_selection_not_exploitable(self, mock_environment):
+        """Test intelligent validation when no modules confirm exploitability."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            server = PacuMCPServer()
+            
+            finding = {
+                'finding_id': 's3-001',
+                'service': 's3',
+                'title': 'Public Bucket'
+            }
+            
+            recommended_modules = ['s3__bucket_finder', 's3__download_bucket']
+            rationale = 'Bucket may be publicly accessible'
+            
+            with patch.object(server, '_run_pacu_module') as mock_run:
+                mock_run.return_value = {
+                    'success': True,
+                    'output': 'No results found. Access denied.',
+                    'errors': ''
+                }
+                
+                validation = server._validate_with_intelligent_modules(
+                    finding, recommended_modules, rationale
+                )
+                
+                assert validation['finding_id'] == 's3-001'
+                assert validation['exploitable'] is False
+                assert 'modules_tried' in validation
+                assert validation['claude_rationale'] == rationale
+    
+    def test_validate_findings_with_priority_map(self, mock_environment):
+        """Test validating findings with priority findings from Strategist."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        priority_findings_input = {
+            'priority_findings': [
+                {
+                    'finding_id': 'iam-001',
+                    'service': 'iam',
+                    'priority_score': 9,
+                    'recommended_modules': ['iam__privesc_scan'],
+                    'rationale': 'Critical privilege escalation'
+                }
+            ],
+            'findings': [
+                {
+                    'finding_id': 'iam-001',
+                    'service': 'iam',
+                    'title': 'Admin Access'
+                }
+            ]
+        }
+        
+        with patch.dict('os.environ', {**mock_environment, 'FINDINGS': json.dumps(priority_findings_input)}):
+            server = PacuMCPServer()
+            
+            with patch.object(server, '_create_session'):
+                with patch.object(server, '_validate_with_intelligent_modules') as mock_validate:
+                    mock_validate.return_value = {
+                        'finding_id': 'iam-001',
+                        'exploitable': True,
+                        'validation_method': 'intelligent_claude_selection'
+                    }
+                    
+                    results = server._validate_findings(priority_findings_input)
+                    
+                    assert len(results['validations']) == 1
+                    assert mock_validate.called
+    
+    def test_validate_findings_without_priority_map(self, mock_environment):
+        """Test validating findings using fallback rule-based method."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        findings = [
+            {
+                'finding_id': 's3-001',
+                'service': 's3',
+                'finding_key': 'bucket-public'
+            }
+        ]
+        
+        with patch.dict('os.environ', {**mock_environment, 'FINDINGS': json.dumps(findings)}):
+            server = PacuMCPServer()
+            
+            with patch.object(server, '_validate_single_finding') as mock_validate:
+                mock_validate.return_value = {
+                    'finding_id': 's3-001',
+                    'exploitable': False,
+                    'status': 'completed'
+                }
+                
+                results = server._validate_findings(findings)
+                
+                assert len(results['validations']) == 1
+                assert mock_validate.called
+    
+    def test_validate_findings_error_handling(self, mock_environment):
+        """Test error handling during finding validation."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        findings = [
+            {
+                'finding_id': 'error-001',
+                'service': 'iam'
+            }
+        ]
+        
+        with patch.dict('os.environ', {**mock_environment, 'FINDINGS': json.dumps(findings)}):
+            server = PacuMCPServer()
+            
+            with patch.object(server, '_validate_single_finding') as mock_validate:
+                mock_validate.side_effect = Exception('Validation error')
+                
+                results = server._validate_findings(findings)
+                
+                assert len(results['validations']) == 1
+                assert results['validations'][0]['status'] == 'error'
+                assert results['validations'][0]['exploitable'] is False
+    
+    def test_create_session(self, mock_environment):
+        """Test creating a Pacu session."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stderr = ''
+        
+        with patch.dict('os.environ', mock_environment):
+            with patch('subprocess.run', return_value=mock_result) as mock_run:
+                with patch('pathlib.Path.mkdir'):
+                    server = PacuMCPServer()
+                    server._create_session()
+                    
+                    # Verify pacu was called with session name
+                    call_args = mock_run.call_args[0][0]
+                    assert 'pacu' in call_args
+                    assert '--session' in call_args
+    
+    def test_create_session_with_access_keys(self, mock_environment):
+        """Test creating session with AWS access keys."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        mock_result = Mock()
+        mock_result.returncode = 0
+        mock_result.stderr = ''
+        
+        env_with_keys = {
+            **mock_environment,
+            'AWS_ACCESS_KEY_ID': 'AKIAIOSFODNN7EXAMPLE',
+            'AWS_SECRET_ACCESS_KEY': 'wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY',
+            'AWS_SESSION_TOKEN': 'FwoGZXIvYXdzEPj'
+        }
+        
+        with patch.dict('os.environ', env_with_keys):
+            with patch('subprocess.run', return_value=mock_result) as mock_run:
+                with patch('pathlib.Path.mkdir'):
+                    server = PacuMCPServer()
+                    server._create_session()
+                    
+                    # Verify environment was passed
+                    call_kwargs = mock_run.call_args[1]
+                    assert 'env' in call_kwargs
+                    assert call_kwargs['env']['AWS_ACCESS_KEY_ID'] == 'AKIAIOSFODNN7EXAMPLE'
+    
+    def test_create_session_failure(self, mock_environment):
+        """Test session creation failure handling."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            with patch('subprocess.run', side_effect=Exception('Session error')):
+                with patch('pathlib.Path.mkdir'):
+                    server = PacuMCPServer()
+                    
+                    with pytest.raises(Exception):
+                        server._create_session()
+    
+    def test_get_version(self, mock_environment):
+        """Test getting Pacu version."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        mock_result = Mock()
+        mock_result.stdout = 'Pacu v1.5.0\n'
+        
+        with patch.dict('os.environ', mock_environment):
+            with patch('subprocess.run', return_value=mock_result):
+                server = PacuMCPServer()
+                version = server._get_version()
+        
+        assert 'Pacu' in version or '1.5.0' in version
+    
+    def test_get_version_failure(self, mock_environment):
+        """Test version extraction when pacu command fails."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            with patch('subprocess.run', side_effect=Exception('Command not found')):
+                server = PacuMCPServer()
+                version = server._get_version()
+        
+        assert version == 'unknown'
+    
+    def test_full_run_workflow_success(self, mock_environment):
+        """Test complete run workflow with successful validation."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        findings = [
+            {
+                'finding_id': 'iam-001',
+                'service': 'iam',
+                'finding_key': 'policy-check'
+            }
+        ]
+        
+        mock_session_result = Mock(returncode=0, stderr='')
+        mock_module_result = Mock(
+            returncode=0,
+            stdout='Found exploitable resources',
+            stderr=''
+        )
+        
+        with patch.dict('os.environ', {**mock_environment, 'FINDINGS': json.dumps(findings)}):
+            with patch('subprocess.run') as mock_run:
+                def run_side_effect(cmd, *args, **kwargs):
+                    if '--list-modules' in cmd:
+                        return mock_session_result
+                    else:
+                        return mock_module_result
+                
+                mock_run.side_effect = run_side_effect
+                
+                with patch('pathlib.Path.mkdir'):
+                    server = PacuMCPServer()
+                    exit_code = server.run()
+        
+        assert exit_code == 0
+    
+    def test_full_run_workflow_failure(self, mock_environment):
+        """Test run workflow when validation fails."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', {**mock_environment, 'FINDINGS': 'invalid json'}):
+            server = PacuMCPServer()
+            exit_code = server.run()
+        
+        assert exit_code == 1
+    
+    def test_analyze_module_result_edge_cases(self, mock_environment):
+        """Test edge cases in module result analysis."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            server = PacuMCPServer()
+            finding = {'finding_id': 'test'}
+            
+            # Test empty output
+            result_empty = {'success': True, 'output': ''}
+            assert server._analyze_module_result(result_empty, finding) is False
+            
+            # Test mixed indicators (more negative)
+            result_mixed = {
+                'success': True,
+                'output': 'Found one item but access denied to most. Error in permissions.'
+            }
+            assert server._analyze_module_result(result_mixed, finding) is False
+            
+            # Test uppercase indicators
+            result_uppercase = {
+                'success': True,
+                'output': 'FOUND MULTIPLE VULNERABLE RESOURCES. SUCCESSFULLY ENUMERATED PERMISSIONS.'
+            }
+            assert server._analyze_module_result(result_uppercase, finding) is True
+    
+    def test_map_finding_lambda_rds_kms(self, mock_environment):
+        """Test finding mapping for Lambda, RDS, and KMS services."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            server = PacuMCPServer()
+            
+            assert server._map_finding_to_module('lambda', '') == 'lambda__enum'
+            assert server._map_finding_to_module('rds', '') == 'rds__enum'
+            assert server._map_finding_to_module('kms', '') == 'kms__enum'
+            assert server._map_finding_to_module('cloudtrail', '') == 'cloudtrail__download_event_history'
+    
+    def test_intelligent_modules_with_empty_list(self, mock_environment):
+        """Test intelligent validation with empty module list."""
+        from src.mcp_servers.pacu_mcp.server import PacuMCPServer
+        
+        with patch.dict('os.environ', mock_environment):
+            server = PacuMCPServer()
+            
+            finding = {
+                'finding_id': 'test-001',
+                'service': 'iam'
+            }
+            
+            validation = server._validate_with_intelligent_modules(
+                finding, [], 'No modules recommended'
+            )
+            
+            assert validation['exploitable'] is False
+            assert validation['modules_tried'] == []
 
 
 if __name__ == '__main__':

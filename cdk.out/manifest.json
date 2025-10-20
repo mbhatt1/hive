@@ -1138,7 +1138,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/9017ce3a33ed664ca77c9e4a1e8c52d0dd95c28695175f7285710ef93409a5cd.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/9808ae379a37c2c8aa38462fac41ae14780ac29783027aae50163e36bbcdcf95.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -1621,10 +1621,10 @@
             "data": "ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
           }
         ],
-        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"archaeologistTaskDef0C0F4ADA\"}": [
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"coordinatorTaskDefD6FC88DD\"}": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
+            "data": "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
           }
         ],
         "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"strategistTaskDef40F5F609\"}": [
@@ -1633,10 +1633,10 @@
             "data": "ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
           }
         ],
-        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"coordinatorTaskDefD6FC88DD\"}": [
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"archaeologistTaskDef0C0F4ADA\"}": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0"
+            "data": "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
           }
         ],
         "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"semgrepmcpTaskDef4F4E8F78\"}": [
@@ -1802,7 +1802,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/d594dbd7a3250c3cc6ec1c91dde07b8b3c06a9c6276ec4b66ff14f493984088e.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/013d7d8b5ccd73c6a867d8b89212d71383cb9242d563cbc697c8bf565ea56bcd.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [

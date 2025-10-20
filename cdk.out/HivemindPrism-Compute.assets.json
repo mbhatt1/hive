@@ -61,16 +61,16 @@
         }
       }
     },
-    "9017ce3a33ed664ca77c9e4a1e8c52d0dd95c28695175f7285710ef93409a5cd": {
+    "9808ae379a37c2c8aa38462fac41ae14780ac29783027aae50163e36bbcdcf95": {
       "displayName": "HivemindPrism-Compute Template",
       "source": {
         "path": "HivemindPrism-Compute.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "current_account-us-east-1-09221c86": {
+        "current_account-us-east-1-569e9d0e": {
           "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
-          "objectKey": "9017ce3a33ed664ca77c9e4a1e8c52d0dd95c28695175f7285710ef93409a5cd.json",
+          "objectKey": "9808ae379a37c2c8aa38462fac41ae14780ac29783027aae50163e36bbcdcf95.json",
           "region": "us-east-1",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
         }
