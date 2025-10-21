@@ -2,12 +2,14 @@
 Unit Tests for Semgrep MCP Server
 ==================================
 
-Tests Semgrep MCP tool implementation.
+Tests Semgrep MCP tool implementation with MCP protocol.
 """
 
 import pytest
 import json
-from unittest.mock import Mock, patch
+import asyncio
+from unittest.mock import Mock, patch, AsyncMock
+from pathlib import Path
 
 
 @pytest.mark.mcp
@@ -17,45 +19,49 @@ class TestSemgrepMCP:
     
     def test_server_initialization(self, mock_environment):
         """Test MCP server initialization."""
-        # Act
         from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
         with patch.dict('os.environ', mock_environment):
             server = SemgrepMCPServer()
         
-        # Assert
         assert server is not None
         assert hasattr(server, 'run')
+        assert server.mission_id == mock_environment['MISSION_ID']
     
-    def test_scan_tool_invocation(
-        self,
-        mock_subprocess,
-        mock_environment
-    ):
-        """Test scan tool execution."""
-        # Arrange
-        mock_subprocess.return_value = Mock(
-            returncode=0,
-            stdout=json.dumps({'results': []}),
-            stderr=''
-        )
-        
-        # Act
+    @pytest.mark.asyncio
+    async def test_scan_tool_invocation(self, mock_subprocess, mock_environment):
+        """Test scan tool execution via MCP protocol."""
         from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
+        
+        # Mock semgrep subprocess
+        mock_process = AsyncMock()
+        mock_process.returncode = 1  # Findings found
+        mock_process.communicate = AsyncMock(return_value=(
+            json.dumps({'results': []}).encode(),
+            b''
+        ))
+        
         with patch.dict('os.environ', mock_environment):
-            with patch('subprocess.run', mock_subprocess):
-                with patch.object(SemgrepMCPServer, '_download_source', return_value='/tmp/test-repo'):
-                    with patch.object(SemgrepMCPServer, '_write_results'):
-                        server = SemgrepMCPServer()
-                        result = server.run()
+            server = SemgrepMCPServer()
+            
+            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+                with patch.object(server, '_store_results', new=AsyncMock(return_value={
+                    's3_uri': 's3://bucket/key',
+                    'digest': 'sha256:abc123',
+                    'timestamp': 12345
+                })):
+                    result = await server._execute_semgrep_scan({
+                        'source_path': '/tmp/test',
+                        'config': 'auto',
+                        'timeout': 60
+                    })
         
-        # Assert
-        assert result == 0
+        assert result['success'] == True
+        assert result['tool'] == 'semgrep'
     
-    def test_result_parsing(self, mock_environment):
-        """Test Semgrep JSON result parsing through _run_semgrep."""
-        # Arrange
+    @pytest.mark.asyncio
+    async def test_result_parsing(self, mock_environment):
+        """Test Semgrep JSON result parsing."""
         from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
-        from pathlib import Path
         
         semgrep_output = {
             'results': [
@@ -69,79 +75,74 @@ class TestSemgrepMCP:
             ]
         }
         
-        # Act
+        mock_process = AsyncMock()
+        mock_process.returncode = 1
+        mock_process.communicate = AsyncMock(return_value=(
+            json.dumps(semgrep_output).encode(),
+            b''
+        ))
+        
         with patch.dict('os.environ', mock_environment):
             server = SemgrepMCPServer()
-            with patch('subprocess.run') as mock_run:
-                mock_run.return_value = Mock(
-                    returncode=1,
-                    stdout=json.dumps(semgrep_output),
-                    stderr=''
-                )
-                result = server._run_semgrep(Path('/tmp/test'))
+            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+                with patch.object(server, '_get_semgrep_version', return_value='1.0.0'):
+                    result = await server._run_semgrep(Path('/tmp/test'), 'auto', 300)
         
-        # Assert
         assert result['tool'] == 'semgrep'
         assert len(result['results']) == 1
         assert result['results'][0]['rule_id'] == 'python.lang.security.injection.sql'
     
-    def test_s3_upload(
-        self,
-        mock_environment
-    ):
-        """Test result upload to S3 through _write_results."""
-        # Arrange
+    @pytest.mark.asyncio
+    async def test_s3_upload(self, mock_environment):
+        """Test result upload to S3."""
+        from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
+        
         results = {'tool': 'semgrep', 'results': [{'rule_id': 'test', 'severity': 'HIGH'}]}
         
-        # Act
-        from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
         with patch.dict('os.environ', mock_environment):
-            # Server uses autouse fixtures from conftest for S3 and DynamoDB
             server = SemgrepMCPServer()
-            # Just verify the method runs without error
-            server._write_results(results)
+            
+            # Mock S3 client
+            mock_put = Mock()
+            server.s3_client.put_object = mock_put
+            
+            # Mock DynamoDB client
+            mock_dynamo = Mock()
+            server.dynamodb_client.put_item = mock_dynamo
+            
+            storage_info = await server._store_results(results)
         
-        # The method should complete without raising exceptions
-        assert True
+        assert 's3_uri' in storage_info
+        assert 'digest' in storage_info
+        assert storage_info['digest'].startswith('sha256:')
     
-    def test_error_handling_invalid_path(
-        self,
-        mock_environment
-    ):
-        """Test error handling for invalid repository path."""
-        # Act & Assert
+    @pytest.mark.asyncio
+    async def test_error_handling_invalid_path(self, mock_environment):
+        """Test error handling for invalid source path."""
         from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
-        with patch.dict('os.environ', mock_environment):
-            # Server uses autouse fixtures from conftest
-            with patch.object(SemgrepMCPServer, '_download_source', side_effect=Exception("No files found")):
-                server = SemgrepMCPServer()
-                result = server.run()
-                assert result == 1
-    
-    def test_error_handling_semgrep_failure(
-        self,
-        mock_subprocess,
-        mock_environment
-    ):
-        """Test error handling when Semgrep fails."""
-        # Arrange
-        mock_subprocess.return_value = Mock(
-            returncode=2,
-            stdout='',
-            stderr='Semgrep error'
-        )
         
-        # Act & Assert
-        from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
-        from pathlib import Path
         with patch.dict('os.environ', mock_environment):
-            with patch('subprocess.run', mock_subprocess):
-                with patch.object(SemgrepMCPServer, '_download_source', return_value=Path('/tmp/test')):
-                    with patch.object(SemgrepMCPServer, '_write_error'):
-                        server = SemgrepMCPServer()
-                        result = server.run()
-                        assert result == 1
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+            server = SemgrepMCPServer()
+            
+            with patch('asyncio.create_subprocess_exec', side_effect=FileNotFoundError("Path not found")):
+                with pytest.raises(FileNotFoundError):
+                    await server._run_semgrep(Path('/nonexistent'), 'auto', 300)
+    
+    @pytest.mark.asyncio
+    async def test_error_handling_semgrep_failure(self, mock_environment):
+        """Test error handling for Semgrep execution failure."""
+        from src.mcp_servers.semgrep_mcp.server import SemgrepMCPServer
+        
+        mock_process = AsyncMock()
+        mock_process.returncode = 2  # Error code
+        mock_process.communicate = AsyncMock(return_value=(
+            b'',
+            b'Semgrep error'
+        ))
+        
+        with patch.dict('os.environ', mock_environment):
+            server = SemgrepMCPServer()
+            
+            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+                with pytest.raises(Exception, match="Semgrep failed"):
+                    await server._run_semgrep(Path('/tmp/test'), 'auto', 300)

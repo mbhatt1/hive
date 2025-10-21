@@ -1,15 +1,19 @@
 """
 Cognitive Kernel - Amazon Bedrock Integration
 Provides secure, unified interface to Bedrock models for all agents.
+Supports Model Context Protocol (MCP) tool invocation.
 """
 
+import os
 import json
 import boto3
 import hashlib
+import asyncio
 from typing import Dict, List, Optional, Any
 from botocore.config import Config
 from dataclasses import dataclass
 import logging
+from src.shared.mcp_client import MCPToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +75,16 @@ class CognitiveKernel:
             config=config
         ) if kendra_index_id else None
         
+        
+        # MCP Tool Registry for tool invocation
+        self.mcp_registry = None
+        if os.environ.get('ENABLE_MCP_TOOLS', 'true').lower() == 'true':
+            self.mcp_registry = MCPToolRegistry(base_env={
+                'MISSION_ID': os.environ.get('MISSION_ID', ''),
+                'S3_ARTIFACTS_BUCKET': os.environ.get('S3_ARTIFACTS_BUCKET', ''),
+                'DYNAMODB_TOOL_RESULTS_TABLE': os.environ.get('DYNAMODB_TOOL_RESULTS_TABLE', ''),
+                'AWS_REGION': region
+            })
         self.model_id = model_id
         self.kendra_index_id = kendra_index_id
         
@@ -339,3 +353,171 @@ class CognitiveKernel:
             formatted.append("")
         
         return "\n".join(formatted)
+    
+    async def list_mcp_tools(self) -> Dict[str, List[Dict[str, Any]]]:
+        """
+        List all available MCP tools from all servers.
+        
+        Returns:
+            Dictionary mapping server names to their available tools
+            
+        Raises:
+            RuntimeError: If MCP tools are not enabled
+        """
+        if not self.mcp_registry:
+            raise RuntimeError("MCP tools not enabled. Set ENABLE_MCP_TOOLS=true")
+        
+        try:
+            all_tools = await self.mcp_registry.list_all_tools()
+            logger.info(f"Listed MCP tools from {len(all_tools)} servers")
+            return all_tools
+        except Exception as e:
+            logger.error(f"Failed to list MCP tools: {e}", exc_info=True)
+            raise
+    
+    async def invoke_mcp_tool(
+        self,
+        server_name: str,
+        tool_name: str,
+        arguments: Dict[str, Any],
+        additional_env: Optional[Dict[str, str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Invoke an MCP tool on a specific server.
+        
+        Args:
+            server_name: Name of the MCP server (e.g., 'semgrep-mcp')
+            tool_name: Name of the tool to invoke
+            arguments: Tool arguments
+            additional_env: Additional environment variables for the tool
+            
+        Returns:
+            Tool execution result
+            
+        Security:
+            - Arguments are sanitized
+            - Tool output is logged with hash
+            - Errors don't leak sensitive information
+        """
+        if not self.mcp_registry:
+            raise RuntimeError("MCP tools not enabled. Set ENABLE_MCP_TOOLS=true")
+        
+        try:
+            # Sanitize arguments
+            sanitized_args = {
+                k: self._sanitize_input(str(v)) if isinstance(v, str) else v
+                for k, v in arguments.items()
+            }
+            
+            # Log invocation
+            args_hash = self._compute_hash(json.dumps(sanitized_args, sort_keys=True))
+            logger.info(f"Invoking MCP tool: {server_name}.{tool_name}, args_hash={args_hash}")
+            
+            # Call tool via MCP protocol
+            result = await self.mcp_registry.call_tool(
+                server_name=server_name,
+                tool_name=tool_name,
+                arguments=sanitized_args,
+                env=additional_env
+            )
+            
+            # Log result hash
+            if result.get('success'):
+                result_hash = self._compute_hash(json.dumps(result, sort_keys=True))
+                logger.info(f"MCP tool succeeded: {server_name}.{tool_name}, result_hash={result_hash}")
+            else:
+                logger.warning(f"MCP tool failed: {server_name}.{tool_name}, error={result.get('error')}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"MCP tool invocation failed: {server_name}.{tool_name}: {e}", exc_info=True)
+            return {
+                'success': False,
+                'server': server_name,
+                'tool': tool_name,
+                'error': str(e)
+            }
+    
+    async def invoke_mcp_tools_parallel(
+        self,
+        tool_invocations: List[Dict[str, Any]],
+        max_concurrency: int = 5
+    ) -> List[Dict[str, Any]]:
+        """
+        Invoke multiple MCP tools in parallel with concurrency control.
+        
+        Args:
+            tool_invocations: List of tool invocation specs with server_name, tool_name, arguments
+            max_concurrency: Maximum number of concurrent tool invocations
+            
+        Returns:
+            List of tool execution results in same order as input
+            
+        Example:
+            tool_invocations = [
+                {
+                    'server_name': 'semgrep-mcp',
+                    'tool_name': 'semgrep_scan',
+                    'arguments': {'source_path': 'unzipped/mission-123/'}
+                },
+                {
+                    'server_name': 'gitleaks-mcp',
+                    'tool_name': 'gitleaks_scan',
+                    'arguments': {'source_path': 'unzipped/mission-123/'}
+                }
+            ]
+        """
+        if not self.mcp_registry:
+            raise RuntimeError("MCP tools not enabled. Set ENABLE_MCP_TOOLS=true")
+        
+        async def invoke_single(invocation: Dict[str, Any]) -> Dict[str, Any]:
+            """Helper to invoke a single tool."""
+            return await self.invoke_mcp_tool(
+                server_name=invocation['server_name'],
+                tool_name=invocation['tool_name'],
+                arguments=invocation.get('arguments', {}),
+                additional_env=invocation.get('env')
+            )
+        
+        # Create semaphore for concurrency control
+        semaphore = asyncio.Semaphore(max_concurrency)
+        
+        async def invoke_with_semaphore(invocation: Dict[str, Any]) -> Dict[str, Any]:
+            """Invoke with semaphore for concurrency control."""
+            async with semaphore:
+                return await invoke_single(invocation)
+        
+        # Execute all invocations concurrently
+        logger.info(f"Invoking {len(tool_invocations)} MCP tools with max_concurrency={max_concurrency}")
+        results = await asyncio.gather(
+            *[invoke_with_semaphore(inv) for inv in tool_invocations],
+            return_exceptions=True
+        )
+        
+        # Handle exceptions
+        processed_results = []
+        for i, result in enumerate(results):
+            if isinstance(result, Exception):
+                logger.error(f"Tool invocation {i} failed with exception: {result}")
+                processed_results.append({
+                    'success': False,
+                    'error': str(result),
+                    'invocation': tool_invocations[i]
+                })
+            else:
+                processed_results.append(result)
+        
+        success_count = sum(1 for r in processed_results if r.get('success'))
+        logger.info(f"Parallel MCP invocation complete: {success_count}/{len(tool_invocations)} succeeded")
+        
+        return processed_results
+    
+    async def cleanup_mcp_connections(self):
+        """Clean up all MCP server connections."""
+        if self.mcp_registry:
+            try:
+                await self.mcp_registry.disconnect_all()
+                logger.info("All MCP connections closed")
+            except Exception as e:
+                logger.warning(f"Error during MCP cleanup: {e}")

@@ -1,6 +1,6 @@
 """
 Synthesizer Agent - Finding Generation from Tool Results
-Drafts preliminary security findings from MCP tool outputs.
+Drafts preliminary security findings from MCP tool outputs with evidence chain verification.
 """
 
 import os
@@ -9,9 +9,9 @@ import boto3
 import redis
 import logging
 import hashlib
-from typing import Dict, List
+import asyncio
+from typing import Dict, List, Optional
 from dataclasses import dataclass, asdict
-import sys
 
 from src.shared.cognitive_kernel.bedrock_client import CognitiveKernel
 
@@ -68,7 +68,7 @@ class SynthesizerAgent:
             raise
     
     def _read_tool_results(self) -> List[Dict]:
-        """Read all tool results from DynamoDB."""
+        """Read all MCP tool results from DynamoDB with evidence chain verification."""
         response = self.dynamodb_client.query(
             TableName=self.dynamodb_tool_results_table,
             KeyConditionExpression='mission_id = :mid',
@@ -78,11 +78,31 @@ class SynthesizerAgent:
         results = []
         for item in response.get('Items', []):
             s3_uri = item['s3_uri']['S']
+            stored_digest = item.get('digest', {}).get('S', '')
+            tool_name = item.get('tool_name', {}).get('S', 'unknown')
+            
             bucket, key = s3_uri.replace('s3://', '').split('/', 1)
             
             obj = self.s3_client.get_object(Bucket=bucket, Key=key)
-            results.append(json.loads(obj['Body'].read()))
+            content = obj['Body'].read()
+            
+            # Verify evidence chain
+            if stored_digest:
+                computed_digest = f"sha256:{hashlib.sha256(content).hexdigest()}"
+                if computed_digest != stored_digest:
+                    logger.error(f"Evidence chain verification FAILED for {tool_name}: {s3_uri}")
+                    logger.error(f"Expected: {stored_digest}, Got: {computed_digest}")
+                    continue  # Skip this result
+                else:
+                    logger.info(f"Evidence chain verified for {tool_name}: {stored_digest}")
+            
+            result_data = json.loads(content)
+            result_data['_verified'] = True
+            result_data['_digest'] = stored_digest
+            result_data['_tool'] = tool_name
+            results.append(result_data)
         
+        logger.info(f"Read {len(results)} verified MCP tool results")
         return results
     
     def _synthesize_findings(self, tool_results: List[Dict]) -> List[DraftFinding]:

@@ -103,41 +103,9 @@ export class OrchestrationStack extends cdk.Stack {
       )
       .otherwise(contextAgentsParallel);
 
-    // 4. Dynamic MCP Invocation (Map State)
-    // Create a Choice state to route to the correct MCP tool based on tool name
-    const mcpInvocationMap = new sfn.Map(this, 'DynamicMCPInvocation', {
-      maxConcurrency: 5,
-      itemsPath: '$.execution_plan.tools',
-      resultPath: '$.mcp_results',
-    });
-
-    // Create tasks for each MCP tool
-    const semgrepTask = this.createMCPTask('SemgrepMCP', props.mcpTaskDefinitions['semgrep-mcp'], props);
-    const gitleaksTask = this.createMCPTask('GitleaksMCP', props.mcpTaskDefinitions['gitleaks-mcp'], props);
-    const trivyTask = this.createMCPTask('TrivyMCP', props.mcpTaskDefinitions['trivy-mcp'], props);
-    const scoutsuiteTask = this.createMCPTask('ScoutSuiteMCP', props.mcpTaskDefinitions['scoutsuite-mcp'], props);
-    const pacuTask = this.createMCPTask('PacuMCP', props.mcpTaskDefinitions['pacu-mcp'], props);
-
-    // Create choice state to select the appropriate tool
-    const toolChoice = new sfn.Choice(this, 'SelectMCPTool')
-      .when(sfn.Condition.stringEquals('$.name', 'semgrep-mcp'), semgrepTask)
-      .when(sfn.Condition.stringEquals('$.name', 'gitleaks-mcp'), gitleaksTask)
-      .when(sfn.Condition.stringEquals('$.name', 'trivy-mcp'), trivyTask)
-      .when(sfn.Condition.stringEquals('$.name', 'scoutsuite-mcp'), scoutsuiteTask)
-      .when(sfn.Condition.stringEquals('$.name', 'pacu-mcp'), pacuTask)
-      .otherwise(new sfn.Fail(this, 'UnknownMCPTool', {
-        error: 'UnknownTool',
-        cause: 'The specified MCP tool is not recognized',
-      }));
-
-    mcpInvocationMap.iterator(toolChoice);
-
-    // 5. Wait for S3 Consistency
-    const waitForTools = new sfn.Wait(this, 'WaitForAllTools', {
-      time: sfn.WaitTime.duration(cdk.Duration.seconds(5)),
-    });
-
-    // 6. Synthesis Crucible (Parallel)
+    // 4. Synthesis Crucible (Parallel)
+    // Note: Coordinator agent internally manages MCP tool invocation via MCPToolRegistry
+    // MCP servers are spawned as child processes and communicate via stdio (JSON-RPC 2.0)
     const synthesizerTask = this.createAgentTask(
       'SynthesizerTask',
       props.agentTaskDefinitions.synthesizer,
@@ -190,14 +158,12 @@ export class OrchestrationStack extends cdk.Stack {
 
     const failureEnd = new sfn.Succeed(this, 'FailureRecorded');
 
-    // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> rest
+    // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> synthesis -> archivist
     const definition = unpackTask
       .next(scanTypeChoice);
     
-    // After coordinator, continue with common path
+    // After coordinator (which internally handles MCP tool execution), continue with synthesis
     coordinatorTask
-      .next(mcpInvocationMap)
-      .next(waitForTools)
       .next(synthesisCrucible)
       .next(waitForConsensus)
       .next(archivistTask)
@@ -249,8 +215,8 @@ export class OrchestrationStack extends cdk.Stack {
         resources: [
           ...Object.values(props.agentTaskDefinitions).map((td) => td.taskRole.roleArn),
           ...Object.values(props.agentTaskDefinitions).map((td) => td.executionRole!.roleArn),
-          ...Object.values(props.mcpTaskDefinitions).map((td) => td.taskRole.roleArn),
-          ...Object.values(props.mcpTaskDefinitions).map((td) => td.executionRole!.roleArn),
+          // MCP tools no longer run as separate ECS tasks
+          // They are managed as child processes by the Coordinator agent
         ],
       })
     );
@@ -404,36 +370,7 @@ export class OrchestrationStack extends cdk.Stack {
     });
   }
 
-  private createMCPTask(
-    id: string,
-    taskDefinition: ecs.FargateTaskDefinition,
-    props: OrchestrationStackProps
-  ): tasks.EcsRunTask {
-    return new tasks.EcsRunTask(this, id, {
-      integrationPattern: sfn.IntegrationPattern.RUN_JOB,
-      cluster: props.ecsCluster,
-      taskDefinition,
-      launchTarget: new tasks.EcsFargateLaunchTarget({
-        platformVersion: ecs.FargatePlatformVersion.LATEST,
-      }),
-      containerOverrides: [
-        {
-          containerDefinition: taskDefinition.defaultContainer!,
-          environment: [
-            {
-              name: 'MISSION_ID',
-              value: sfn.JsonPath.stringAt('$.mission_id'),
-            },
-            {
-              name: 'TOOL_NAME',
-              value: sfn.JsonPath.stringAt('$.name'),
-            },
-          ],
-        },
-      ],
-      securityGroups: [props.mcpToolsSecurityGroup],
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
-      resultPath: '$.tool_result',
-    });
-  }
+  // MCP servers are no longer run as separate ECS tasks
+  // They are spawned as child processes by the Coordinator agent
+  // and communicate via stdio using JSON-RPC 2.0 protocol
 }

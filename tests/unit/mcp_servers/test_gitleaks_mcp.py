@@ -2,12 +2,14 @@
 Unit Tests for Gitleaks MCP Server
 ===================================
 
-Tests Gitleaks MCP secret scanning implementation.
+Tests Gitleaks MCP tool implementation with MCP protocol.
 """
 
 import pytest
 import json
-from unittest.mock import Mock, patch
+import asyncio
+from unittest.mock import Mock, patch, AsyncMock
+from pathlib import Path
 
 
 @pytest.mark.mcp
@@ -23,107 +25,123 @@ class TestGitleaksMCP:
         
         assert server is not None
         assert hasattr(server, 'run')
+        assert server.mission_id == mock_environment['MISSION_ID']
     
-    def test_scan_tool_invocation(
-        self,
-        mock_subprocess,
-        mock_environment
-    ):
-        """Test scan tool execution."""
-        mock_subprocess.return_value = Mock(
-            returncode=0,
-            stdout=json.dumps([]),
-            stderr=''
-        )
-        
+    @pytest.mark.asyncio
+    async def test_scan_tool_invocation(self, mock_subprocess, mock_environment):
+        """Test scan tool execution via MCP protocol."""
         from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
-        with patch.dict('os.environ', mock_environment):
-            with patch('subprocess.run', mock_subprocess):
-                with patch.object(GitleaksMCPServer, '_download_source', return_value='/tmp/test-repo'):
-                    with patch.object(GitleaksMCPServer, '_write_results'):
-                        server = GitleaksMCPServer()
-                        result = server.run()
         
-        assert result == 0
-    
-    def test_result_parsing(self, mock_environment):
-        """Test Gitleaks JSON result parsing through _run_gitleaks."""
-        from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
-        from pathlib import Path
-        
-        gitleaks_json = [
-            {
-                'RuleID': 'aws-access-key',
-                'Description': 'AWS Access Key',
-                'File': 'config.py',
-                'StartLine': 10,
-                'Match': 'AKIA...',
-                'Commit': 'abc123'
-            }
-        ]
+        # Mock gitleaks subprocess
+        mock_process = AsyncMock()
+        mock_process.returncode = 1  # Leaks found
+        mock_process.communicate = AsyncMock(return_value=(
+            json.dumps([]).encode(),
+            b''
+        ))
         
         with patch.dict('os.environ', mock_environment):
             server = GitleaksMCPServer()
-            with patch('subprocess.run') as mock_run:
-                mock_run.return_value = Mock(returncode=1, stdout='', stderr='')
-                with patch('builtins.open', create=True) as mock_open:
-                    mock_open.return_value.__enter__.return_value.read.return_value = json.dumps(gitleaks_json)
-                    with patch('json.load', return_value=gitleaks_json):
-                        result = server._run_gitleaks(Path('/tmp/test'))
+            
+            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+                with patch.object(server, '_store_results', new=AsyncMock(return_value={
+                    's3_uri': 's3://bucket/key',
+                    'digest': 'sha256:abc123',
+                    'timestamp': 12345
+                })):
+                    result = await server._execute_gitleaks_scan({
+                        'source_path': '/tmp/test',
+                        'config_path': None,
+                        'timeout': 60,
+                        'no_git': False
+                    })
+        
+        assert result['success'] == True
+        assert result['tool'] == 'gitleaks'
+    
+    @pytest.mark.asyncio
+    async def test_result_parsing(self, mock_environment):
+        """Test Gitleaks JSON result parsing."""
+        from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
+        from unittest.mock import mock_open
+        
+        gitleaks_output = [
+            {
+                'Description': 'AWS Access Key',
+                'Secret': 'AKIAIOSFODNN7EXAMPLE',
+                'File': 'config.py',
+                'StartLine': 12,
+                'RuleID': 'aws-access-key'
+            }
+        ]
+        
+        mock_process = AsyncMock()
+        mock_process.returncode = 1
+        mock_process.communicate = AsyncMock(return_value=(b'', b''))
+        
+        with patch.dict('os.environ', mock_environment):
+            server = GitleaksMCPServer()
+            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+                with patch.object(server, '_get_gitleaks_version', return_value='8.18.0'):
+                    # Mock file reading
+                    with patch('builtins.open', mock_open(read_data=json.dumps(gitleaks_output))):
+                        result = await server._run_gitleaks(Path('/tmp/test'), None, 300, False)
         
         assert result['tool'] == 'gitleaks'
         assert len(result['results']) == 1
         assert result['results'][0]['rule_id'] == 'aws-access-key'
     
-    def test_s3_upload(
-        self,
-        mock_environment
-    ):
-        """Test result upload to S3 through _write_results."""
-        results = {'tool': 'gitleaks', 'results': [{'rule_id': 'test', 'secret_type': 'test'}]}
-        
+    @pytest.mark.asyncio
+    async def test_s3_upload(self, mock_environment):
+        """Test result upload to S3."""
         from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
+        
+        results = {'tool': 'gitleaks', 'results': [{'rule_id': 'test', 'severity': 'HIGH'}]}
+        
         with patch.dict('os.environ', mock_environment):
-            # Server uses autouse fixtures from conftest for S3 and DynamoDB
             server = GitleaksMCPServer()
-            # Just verify the method runs without error
-            server._write_results(results)
             
-        # The method should complete without raising exceptions
-        assert True
-    
-    def test_error_handling_invalid_path(self, mock_environment):
-        """Test error handling for invalid repository path."""
-        from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
-        with patch.dict('os.environ', mock_environment):
-            # Server uses autouse fixtures from conftest
-            with patch.object(GitleaksMCPServer, '_download_source', side_effect=Exception("No files found")):
-                server = GitleaksMCPServer()
-                result = server.run()
-                assert result == 1
-    
-    def test_error_handling_gitleaks_failure(
-        self,
-        mock_subprocess,
-        mock_environment
-    ):
-        """Test error handling when Gitleaks fails."""
-        mock_subprocess.return_value = Mock(
-            returncode=2,
-            stdout='',
-            stderr='Gitleaks error'
-        )
+            # Mock S3 client
+            mock_put = Mock()
+            server.s3_client.put_object = mock_put
+            
+            # Mock DynamoDB client  
+            mock_dynamo = Mock()
+            server.dynamodb_client.put_item = mock_dynamo
+            
+            storage_info = await server._store_results(results)
         
+        assert 's3_uri' in storage_info
+        assert 'digest' in storage_info
+        assert storage_info['digest'].startswith('sha256:')
+    
+    @pytest.mark.asyncio
+    async def test_error_handling_invalid_path(self, mock_environment):
+        """Test error handling for invalid source path."""
         from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
-        from pathlib import Path
+        
         with patch.dict('os.environ', mock_environment):
-            with patch('subprocess.run', mock_subprocess):
-                with patch.object(GitleaksMCPServer, '_download_source', return_value=Path('/tmp/test')):
-                    with patch.object(GitleaksMCPServer, '_write_error'):
-                        server = GitleaksMCPServer()
-                        result = server.run()
-                        assert result == 1
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v'])
+            server = GitleaksMCPServer()
+            
+            with patch('asyncio.create_subprocess_exec', side_effect=FileNotFoundError("Path not found")):
+                with pytest.raises(FileNotFoundError):
+                    await server._run_gitleaks(Path('/nonexistent'), None, 300, False)
+    
+    @pytest.mark.asyncio
+    async def test_error_handling_gitleaks_failure(self, mock_environment):
+        """Test error handling for Gitleaks execution failure."""
+        from src.mcp_servers.gitleaks_mcp.server import GitleaksMCPServer
+        
+        mock_process = AsyncMock()
+        mock_process.returncode = 2  # Error code
+        mock_process.communicate = AsyncMock(return_value=(
+            b'',
+            b'Gitleaks error'
+        ))
+        
+        with patch.dict('os.environ', mock_environment):
+            server = GitleaksMCPServer()
+            
+            with patch('asyncio.create_subprocess_exec', return_value=mock_process):
+                with pytest.raises(Exception, match="Gitleaks failed"):
+                    await server._run_gitleaks(Path('/tmp/test'), None, 300, False)

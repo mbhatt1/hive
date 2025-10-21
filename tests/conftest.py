@@ -231,6 +231,27 @@ def mock_redis_client():
 
 
 @pytest.fixture
+def mock_redis():
+    """Alias for mock_redis_client for backward compatibility."""
+    mock_redis = Mock()
+    # Mock Redis operations
+    mock_redis.set.return_value = True
+    mock_redis.get.return_value = json.dumps({'status': 'success'}).encode()
+    mock_redis.delete.return_value = 1
+    mock_redis.exists.return_value = True
+    mock_redis.hset.return_value = True
+    mock_redis.hget.return_value = json.dumps({'status': 'success'}).encode()
+    mock_redis.sadd.return_value = 1
+    mock_redis.srem.return_value = 1
+    mock_redis.smembers.return_value = set()
+    mock_redis.lrange.return_value = []
+    mock_redis.rpush.return_value = 1
+    mock_redis.zadd.return_value = 1
+    mock_redis.scan_iter.return_value = iter([])
+    return mock_redis
+
+
+@pytest.fixture
 def mock_stepfunctions_client():
     """Mock Step Functions client."""
     with mock_aws():

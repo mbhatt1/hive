@@ -1,291 +1,490 @@
 """
-ScoutSuite MCP Server - AWS Infrastructure Security Scanning
-Performs comprehensive AWS security audits and compliance checks
+ScoutSuite MCP Server - Proper Model Context Protocol Implementation
+Implements JSON-RPC 2.0 protocol for AWS security configuration assessment.
 """
 
 import os
 import json
-import subprocess
+import asyncio
 import hashlib
 import boto3
 import logging
 from pathlib import Path
+from typing import Any, Sequence
 import time
-import uuid
+
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import (
+    Tool,
+    TextContent,
+    ImageContent,
+    EmbeddedResource
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class ScoutSuiteMCPServer:
+    """MCP-compliant server for ScoutSuite AWS security assessment."""
+    
     def __init__(self):
+        self.server = Server("scoutsuite-mcp")
         self.mission_id = os.environ.get('MISSION_ID', 'test-scan-123')
         self.s3_artifacts_bucket = os.environ.get('S3_ARTIFACTS_BUCKET', 'test-bucket')
         self.dynamodb_tool_results_table = os.environ.get('DYNAMODB_TOOL_RESULTS_TABLE', 'test-table')
-        self.tool_name = 'scoutsuite-mcp'
-        
-        # AWS configuration for scanning
-        self.aws_account = os.environ.get('AWS_ACCOUNT_ID', '')
-        self.aws_region = os.environ.get('AWS_TARGET_REGION', 'us-east-1')
-        self.aws_profile = os.environ.get('AWS_PROFILE', 'default')
-        self.services = os.environ.get('SERVICES', '').split(',') if os.environ.get('SERVICES') else []
-        self.scan_timeout = int(os.environ.get('SCAN_TIMEOUT_MINUTES', '30'))  # Default 30 minutes
-        self.cross_account_role_arn = os.environ.get('CROSS_ACCOUNT_ROLE_ARN', '')
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
         self.dynamodb_client = boto3.client('dynamodb', region_name=region)
-        self.secrets_client = boto3.client('secretsmanager', region_name=region)
         
-        # Load credentials from Secrets Manager if configured
-        self._load_scan_credentials()
+        # Register MCP handlers
+        self._register_handlers()
         
         logger.info(f"ScoutSuiteMCPServer initialized for mission: {self.mission_id}")
-        logger.info(f"Target AWS Account: {self.aws_account}, Region: {self.aws_region}")
     
-    def _load_scan_credentials(self):
-        """Load AWS scan credentials from Secrets Manager if configured."""
-        secret_name = os.environ.get('AWS_SCAN_CREDENTIALS_SECRET')
-        if not secret_name:
-            logger.info("No AWS_SCAN_CREDENTIALS_SECRET configured, using default credentials")
-            return
+    def _register_handlers(self):
+        """Register MCP protocol handlers."""
         
-        try:
-            response = self.secrets_client.get_secret_value(SecretId=secret_name)
-            credentials = json.loads(response['SecretString'])
-            
-            # Set environment variables for ScoutSuite to use
-            if 'access_key_id' in credentials:
-                os.environ['AWS_ACCESS_KEY_ID'] = credentials['access_key_id']
-            if 'secret_access_key' in credentials:
-                os.environ['AWS_SECRET_ACCESS_KEY'] = credentials['secret_access_key']
-            if 'session_token' in credentials:
-                os.environ['AWS_SESSION_TOKEN'] = credentials['session_token']
-            if 'role_arn' in credentials:
-                os.environ['AWS_ROLE_ARN'] = credentials['role_arn']
-            
-            logger.info(f"Loaded scan credentials from Secrets Manager: {secret_name}")
-        except Exception as e:
-            logger.warning(f"Failed to load credentials from Secrets Manager: {e}")
+        @self.server.list_tools()
+        async def list_tools() -> list[Tool]:
+            """List available tools - MCP protocol requirement."""
+            return [
+                Tool(
+                    name="scoutsuite_scan",
+                    description="Run comprehensive AWS security configuration assessment across all services. Scans IAM, S3, EC2, RDS, Lambda, and 20+ other AWS services for security misconfigurations, compliance violations, and best practice deviations.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "aws_profile": {
+                                "type": "string",
+                                "description": "AWS CLI profile name to use (optional, uses default credentials if not specified)",
+                                "default": "default"
+                            },
+                            "services": {
+                                "type": "array",
+                                "description": "List of AWS services to scan (default: all). Options: iam, s3, ec2, rds, lambda, cloudtrail, etc.",
+                                "items": {"type": "string"},
+                                "default": []
+                            },
+                            "regions": {
+                                "type": "array",
+                                "description": "AWS regions to scan (default: all enabled regions)",
+                                "items": {"type": "string"},
+                                "default": []
+                            },
+                            "report_name": {
+                                "type": "string",
+                                "description": "Custom name for the assessment report",
+                                "default": "aws-security-assessment"
+                            },
+                            "timeout": {
+                                "type": "integer",
+                                "description": "Scan timeout in seconds (default: 1800 = 30 minutes)",
+                                "default": 1800
+                            }
+                        },
+                        "required": []
+                    }
+                ),
+                Tool(
+                    name="get_compliance_report",
+                    description="Retrieve compliance report from previous ScoutSuite scan with CIS AWS Foundations Benchmark mapping",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "mission_id": {
+                                "type": "string",
+                                "description": "Mission ID of the scan"
+                            },
+                            "format": {
+                                "type": "string",
+                                "description": "Report format: json or html",
+                                "enum": ["json", "html"],
+                                "default": "json"
+                            }
+                        },
+                        "required": ["mission_id"]
+                    }
+                ),
+                Tool(
+                    name="get_scan_results",
+                    description="Retrieve raw scan results from previous ScoutSuite assessment",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "mission_id": {
+                                "type": "string",
+                                "description": "Mission ID of the scan"
+                            }
+                        },
+                        "required": ["mission_id"]
+                    }
+                )
+            ]
+        
+        @self.server.call_tool()
+        async def call_tool(name: str, arguments: Any) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+            """Execute tool - MCP protocol requirement."""
+            try:
+                if name == "scoutsuite_scan":
+                    result = await self._execute_scoutsuite_scan(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2)
+                    )]
+                
+                elif name == "get_compliance_report":
+                    result = await self._get_compliance_report(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2) if isinstance(result, dict) else result
+                    )]
+                
+                elif name == "get_scan_results":
+                    result = await self._get_scan_results(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2)
+                    )]
+                
+                else:
+                    raise ValueError(f"Unknown tool: {name}")
+                    
+            except Exception as e:
+                logger.error(f"Tool execution failed: {e}", exc_info=True)
+                return [TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "error": str(e),
+                        "tool": name,
+                        "success": False
+                    })
+                )]
     
-    def run(self):
-        try:
-            results = self._run_scoutsuite()
-            self._write_results(results)
-            findings_count = self._count_findings(results)
-            logger.info(f"ScoutSuite completed: {findings_count} findings discovered")
-            return 0
-        except Exception as e:
-            logger.error(f"ScoutSuite failed: {str(e)}", exc_info=True)
-            self._write_error(str(e))
-            return 1
+    async def _execute_scoutsuite_scan(self, arguments: dict) -> dict:
+        """Execute ScoutSuite AWS security assessment with MCP protocol."""
+        aws_profile = arguments.get("aws_profile", "default")
+        services = arguments.get("services", [])
+        regions = arguments.get("regions", [])
+        report_name = arguments.get("report_name", "aws-security-assessment")
+        timeout = arguments.get("timeout", 1800)
+        
+        logger.info(f"Starting ScoutSuite scan: profile={aws_profile}, services={services or 'all'}")
+        
+        # Execute ScoutSuite
+        results = await self._run_scoutsuite(aws_profile, services, regions, report_name, timeout)
+        
+        # Store results
+        storage_info = await self._store_results(results, report_name)
+        
+        # Return MCP-compliant response
+        return {
+            "success": True,
+            "tool": "scoutsuite",
+            "mission_id": self.mission_id,
+            "report_name": report_name,
+            "findings_count": results.get('findings_count', 0),
+            "storage": storage_info,
+            "summary": results.get('summary', {})
+        }
     
-    def _run_scoutsuite(self) -> dict:
-        """Run ScoutSuite AWS security scan."""
+    async def _run_scoutsuite(
+        self,
+        aws_profile: str,
+        services: list,
+        regions: list,
+        report_name: str,
+        timeout: int
+    ) -> dict:
+        """Run ScoutSuite scan asynchronously."""
         try:
-            # Prepare report directory
-            report_dir = Path(f"/tmp/scoutsuite-reports/{self.mission_id}")
-            report_dir.mkdir(parents=True, exist_ok=True)
+            output_dir = f'/tmp/scoutsuite-{self.mission_id}'
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
             
-            report_name = f"scan_{uuid.uuid4().hex[:8]}"
-            
-            # Build ScoutSuite command
+            # Build command
             cmd = [
-                'scout', 'aws',
-                '--report-dir', str(report_dir),
+                'scout',
+                'aws',
+                '--profile', aws_profile,
+                '--report-dir', output_dir,
                 '--report-name', report_name,
-                '--no-browser'
+                '--no-browser',
+                '--json'
             ]
             
-            # Add AWS credentials
-            if os.environ.get('AWS_ACCESS_KEY_ID') and os.environ.get('AWS_SECRET_ACCESS_KEY'):
-                cmd.extend([
-                    '--access-keys',
-                    '--access-key-id', os.environ.get('AWS_ACCESS_KEY_ID'),
-                    '--secret-access-key', os.environ.get('AWS_SECRET_ACCESS_KEY')
-                ])
-                if os.environ.get('AWS_SESSION_TOKEN'):
-                    cmd.extend(['--session-token', os.environ.get('AWS_SESSION_TOKEN')])
-            else:
-                cmd.extend(['--profile', self.aws_profile])
+            if services:
+                cmd.extend(['--services'] + services)
             
-            # Add region filter
-            if self.aws_region:
-                cmd.extend(['--regions', self.aws_region])
+            if regions:
+                cmd.extend(['--regions'] + regions)
             
-            # Add service filter
-            if self.services and self.services[0]:
-                cmd.extend(['--services'] + self.services)
-            
-            # Add cross-account role if configured
-            if self.cross_account_role_arn:
-                logger.info(f"Using cross-account role: {self.cross_account_role_arn}")
-                cmd.extend(['--assume-role', self.cross_account_role_arn])
-            
-            logger.info(f"Running ScoutSuite: {' '.join(cmd)}")
-            timeout_seconds = self.scan_timeout * 60
-            logger.info(f"Scan timeout: {self.scan_timeout} minutes ({timeout_seconds} seconds)")
-            
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout_seconds
+            # Run ScoutSuite
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env={**os.environ, 'AWS_PROFILE': aws_profile}
             )
             
-            if result.returncode != 0:
-                logger.warning(f"ScoutSuite stderr: {result.stderr}")
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=timeout
+            )
             
-            # Parse ScoutSuite JSON report
-            report_file = report_dir / f"scoutsuite-results/scoutsuite_results_{report_name}.js"
-            
-            # ScoutSuite generates a JS file, we need to extract JSON
-            if report_file.exists():
-                with open(report_file, 'r') as f:
-                    content = f.read()
-                    # Extract JSON from JS file (format: scoutsuite_results = {...})
+            if process.returncode == 0:
+                # Parse ScoutSuite results
+                results_file = Path(output_dir) / f'scoutsuite-results/scoutsuite_results_aws-{report_name}.js'
+                
+                if results_file.exists():
+                    # ScoutSuite outputs JS file, need to extract JSON
+                    content = results_file.read_text()
+                    # Extract JSON from: scoutsuite_results = {...};
                     json_start = content.find('{')
                     json_end = content.rfind('}') + 1
                     if json_start > 0 and json_end > json_start:
-                        scan_data = json.loads(content[json_start:json_end])
+                        results_json = content[json_start:json_end]
+                        scout_data = json.loads(results_json)
                     else:
-                        scan_data = {}
-            else:
-                logger.warning("ScoutSuite report file not found, returning empty results")
-                scan_data = {}
-            
-            # Format results
-            formatted = {
-                'tool': 'scoutsuite',
-                'version': self._get_version(),
-                'aws_account': self.aws_account,
-                'aws_region': self.aws_region,
-                'scan_timestamp': int(time.time()),
-                'results': self._parse_findings(scan_data)
-            }
-            
-            return formatted
-            
-        except subprocess.TimeoutExpired:
-            return {'tool': 'scoutsuite', 'error': 'timeout', 'results': []}
-        except Exception as e:
-            logger.error(f"ScoutSuite execution error: {str(e)}")
-            return {'tool': 'scoutsuite', 'error': str(e), 'results': []}
-    
-    def _parse_findings(self, scan_data: dict) -> list:
-        """Parse ScoutSuite scan data and extract findings."""
-        findings = []
-        services = scan_data.get('services', {})
-        
-        for service_name, service_data in services.items():
-            if not isinstance(service_data, dict):
-                continue
-            
-            # Parse findings from service data
-            findings_data = service_data.get('findings', {})
-            
-            for finding_key, finding_info in findings_data.items():
-                if not isinstance(finding_info, dict):
-                    continue
+                        scout_data = {}
+                else:
+                    scout_data = {}
                 
-                # Extract finding details
-                finding = {
-                    'finding_id': f"{service_name}_{finding_key}_{uuid.uuid4().hex[:8]}",
-                    'service': service_name,
-                    'finding_key': finding_key,
-                    'description': finding_info.get('description', ''),
-                    'level': finding_info.get('level', 'info'),
-                    'severity': self._map_severity(finding_info.get('level', 'info')),
-                    'items': finding_info.get('items', []),
-                    'items_count': len(finding_info.get('items', [])),
-                    'compliance': finding_info.get('compliance', []),
-                    'references': finding_info.get('references', [])
+                # Format results
+                formatted = {
+                    'tool': 'scoutsuite',
+                    'version': await self._get_scoutsuite_version(),
+                    'profile': aws_profile,
+                    'report_name': report_name,
+                    'findings_count': self._count_findings(scout_data),
+                    'summary': self._create_summary(scout_data),
+                    'raw_results': scout_data
                 }
                 
-                findings.append(finding)
-        
-        logger.info(f"Parsed {len(findings)} findings from ScoutSuite scan")
-        return findings
+                return formatted
+            else:
+                raise Exception(f"ScoutSuite failed with code {process.returncode}: {stderr.decode()}")
+                
+        except asyncio.TimeoutError:
+            logger.error(f"ScoutSuite timeout after {timeout} seconds")
+            return {
+                'tool': 'scoutsuite',
+                'error': 'timeout',
+                'findings_count': 0
+            }
     
-    def _map_severity(self, level: str) -> str:
-        """Map ScoutSuite levels to standard severity."""
-        severity_map = {
-            'danger': 'critical',
-            'warning': 'high',
-            'info': 'medium',
-            'success': 'low'
-        }
-        return severity_map.get(level.lower(), 'medium')
-    
-    def _count_findings(self, results: dict) -> int:
-        """Count total findings in results."""
-        return len(results.get('results', []))
-    
-    def _get_version(self) -> str:
-        """Get ScoutSuite version."""
+    async def _get_scoutsuite_version(self) -> str:
+        """Get ScoutSuite version asynchronously."""
         try:
-            result = subprocess.run(['scout', '--version'], capture_output=True, text=True)
-            return result.stdout.strip()
+            process = await asyncio.create_subprocess_exec(
+                'scout',
+                '--version',
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, _ = await process.communicate()
+            return stdout.decode().strip()
         except:
             return 'unknown'
     
-    def _write_results(self, results: dict):
-        """Write results to S3 and DynamoDB."""
+    def _count_findings(self, scout_data: dict) -> int:
+        """Count total findings from ScoutSuite results."""
+        count = 0
+        services = scout_data.get('services', {})
+        
+        for service_name, service_data in services.items():
+            findings = service_data.get('findings', {})
+            for finding_name, finding_data in findings.items():
+                flagged_items = finding_data.get('flagged_items', [])
+                count += len(flagged_items)
+        
+        return count
+    
+    def _create_summary(self, scout_data: dict) -> dict:
+        """Create summary from ScoutSuite results."""
+        services = scout_data.get('services', {})
+        summary = {
+            'services_scanned': len(services),
+            'by_severity': {'danger': 0, 'warning': 0, 'info': 0},
+            'by_service': {}
+        }
+        
+        for service_name, service_data in services.items():
+            service_findings = 0
+            findings = service_data.get('findings', {})
+            
+            for finding_name, finding_data in findings.items():
+                flagged_items = finding_data.get('flagged_items', [])
+                finding_count = len(flagged_items)
+                service_findings += finding_count
+                
+                # Count by severity
+                severity = finding_data.get('level', 'info')
+                if severity in summary['by_severity']:
+                    summary['by_severity'][severity] += finding_count
+            
+            summary['by_service'][service_name] = service_findings
+        
+        return summary
+    
+    async def _store_results(self, results: dict, report_name: str) -> dict:
+        """Store results in S3 and DynamoDB with evidence chain."""
         timestamp = int(time.time())
+        
+        # Compute digest
         results_json = json.dumps(results, sort_keys=True)
         digest = hashlib.sha256(results_json.encode()).hexdigest()
-        s3_key = f"tool-results/{self.tool_name}/{self.mission_id}/{timestamp}/results.json"
         
-        # Upload to S3
-        self.s3_client.put_object(
-            Bucket=self.s3_artifacts_bucket,
-            Key=s3_key,
-            Body=results_json,
-            ContentType='application/json',
-            Metadata={
-                'tool': self.tool_name,
-                'digest': f"sha256:{digest}",
-                'aws_account': self.aws_account,
-                'aws_region': self.aws_region
-            }
+        # Write to S3
+        s3_key = f"tool-results/scoutsuite-mcp/{self.mission_id}/{timestamp}/{report_name}-results.json"
+        
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            lambda: self.s3_client.put_object(
+                Bucket=self.s3_artifacts_bucket,
+                Key=s3_key,
+                Body=results_json,
+                ContentType='application/json',
+                Metadata={
+                    'tool': 'scoutsuite-mcp',
+                    'mission-id': self.mission_id,
+                    'digest': f"sha256:{digest}",
+                    'report-name': report_name
+                }
+            )
         )
         
-        # Write to DynamoDB
-        self.dynamodb_client.put_item(
-            TableName=self.dynamodb_tool_results_table,
-            Item={
-                'mission_id': {'S': self.mission_id},
-                'tool_timestamp': {'S': f"{self.tool_name}#{timestamp}"},
-                'tool_name': {'S': self.tool_name},
-                's3_uri': {'S': f"s3://{self.s3_artifacts_bucket}/{s3_key}"},
-                'digest': {'S': f"sha256:{digest}"},
-                'findings_count': {'N': str(len(results.get('results', [])))},
-                'aws_account': {'S': self.aws_account},
-                'aws_region': {'S': self.aws_region},
-                'success': {'BOOL': True},
-                'ttl': {'N': str(timestamp + (7 * 24 * 60 * 60))}
-            }
+        # Write digest file
+        digest_key = f"tool-results/scoutsuite-mcp/{self.mission_id}/{timestamp}/digest.sha256"
+        await loop.run_in_executor(
+            None,
+            lambda: self.s3_client.put_object(
+                Bucket=self.s3_artifacts_bucket,
+                Key=digest_key,
+                Body=f"sha256:{digest}",
+                ContentType='text/plain'
+            )
         )
         
-        logger.info(f"Results written to S3: {s3_key}")
+        # Index in DynamoDB
+        await loop.run_in_executor(
+            None,
+            lambda: self.dynamodb_client.put_item(
+                TableName=self.dynamodb_tool_results_table,
+                Item={
+                    'mission_id': {'S': self.mission_id},
+                    'tool_timestamp': {'S': f"scoutsuite-mcp#{timestamp}"},
+                    'tool_name': {'S': 'scoutsuite-mcp'},
+                    's3_uri': {'S': f"s3://{self.s3_artifacts_bucket}/{s3_key}"},
+                    'digest': {'S': f"sha256:{digest}"},
+                    'findings_count': {'N': str(results.get('findings_count', 0))},
+                    'success': {'BOOL': True},
+                    'report_name': {'S': report_name},
+                    'ttl': {'N': str(timestamp + (7 * 24 * 60 * 60))}
+                }
+            )
+        )
+        
+        logger.info(f"Results stored: s3://{self.s3_artifacts_bucket}/{s3_key}")
+        logger.info(f"Evidence chain digest: sha256:{digest}")
+        
+        return {
+            "s3_uri": f"s3://{self.s3_artifacts_bucket}/{s3_key}",
+            "digest": f"sha256:{digest}",
+            "timestamp": timestamp
+        }
     
-    def _write_error(self, error: str):
-        """Write error to DynamoDB."""
-        timestamp = int(time.time())
-        self.dynamodb_client.put_item(
-            TableName=self.dynamodb_tool_results_table,
-            Item={
-                'mission_id': {'S': self.mission_id},
-                'tool_timestamp': {'S': f"{self.tool_name}#{timestamp}"},
-                'tool_name': {'S': self.tool_name},
-                'success': {'BOOL': False},
-                'error_message': {'S': error},
-                'ttl': {'N': str(timestamp + (7 * 24 * 60 * 60))}
-            }
+    async def _get_compliance_report(self, arguments: dict) -> dict:
+        """Retrieve compliance report from DynamoDB."""
+        mission_id = arguments.get("mission_id", self.mission_id)
+        format_type = arguments.get("format", "json")
+        
+        # Get raw results first
+        results = await self._get_scan_results({"mission_id": mission_id})
+        
+        if "error" in results:
+            return results
+        
+        # Extract compliance-relevant findings
+        compliance_report = {
+            "mission_id": mission_id,
+            "report_type": "cis_aws_foundations_benchmark",
+            "findings_by_control": {},
+            "summary": results.get('summary', {})
+        }
+        
+        # Map ScoutSuite findings to CIS controls
+        # This is a simplified version - production would have full CIS mapping
+        raw_results = results.get('raw_results', {})
+        services = raw_results.get('services', {})
+        
+        for service_name, service_data in services.items():
+            findings = service_data.get('findings', {})
+            for finding_name, finding_data in findings.items():
+                compliance_report['findings_by_control'][finding_name] = {
+                    'service': service_name,
+                    'severity': finding_data.get('level', 'info'),
+                    'flagged_items_count': len(finding_data.get('flagged_items', [])),
+                    'description': finding_data.get('description', '')
+                }
+        
+        return compliance_report
+    
+    async def _get_scan_results(self, arguments: dict) -> dict:
+        """Retrieve scan results from DynamoDB."""
+        mission_id = arguments.get("mission_id", self.mission_id)
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: self.dynamodb_client.query(
+                TableName=self.dynamodb_tool_results_table,
+                KeyConditionExpression='mission_id = :mid AND begins_with(tool_timestamp, :tool)',
+                ExpressionAttributeValues={
+                    ':mid': {'S': mission_id},
+                    ':tool': {'S': 'scoutsuite-mcp#'}
+                }
+            )
         )
+        
+        items = response.get('Items', [])
+        if not items:
+            return {"error": "No results found", "mission_id": mission_id}
+        
+        # Get most recent result
+        latest = items[-1]
+        s3_uri = latest['s3_uri']['S']
+        
+        # Download from S3
+        if s3_uri.startswith('s3://'):
+            bucket, key = s3_uri[5:].split('/', 1)
+            obj = await loop.run_in_executor(
+                None,
+                lambda: self.s3_client.get_object(Bucket=bucket, Key=key)
+            )
+            content = obj['Body'].read().decode()
+            return json.loads(content)
+        
+        return {"error": "Invalid S3 URI", "s3_uri": s3_uri}
+    
+    async def run(self):
+        """Start MCP server with stdio transport."""
+        async with stdio_server() as (read_stream, write_stream):
+            logger.info("ScoutSuite MCP Server starting with stdio transport")
+            await self.server.run(
+                read_stream,
+                write_stream,
+                self.server.create_initialization_options()
+            )
 
-def main():
+
+async def main():
+    """Entry point for MCP server."""
     server = ScoutSuiteMCPServer()
-    return server.run()
+    await server.run()
+
 
 if __name__ == "__main__":
-    exit(main())
+    asyncio.run(main())

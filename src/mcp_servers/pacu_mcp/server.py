@@ -1,466 +1,507 @@
 """
-Pacu MCP Server - AWS Exploit Validation
-Validates if AWS security findings are actually exploitable
+Pacu MCP Server - Proper Model Context Protocol Implementation
+Implements JSON-RPC 2.0 protocol for AWS penetration testing.
 """
 
 import os
 import json
-import subprocess
+import asyncio
 import hashlib
 import boto3
 import logging
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Sequence
 import time
-import uuid
-import sqlite3
+
+from mcp.server import Server
+from mcp.server.stdio import stdio_server
+from mcp.types import (
+    Tool,
+    TextContent,
+    ImageContent,
+    EmbeddedResource
+)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 class PacuMCPServer:
+    """MCP-compliant server for Pacu AWS penetration testing."""
+    
     def __init__(self):
+        self.server = Server("pacu-mcp")
         self.mission_id = os.environ.get('MISSION_ID', 'test-scan-123')
         self.s3_artifacts_bucket = os.environ.get('S3_ARTIFACTS_BUCKET', 'test-bucket')
         self.dynamodb_tool_results_table = os.environ.get('DYNAMODB_TOOL_RESULTS_TABLE', 'test-table')
-        self.tool_name = 'pacu-mcp'
-        
-        # AWS configuration for validation
-        self.aws_account = os.environ.get('AWS_ACCOUNT_ID', '')
-        self.aws_region = os.environ.get('AWS_TARGET_REGION', 'us-east-1')
-        self.aws_profile = os.environ.get('AWS_PROFILE', 'default')
-        self.scan_timeout = int(os.environ.get('SCAN_TIMEOUT_MINUTES', '30'))  # Default 30 minutes
-        self.cross_account_role_arn = os.environ.get('CROSS_ACCOUNT_ROLE_ARN', '')
-        
-        # Findings to validate (JSON string)
-        self.findings_json = os.environ.get('FINDINGS', '[]')
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
         self.dynamodb_client = boto3.client('dynamodb', region_name=region)
-        self.secrets_client = boto3.client('secretsmanager', region_name=region)
         
-        # Pacu session configuration
-        self.session_name = f"hivemind_{self.mission_id}"
-        self.session_db = Path(f"/tmp/pacu_sessions/{self.session_name}.db")
-        
-        # Load credentials from Secrets Manager if configured
-        self._load_scan_credentials()
+        # Register MCP handlers
+        self._register_handlers()
         
         logger.info(f"PacuMCPServer initialized for mission: {self.mission_id}")
-        logger.info(f"Target AWS Account: {self.aws_account}, Region: {self.aws_region}")
     
-    def _load_scan_credentials(self):
-        """Load AWS scan credentials from Secrets Manager if configured."""
-        secret_name = os.environ.get('AWS_SCAN_CREDENTIALS_SECRET')
-        if not secret_name:
-            logger.info("No AWS_SCAN_CREDENTIALS_SECRET configured, using default credentials")
-            return
+    def _register_handlers(self):
+        """Register MCP protocol handlers."""
         
-        try:
-            response = self.secrets_client.get_secret_value(SecretId=secret_name)
-            credentials = json.loads(response['SecretString'])
-            
-            # Set environment variables for Pacu to use
-            if 'access_key_id' in credentials:
-                os.environ['AWS_ACCESS_KEY_ID'] = credentials['access_key_id']
-            if 'secret_access_key' in credentials:
-                os.environ['AWS_SECRET_ACCESS_KEY'] = credentials['secret_access_key']
-            if 'session_token' in credentials:
-                os.environ['AWS_SESSION_TOKEN'] = credentials['session_token']
-            if 'role_arn' in credentials:
-                os.environ['AWS_ROLE_ARN'] = credentials['role_arn']
-            
-            logger.info(f"Loaded scan credentials from Secrets Manager: {secret_name}")
-        except Exception as e:
-            logger.warning(f"Failed to load credentials from Secrets Manager: {e}")
-    
-    def run(self):
-        try:
-            # Parse findings to validate
-            findings = json.loads(self.findings_json)
-            logger.info(f"Validating {len(findings)} findings")
-            
-            # Create Pacu session
-            self._create_session()
-            
-            # Validate findings
-            results = self._validate_findings(findings)
-            
-            # Write results
-            self._write_results(results)
-            
-            validated_count = sum(1 for r in results.get('validations', []) if r.get('exploitable'))
-            logger.info(f"Pacu validation completed: {validated_count}/{len(findings)} exploitable")
-            
-            return 0
-        except Exception as e:
-            logger.error(f"Pacu validation failed: {str(e)}", exc_info=True)
-            self._write_error(str(e))
-            return 1
-    
-    def _create_session(self):
-        """Create a new Pacu session."""
-        try:
-            # Ensure session directory exists
-            self.session_db.parent.mkdir(parents=True, exist_ok=True)
-            
-            cmd = [
-                'pacu',
-                '--session', self.session_name
+        @self.server.list_tools()
+        async def list_tools() -> list[Tool]:
+            """List available tools - MCP protocol requirement."""
+            return [
+                Tool(
+                    name="pacu_list_modules",
+                    description="List all available Pacu modules for AWS penetration testing. Modules include reconnaissance, privilege escalation, lateral movement, and exfiltration techniques.",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "category": {
+                                "type": "string",
+                                "description": "Filter by module category: recon, enum, privesc, lateral, exfil, or all",
+                                "default": "all",
+                                "enum": ["all", "recon", "enum", "privesc", "lateral", "exfil"]
+                            }
+                        },
+                        "required": []
+                    }
+                ),
+                Tool(
+                    name="pacu_run_module",
+                    description="Execute a specific Pacu module for AWS penetration testing with safety controls",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "module_name": {
+                                "type": "string",
+                                "description": "Name of the Pacu module to run (e.g., 'iam__enum_permissions', 'ec2__enum')"
+                            },
+                            "aws_profile": {
+                                "type": "string",
+                                "description": "AWS CLI profile to use",
+                                "default": "default"
+                            },
+                            "regions": {
+                                "type": "array",
+                                "description": "AWS regions to target",
+                                "items": {"type": "string"},
+                                "default": []
+                            },
+                            "module_args": {
+                                "type": "object",
+                                "description": "Module-specific arguments",
+                                "default": {}
+                            },
+                            "dry_run": {
+                                "type": "boolean",
+                                "description": "Perform dry run without making changes (recommended)",
+                                "default": True
+                            },
+                            "timeout": {
+                                "type": "integer",
+                                "description": "Module execution timeout in seconds",
+                                "default": 600
+                            }
+                        },
+                        "required": ["module_name"]
+                    }
+                ),
+                Tool(
+                    name="pacu_enum_permissions",
+                    description="Enumerate IAM permissions for current AWS credentials - safe reconnaissance module",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "aws_profile": {
+                                "type": "string",
+                                "description": "AWS CLI profile to use",
+                                "default": "default"
+                            }
+                        },
+                        "required": []
+                    }
+                ),
+                Tool(
+                    name="get_scan_results",
+                    description="Retrieve results from previous Pacu module execution",
+                    inputSchema={
+                        "type": "object",
+                        "properties": {
+                            "mission_id": {
+                                "type": "string",
+                                "description": "Mission ID of the scan"
+                            }
+                        },
+                        "required": ["mission_id"]
+                    }
+                )
             ]
-            
-            # Set AWS credentials via environment
-            env = os.environ.copy()
-            if os.environ.get('AWS_ACCESS_KEY_ID') and os.environ.get('AWS_SECRET_ACCESS_KEY'):
-                env['AWS_ACCESS_KEY_ID'] = os.environ.get('AWS_ACCESS_KEY_ID')
-                env['AWS_SECRET_ACCESS_KEY'] = os.environ.get('AWS_SECRET_ACCESS_KEY')
-                if os.environ.get('AWS_SESSION_TOKEN'):
-                    env['AWS_SESSION_TOKEN'] = os.environ.get('AWS_SESSION_TOKEN')
-            
-            logger.info(f"Creating Pacu session: {self.session_name}")
-            
-            # Initialize session (this creates the SQLite database)
-            result = subprocess.run(
-                cmd + ['--list-modules'],
-                capture_output=True,
-                text=True,
-                timeout=30,
-                env=env
-            )
-            
-            if result.returncode != 0:
-                logger.warning(f"Pacu session creation warning: {result.stderr}")
-            
-            logger.info("Pacu session created successfully")
-            
-        except Exception as e:
-            logger.error(f"Failed to create Pacu session: {str(e)}")
-            raise
-    
-    def _validate_findings(self, findings: list) -> dict:
-        """Validate findings using Pacu modules with intelligent selection.
         
-        If priority_findings are provided (from Strategist's Claude analysis),
-        use the recommended modules for each finding.
-        """
-        validations = []
-        
-        # Check if we have intelligent analysis from Strategist
-        priority_findings_map = {}
-        if isinstance(findings, dict) and 'priority_findings' in findings:
-            # Extract priority findings with their recommended modules
-            for pf in findings['priority_findings']:
-                priority_findings_map[pf['finding_id']] = {
-                    'priority_score': pf['priority_score'],
-                    'recommended_modules': pf['recommended_modules'],
-                    'rationale': pf.get('rationale', '')
-                }
-            logger.info(f"Using intelligent module selection for {len(priority_findings_map)} priority findings")
-            findings_to_validate = findings.get('findings', findings.get('priority_findings', []))
-        else:
-            findings_to_validate = findings if isinstance(findings, list) else []
-        
-        for finding in findings_to_validate:
+        @self.server.call_tool()
+        async def call_tool(name: str, arguments: Any) -> Sequence[TextContent | ImageContent | EmbeddedResource]:
+            """Execute tool - MCP protocol requirement."""
             try:
-                finding_id = finding.get('finding_id')
+                if name == "pacu_list_modules":
+                    result = await self._list_pacu_modules(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2)
+                    )]
                 
-                # Use intelligent module selection if available
-                if finding_id in priority_findings_map:
-                    priority_info = priority_findings_map[finding_id]
-                    validation = self._validate_with_intelligent_modules(
-                        finding,
-                        priority_info['recommended_modules'],
-                        priority_info['rationale']
-                    )
+                elif name == "pacu_run_module":
+                    result = await self._run_pacu_module(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2)
+                    )]
+                
+                elif name == "pacu_enum_permissions":
+                    result = await self._enum_permissions(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2)
+                    )]
+                
+                elif name == "get_scan_results":
+                    result = await self._get_scan_results(arguments)
+                    return [TextContent(
+                        type="text",
+                        text=json.dumps(result, indent=2)
+                    )]
+                
                 else:
-                    # Fall back to rule-based validation
-                    validation = self._validate_single_finding(finding)
-                
-                validations.append(validation)
+                    raise ValueError(f"Unknown tool: {name}")
+                    
             except Exception as e:
-                logger.error(f"Failed to validate finding {finding.get('finding_id')}: {str(e)}")
-                validations.append({
-                    'finding_id': finding.get('finding_id'),
-                    'status': 'error',
-                    'error': str(e),
-                    'exploitable': False
-                })
-        
-        return {
-            'tool': 'pacu',
-            'version': self._get_version(),
-            'session_name': self.session_name,
-            'aws_account': self.aws_account,
-            'aws_region': self.aws_region,
-            'validation_timestamp': int(time.time()),
-            'validations': validations
-        }
+                logger.error(f"Tool execution failed: {e}", exc_info=True)
+                return [TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "error": str(e),
+                        "tool": name,
+                        "success": False
+                    })
+                )]
     
-    def _validate_with_intelligent_modules(
-        self,
-        finding: dict,
-        recommended_modules: List[str],
-        rationale: str
-    ) -> dict:
-        """Validate a finding using Claude-recommended Pacu modules."""
-        finding_id = finding.get('finding_id')
-        service = finding.get('service', '').lower()
+    async def _list_pacu_modules(self, arguments: dict) -> dict:
+        """List available Pacu modules."""
+        category = arguments.get("category", "all")
         
-        logger.info(f"Validating {finding_id} with intelligent modules: {recommended_modules}")
-        logger.info(f"Rationale: {rationale}")
+        logger.info(f"Listing Pacu modules: category={category}")
         
-        # Try each recommended module in order
-        for module in recommended_modules:
-            if not module:
-                continue
-            
-            result = self._run_pacu_module(module)
-            
-            # Analyze if this module confirmed exploitability
-            if result and self._analyze_module_result(result, finding):
-                return {
-                    'finding_id': finding_id,
-                    'service': service,
-                    'module': module,
-                    'status': 'completed',
-                    'exploitable': True,
-                    'evidence': result.get('output', ''),
-                    'claude_rationale': rationale,
-                    'validation_method': 'intelligent_claude_selection',
-                    'executed_at': int(time.time())
-                }
-        
-        # No modules confirmed exploitability
-        return {
-            'finding_id': finding_id,
-            'service': service,
-            'modules_tried': recommended_modules,
-            'status': 'completed',
-            'exploitable': False,
-            'claude_rationale': rationale,
-            'validation_method': 'intelligent_claude_selection',
-            'executed_at': int(time.time())
-        }
-    
-    def _validate_single_finding(self, finding: dict) -> dict:
-        """Validate a single finding using appropriate Pacu module."""
-        finding_id = finding.get('finding_id')
-        service = finding.get('service', '').lower()
-        finding_key = finding.get('finding_key', '')
-        
-        logger.info(f"Validating finding: {finding_id} (service: {service})")
-        
-        # Map finding to Pacu module
-        module = self._map_finding_to_module(service, finding_key)
-        
-        if not module:
-            return {
-                'finding_id': finding_id,
-                'service': service,
-                'module': 'none',
-                'status': 'skipped',
-                'reason': 'No applicable Pacu module',
-                'exploitable': False
-            }
-        
-        # Run Pacu module
-        result = self._run_pacu_module(module)
-        
-        # Analyze result to determine exploitability
-        exploitable = self._analyze_module_result(result, finding)
-        
-        return {
-            'finding_id': finding_id,
-            'service': service,
-            'module': module,
-            'status': 'completed',
-            'exploitable': exploitable,
-            'evidence': result.get('output', ''),
-            'executed_at': int(time.time())
-        }
-    
-    def _map_finding_to_module(self, service: str, finding_key: str) -> str:
-        """Map a finding to an appropriate Pacu module."""
-        # Service-based module mapping
-        service_modules = {
-            'iam': 'iam__enum_permissions',
-            's3': 's3__bucket_finder',
-            'ec2': 'ec2__enum_instances',
-            'lambda': 'lambda__enum',
-            'rds': 'rds__enum',
-            'kms': 'kms__enum',
-            'cloudtrail': 'cloudtrail__download_event_history'
-        }
-        
-        # Finding-specific overrides
-        if 'policy' in finding_key.lower():
-            return 'iam__enum_policies'
-        elif 'bucket' in finding_key.lower():
-            return 's3__bucket_finder'
-        elif 'security-group' in finding_key.lower():
-            return 'ec2__enum_security_groups'
-        
-        return service_modules.get(service, '')
-    
-    def _run_pacu_module(self, module_name: str) -> dict:
-        """Run a Pacu module."""
         try:
-            cmd = [
+            # Run pacu to list modules
+            process = await asyncio.create_subprocess_exec(
                 'pacu',
-                '--session', self.session_name,
-                '--exec', module_name
-            ]
-            
-            logger.info(f"Running Pacu module: {module_name}")
-            
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=300  # 5 minutes per module
+                '--list-modules',
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
             )
             
-            return {
-                'module': module_name,
-                'returncode': result.returncode,
-                'output': result.stdout,
-                'errors': result.stderr,
-                'success': result.returncode == 0
-            }
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=30
+            )
             
-        except subprocess.TimeoutExpired:
-            logger.warning(f"Pacu module {module_name} timed out")
-            return {
-                'module': module_name,
-                'returncode': -1,
-                'output': '',
-                'errors': 'Module execution timed out',
-                'success': False
-            }
+            if process.returncode == 0:
+                # Parse module list
+                modules_text = stdout.decode()
+                modules = []
+                
+                for line in modules_text.split('\n'):
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        # Simple parsing - production would be more sophisticated
+                        if '__' in line:
+                            module_name = line.split()[0] if ' ' in line else line
+                            modules.append({
+                                'name': module_name,
+                                'category': self._categorize_module(module_name)
+                            })
+                
+                # Filter by category if specified
+                if category != "all":
+                    modules = [m for m in modules if m['category'] == category]
+                
+                return {
+                    "success": True,
+                    "tool": "pacu",
+                    "category": category,
+                    "modules": modules,
+                    "count": len(modules)
+                }
+            else:
+                raise Exception(f"Pacu list modules failed: {stderr.decode()}")
+                
+        except asyncio.TimeoutError:
+            return {"success": False, "error": "timeout listing modules"}
         except Exception as e:
-            logger.error(f"Failed to run Pacu module {module_name}: {str(e)}")
-            return {
-                'module': module_name,
-                'returncode': -1,
-                'output': '',
-                'errors': str(e),
-                'success': False
-            }
+            return {"success": False, "error": str(e)}
     
-    def _analyze_module_result(self, result: dict, finding: dict) -> bool:
-        """Analyze Pacu module result to determine exploitability."""
-        if not result.get('success'):
-            return False
-        
-        output = result.get('output', '').lower()
-        
-        # Exploitation indicators
-        exploit_indicators = [
-            'found',
-            'discovered',
-            'vulnerable',
-            'exploitable',
-            'accessible',
-            'exposed',
-            'permission granted',
-            'successfully enumerated',
-            'retrieved'
-        ]
-        
-        # Negative indicators
-        negative_indicators = [
-            'no results',
-            'not found',
-            'access denied',
-            'permission denied',
-            'unauthorized',
-            'failed',
-            'error'
-        ]
-        
-        # Count indicators
-        exploit_count = sum(1 for indicator in exploit_indicators if indicator in output)
-        negative_count = sum(1 for indicator in negative_indicators if indicator in output)
-        
-        # Finding is exploitable if we have more positive indicators
-        return exploit_count > negative_count and exploit_count > 0
+    def _categorize_module(self, module_name: str) -> str:
+        """Categorize module by name convention."""
+        if 'enum' in module_name or 'list' in module_name:
+            return 'enum'
+        elif 'priv' in module_name or 'escalate' in module_name:
+            return 'privesc'
+        elif 'lateral' in module_name:
+            return 'lateral'
+        elif 'exfil' in module_name:
+            return 'exfil'
+        else:
+            return 'recon'
     
-    def _get_version(self) -> str:
-        """Get Pacu version."""
+    async def _run_pacu_module(self, arguments: dict) -> dict:
+        """Execute a Pacu module with MCP protocol."""
+        module_name = arguments.get("module_name")
+        aws_profile = arguments.get("aws_profile", "default")
+        regions = arguments.get("regions", [])
+        module_args = arguments.get("module_args", {})
+        dry_run = arguments.get("dry_run", True)
+        timeout = arguments.get("timeout", 600)
+        
+        logger.info(f"Running Pacu module: {module_name}, dry_run={dry_run}")
+        
+        # Safety check
+        if not dry_run:
+            logger.warning(f"PACU NON-DRY-RUN MODE: Module {module_name} will make real changes!")
+        
         try:
-            result = subprocess.run(['pacu', '--version'], capture_output=True, text=True)
-            return result.stdout.strip()
+            # Create Pacu session directory
+            session_dir = f'/tmp/pacu-{self.mission_id}'
+            Path(session_dir).mkdir(parents=True, exist_ok=True)
+            
+            # Build command
+            cmd = [
+                'pacu',
+                '--session', self.mission_id,
+                '--profile', aws_profile
+            ]
+            
+            if regions:
+                cmd.extend(['--regions', ','.join(regions)])
+            
+            # Add module execution
+            cmd.extend(['--exec', module_name])
+            
+            # Add dry run flag if requested
+            if dry_run:
+                cmd.append('--dry-run')
+            
+            # Run Pacu
+            process = await asyncio.create_subprocess_exec(
+                *cmd,
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                env={**os.environ, 'AWS_PROFILE': aws_profile},
+                cwd=session_dir
+            )
+            
+            stdout, stderr = await asyncio.wait_for(
+                process.communicate(),
+                timeout=timeout
+            )
+            
+            if process.returncode in [0, 1]:  # 0 = success, 1 = module errors (non-fatal)
+                output = stdout.decode()
+                
+                # Parse Pacu output
+                results = {
+                    'tool': 'pacu',
+                    'version': await self._get_pacu_version(),
+                    'module': module_name,
+                    'dry_run': dry_run,
+                    'profile': aws_profile,
+                    'output': output,
+                    'summary': self._parse_pacu_output(output)
+                }
+                
+                # Store results
+                storage_info = await self._store_results(results, module_name)
+                
+                return {
+                    "success": True,
+                    "tool": "pacu",
+                    "module": module_name,
+                    "dry_run": dry_run,
+                    "mission_id": self.mission_id,
+                    "storage": storage_info,
+                    "summary": results['summary']
+                }
+            else:
+                raise Exception(f"Pacu module failed: {stderr.decode()}")
+                
+        except asyncio.TimeoutError:
+            logger.error(f"Pacu module timeout after {timeout} seconds")
+            return {"success": False, "error": "timeout", "module": module_name}
+    
+    async def _enum_permissions(self, arguments: dict) -> dict:
+        """Safe IAM permission enumeration."""
+        aws_profile = arguments.get("aws_profile", "default")
+        
+        logger.info(f"Enumerating IAM permissions for profile: {aws_profile}")
+        
+        # Run safe reconnaissance module
+        return await self._run_pacu_module({
+            "module_name": "iam__enum_permissions",
+            "aws_profile": aws_profile,
+            "dry_run": True,  # Always dry run for enum
+            "timeout": 300
+        })
+    
+    async def _get_pacu_version(self) -> str:
+        """Get Pacu version asynchronously."""
+        try:
+            process = await asyncio.create_subprocess_exec(
+                'pacu',
+                '--version',
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE
+            )
+            stdout, _ = await process.communicate()
+            return stdout.decode().strip()
         except:
             return 'unknown'
     
-    def _write_results(self, results: dict):
-        """Write results to S3 and DynamoDB."""
+    def _parse_pacu_output(self, output: str) -> dict:
+        """Parse Pacu module output for key findings."""
+        summary = {
+            'lines': len(output.split('\n')),
+            'errors': output.count('ERROR'),
+            'warnings': output.count('WARNING'),
+            'findings': []
+        }
+        
+        # Extract key findings (simplified)
+        for line in output.split('\n'):
+            if 'Found' in line or 'Discovered' in line:
+                summary['findings'].append(line.strip())
+        
+        return summary
+    
+    async def _store_results(self, results: dict, module_name: str) -> dict:
+        """Store results in S3 and DynamoDB with evidence chain."""
         timestamp = int(time.time())
+        
+        # Compute digest
         results_json = json.dumps(results, sort_keys=True)
         digest = hashlib.sha256(results_json.encode()).hexdigest()
-        s3_key = f"tool-results/{self.tool_name}/{self.mission_id}/{timestamp}/results.json"
         
-        # Upload to S3
-        self.s3_client.put_object(
-            Bucket=self.s3_artifacts_bucket,
-            Key=s3_key,
-            Body=results_json,
-            ContentType='application/json',
-            Metadata={
-                'tool': self.tool_name,
-                'digest': f"sha256:{digest}",
-                'aws_account': self.aws_account,
-                'aws_region': self.aws_region,
-                'session_name': self.session_name
-            }
+        # Write to S3
+        s3_key = f"tool-results/pacu-mcp/{self.mission_id}/{timestamp}/{module_name}-results.json"
+        
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(
+            None,
+            lambda: self.s3_client.put_object(
+                Bucket=self.s3_artifacts_bucket,
+                Key=s3_key,
+                Body=results_json,
+                ContentType='application/json',
+                Metadata={
+                    'tool': 'pacu-mcp',
+                    'mission-id': self.mission_id,
+                    'digest': f"sha256:{digest}",
+                    'module-name': module_name
+                }
+            )
         )
         
-        # Count exploitable findings
-        exploitable_count = sum(
-            1 for v in results.get('validations', []) 
-            if v.get('exploitable')
+        # Write digest file
+        digest_key = f"tool-results/pacu-mcp/{self.mission_id}/{timestamp}/digest.sha256"
+        await loop.run_in_executor(
+            None,
+            lambda: self.s3_client.put_object(
+                Bucket=self.s3_artifacts_bucket,
+                Key=digest_key,
+                Body=f"sha256:{digest}",
+                ContentType='text/plain'
+            )
         )
         
-        # Write to DynamoDB
-        self.dynamodb_client.put_item(
-            TableName=self.dynamodb_tool_results_table,
-            Item={
-                'mission_id': {'S': self.mission_id},
-                'tool_timestamp': {'S': f"{self.tool_name}#{timestamp}"},
-                'tool_name': {'S': self.tool_name},
-                's3_uri': {'S': f"s3://{self.s3_artifacts_bucket}/{s3_key}"},
-                'digest': {'S': f"sha256:{digest}"},
-                'findings_count': {'N': str(len(results.get('validations', [])))},
-                'exploitable_count': {'N': str(exploitable_count)},
-                'aws_account': {'S': self.aws_account},
-                'aws_region': {'S': self.aws_region},
-                'session_name': {'S': self.session_name},
-                'success': {'BOOL': True},
-                'ttl': {'N': str(timestamp + (7 * 24 * 60 * 60))}
-            }
+        # Index in DynamoDB
+        findings_count = len(results.get('summary', {}).get('findings', []))
+        await loop.run_in_executor(
+            None,
+            lambda: self.dynamodb_client.put_item(
+                TableName=self.dynamodb_tool_results_table,
+                Item={
+                    'mission_id': {'S': self.mission_id},
+                    'tool_timestamp': {'S': f"pacu-mcp#{timestamp}"},
+                    'tool_name': {'S': 'pacu-mcp'},
+                    's3_uri': {'S': f"s3://{self.s3_artifacts_bucket}/{s3_key}"},
+                    'digest': {'S': f"sha256:{digest}"},
+                    'findings_count': {'N': str(findings_count)},
+                    'success': {'BOOL': True},
+                    'module_name': {'S': module_name},
+                    'ttl': {'N': str(timestamp + (7 * 24 * 60 * 60))}
+                }
+            )
         )
         
-        logger.info(f"Results written to S3: {s3_key}")
+        logger.info(f"Results stored: s3://{self.s3_artifacts_bucket}/{s3_key}")
+        logger.info(f"Evidence chain digest: sha256:{digest}")
+        
+        return {
+            "s3_uri": f"s3://{self.s3_artifacts_bucket}/{s3_key}",
+            "digest": f"sha256:{digest}",
+            "timestamp": timestamp
+        }
     
-    def _write_error(self, error: str):
-        """Write error to DynamoDB."""
-        timestamp = int(time.time())
-        self.dynamodb_client.put_item(
-            TableName=self.dynamodb_tool_results_table,
-            Item={
-                'mission_id': {'S': self.mission_id},
-                'tool_timestamp': {'S': f"{self.tool_name}#{timestamp}"},
-                'tool_name': {'S': self.tool_name},
-                'success': {'BOOL': False},
-                'error_message': {'S': error},
-                'ttl': {'N': str(timestamp + (7 * 24 * 60 * 60))}
-            }
+    async def _get_scan_results(self, arguments: dict) -> dict:
+        """Retrieve scan results from DynamoDB."""
+        mission_id = arguments.get("mission_id", self.mission_id)
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None,
+            lambda: self.dynamodb_client.query(
+                TableName=self.dynamodb_tool_results_table,
+                KeyConditionExpression='mission_id = :mid AND begins_with(tool_timestamp, :tool)',
+                ExpressionAttributeValues={
+                    ':mid': {'S': mission_id},
+                    ':tool': {'S': 'pacu-mcp#'}
+                }
+            )
         )
+        
+        items = response.get('Items', [])
+        if not items:
+            return {"error": "No results found", "mission_id": mission_id}
+        
+        # Get most recent result
+        latest = items[-1]
+        s3_uri = latest['s3_uri']['S']
+        
+        # Download from S3
+        if s3_uri.startswith('s3://'):
+            bucket, key = s3_uri[5:].split('/', 1)
+            obj = await loop.run_in_executor(
+                None,
+                lambda: self.s3_client.get_object(Bucket=bucket, Key=key)
+            )
+            content = obj['Body'].read().decode()
+            return json.loads(content)
+        
+        return {"error": "Invalid S3 URI", "s3_uri": s3_uri}
+    
+    async def run(self):
+        """Start MCP server with stdio transport."""
+        async with stdio_server() as (read_stream, write_stream):
+            logger.info("Pacu MCP Server starting with stdio transport")
+            await self.server.run(
+                read_stream,
+                write_stream,
+                self.server.create_initialization_options()
+            )
 
-def main():
+
+async def main():
+    """Entry point for MCP server."""
     server = PacuMCPServer()
-    return server.run()
+    await server.run()
+
 
 if __name__ == "__main__":
-    exit(main())
+    asyncio.run(main())
