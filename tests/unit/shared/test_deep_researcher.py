@@ -49,6 +49,9 @@ class TestDeepCodeResearcher:
             
             stats = researcher.catalog_repository()
             
+            assert isinstance(stats, dict)
+    
+            
             assert stats['total_files'] == 0
             assert stats['total_lines'] == 0
     
