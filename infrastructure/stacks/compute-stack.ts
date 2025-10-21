@@ -306,7 +306,7 @@ export class ComputeStack extends cdk.Stack {
         MISSION_TABLE: props.missionStatusTable.tableName,
       },
       vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       logRetention: logs.RetentionDays.ONE_WEEK,
     });
 
@@ -331,7 +331,7 @@ export class ComputeStack extends cdk.Stack {
         KENDRA_INDEX_ID: props.kendraIndex.attrId,
       },
       vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       logRetention: logs.RetentionDays.ONE_WEEK,
     });
 
@@ -358,7 +358,7 @@ export class ComputeStack extends cdk.Stack {
         MISSION_TABLE: props.missionStatusTable.tableName,
       },
       vpc: props.vpc,
-      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       logRetention: logs.RetentionDays.ONE_WEEK,
     });
 

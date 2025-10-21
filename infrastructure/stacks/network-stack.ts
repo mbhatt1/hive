@@ -13,8 +13,8 @@ export class NetworkStack extends cdk.Stack {
     // Create VPC with public, private, and isolated subnets
     this.vpc = new ec2.Vpc(this, 'HivemindVpc', {
       ipAddresses: ec2.IpAddresses.cidr('10.10.0.0/16'),
-      maxAzs: 2,
-      natGateways: 1, // Cost optimization: single NAT gateway
+      maxAzs: 1, // Reduce to 1 AZ to use fewer EIPs
+      natGateways: 0, // No NAT gateway to avoid EIP usage
       subnetConfiguration: [
         {
           name: 'Public',
@@ -23,7 +23,7 @@ export class NetworkStack extends cdk.Stack {
         },
         {
           name: 'Private',
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
           cidrMask: 24,
         },
         {
@@ -43,7 +43,6 @@ export class NetworkStack extends cdk.Stack {
     this.vpc.addGatewayEndpoint('S3Endpoint', {
       service: ec2.GatewayVpcEndpointAwsService.S3,
       subnets: [
-        { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
         { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       ],
     });
@@ -51,7 +50,6 @@ export class NetworkStack extends cdk.Stack {
     this.vpc.addGatewayEndpoint('DynamoDbEndpoint', {
       service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
       subnets: [
-        { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
         { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       ],
     });
@@ -102,7 +100,7 @@ export class NetworkStack extends cdk.Stack {
         service: endpoint.service,
         privateDnsEnabled: true,
         subnets: {
-          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         },
       });
     });
@@ -115,7 +113,7 @@ export class NetworkStack extends cdk.Stack {
       ),
       privateDnsEnabled: true,
       subnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
     });
 
@@ -124,7 +122,7 @@ export class NetworkStack extends cdk.Stack {
       service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_MONITORING,
       privateDnsEnabled: true,
       subnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
     });
 
@@ -133,7 +131,7 @@ export class NetworkStack extends cdk.Stack {
       service: ec2.InterfaceVpcEndpointAwsService.XRAY,
       privateDnsEnabled: true,
       subnets: {
-        subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
     });
 
