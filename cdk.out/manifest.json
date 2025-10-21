@@ -11,7 +11,7 @@
     },
     "HivemindPrism-Network": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://909507831547/us-west-2",
       "properties": {
         "templateFile": "HivemindPrism-Network.template.json",
         "terminationProtection": false,
@@ -21,16 +21,16 @@
           "Project": "Hivemind-Prism"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/06edc34e74972425973546a587641e01a1e1b532b184663147f30a8729620130.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/49349e6661f436bb2a81673e0516bbe62baf499a09b469a1c4d357f30833479a.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HivemindPrism-Network.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-lookup-role-909507831547-us-west-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -461,7 +461,7 @@
     },
     "HivemindPrism-Security": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://909507831547/us-west-2",
       "properties": {
         "templateFile": "HivemindPrism-Security.template.json",
         "terminationProtection": false,
@@ -471,16 +471,16 @@
           "Project": "Hivemind-Prism"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/03200d440b040751463c5f916be2d7b9f9f2bfa28c830e59de06b081cfb067fe.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/ac5907baa7ce60090e3821c94d813bbba656fe31c3e11368c122e2d925c2c1d1.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HivemindPrism-Security.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-lookup-role-909507831547-us-west-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -581,6 +581,12 @@
             "data": "HivemindCliUserRoleD02399F7"
           }
         ],
+        "/HivemindPrism-Security/HivemindCliUserRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "HivemindCliUserRoleDefaultPolicyB6ECF48F"
+          }
+        ],
         "/HivemindPrism-Security/KmsKeyId": [
           {
             "type": "aws:cdk:logicalId",
@@ -623,12 +629,6 @@
             "data": "ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
           }
         ],
-        "/HivemindPrism-Security/Exports/Output{\"Fn::GetAtt\":[\"McpToolsSg1B279A8A\",\"GroupId\"]}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2"
-          }
-        ],
         "/HivemindPrism-Security/BootstrapVersion": [
           {
             "type": "aws:cdk:logicalId",
@@ -654,7 +654,7 @@
     },
     "HivemindPrism-Storage": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://909507831547/us-west-2",
       "properties": {
         "templateFile": "HivemindPrism-Storage.template.json",
         "terminationProtection": false,
@@ -664,16 +664,16 @@
           "Project": "Hivemind-Prism"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/633e8b4809220796d4e1d471b6cfbafd6a6ca936d37b7af3594f46df5b9b3455.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/de2b3d0a3f597b9c9f90eab6c8b227b34d0f5f9b98e945c7fc55d6b03a960ec5.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HivemindPrism-Storage.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-lookup-role-909507831547-us-west-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -980,7 +980,7 @@
     },
     "HivemindPrism-Intelligence": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://909507831547/us-west-2",
       "properties": {
         "templateFile": "HivemindPrism-Intelligence.template.json",
         "terminationProtection": false,
@@ -990,16 +990,16 @@
           "Project": "Hivemind-Prism"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/c46c1db0552b3b5e12dd1c619ae6ab9d54f1229a0807939bcc057347928e80ce.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/a5beb9246d0ce6c6cfb7426da3e6cb0da9af564102a06a47eb4bc61e29b8a151.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HivemindPrism-Intelligence.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-lookup-role-909507831547-us-west-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -1126,7 +1126,7 @@
     },
     "HivemindPrism-Compute": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://909507831547/us-west-2",
       "properties": {
         "templateFile": "HivemindPrism-Compute.template.json",
         "terminationProtection": false,
@@ -1136,16 +1136,16 @@
           "Project": "Hivemind-Prism"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/9808ae379a37c2c8aa38462fac41ae14780ac29783027aae50163e36bbcdcf95.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/33c9b138e8ab6e933aeb3b2077e6d3999469a650d88c249199c2e5ff5a6485a8.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HivemindPrism-Compute.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-lookup-role-909507831547-us-west-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -1525,6 +1525,54 @@
             "data": "trivymcpLogGroupE8CDE4CC"
           }
         ],
+        "/HivemindPrism-Compute/scoutsuite-mcpExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scoutsuitemcpExecutionRole12A086E0"
+          }
+        ],
+        "/HivemindPrism-Compute/scoutsuite-mcpExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scoutsuitemcpExecutionRoleDefaultPolicyA02B2681"
+          }
+        ],
+        "/HivemindPrism-Compute/scoutsuite-mcpTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scoutsuitemcpTaskDefC2536807"
+          }
+        ],
+        "/HivemindPrism-Compute/scoutsuite-mcpLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "scoutsuitemcpLogGroupE156C9EA"
+          }
+        ],
+        "/HivemindPrism-Compute/pacu-mcpExecutionRole/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "pacumcpExecutionRole7CCD7D4B"
+          }
+        ],
+        "/HivemindPrism-Compute/pacu-mcpExecutionRole/DefaultPolicy/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "pacumcpExecutionRoleDefaultPolicy9E5D977D"
+          }
+        ],
+        "/HivemindPrism-Compute/pacu-mcpTaskDef/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "pacumcpTaskDef015493B9"
+          }
+        ],
+        "/HivemindPrism-Compute/pacu-mcpLogGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "pacumcpLogGroupAB4093EB"
+          }
+        ],
         "/HivemindPrism-Compute/UnpackLambda/SecurityGroup/Resource": [
           {
             "type": "aws:cdk:logicalId",
@@ -1639,12 +1687,6 @@
             "data": "ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
           }
         ],
-        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"semgrepmcpTaskDef4F4E8F78\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-          }
-        ],
         "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"synthesizerTaskDef22D2EEBC\"}": [
           {
             "type": "aws:cdk:logicalId",
@@ -1699,12 +1741,6 @@
             "data": "ExportsOutputFnGetAttArchivistTaskRoleEE36BB64Arn77DF6974"
           }
         ],
-        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"McpServerTaskRoleB19E5A08\",\"Arn\"]}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC"
-          }
-        ],
         "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"archaeologistExecutionRoleE7945B2B\",\"Arn\"]}": [
           {
             "type": "aws:cdk:logicalId",
@@ -1741,28 +1777,16 @@
             "data": "ExportsOutputFnGetAttarchivistExecutionRole522CA1A4Arn50372367"
           }
         ],
-        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"semgrepmcpExecutionRole97487FBA\",\"Arn\"]}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0"
-          }
-        ],
-        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"gitleaksmcpExecutionRoleD51A8FB4\",\"Arn\"]}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3"
-          }
-        ],
-        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"trivymcpExecutionRole6C379FEC\",\"Arn\"]}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0"
-          }
-        ],
         "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"HivemindCluster94255979\",\"Arn\"]}": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+          }
+        ],
+        "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"HivemindCluster94255979\"}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputRefHivemindCluster9425597927C437AA"
           }
         ],
         "/HivemindPrism-Compute/BootstrapVersion": [
@@ -1790,7 +1814,7 @@
     },
     "HivemindPrism-Orchestration": {
       "type": "aws:cloudformation:stack",
-      "environment": "aws://unknown-account/us-east-1",
+      "environment": "aws://909507831547/us-west-2",
       "properties": {
         "templateFile": "HivemindPrism-Orchestration.template.json",
         "terminationProtection": false,
@@ -1800,16 +1824,16 @@
           "Project": "Hivemind-Prism"
         },
         "validateOnSynth": false,
-        "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-deploy-role-${AWS::AccountId}-us-east-1",
-        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-cfn-exec-role-${AWS::AccountId}-us-east-1",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1/013d7d8b5ccd73c6a867d8b89212d71383cb9242d563cbc697c8bf565ea56bcd.json",
+        "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
+        "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/82f49d07cc7c5fe9bc0a4f46443364ed795b48bb408c5db0e17368a69e05490c.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
           "HivemindPrism-Orchestration.assets"
         ],
         "lookupRole": {
-          "arn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-lookup-role-${AWS::AccountId}-us-east-1",
+          "arn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-lookup-role-909507831547-us-west-2",
           "requiresBootstrapStackVersion": 8,
           "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version"
         }
@@ -1887,6 +1911,24 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "CodeUploadTrigger67DF3E44"
+          }
+        ],
+        "/HivemindPrism-Orchestration/ExecutionFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExecutionFailureAlarm65D8EF83"
+          }
+        ],
+        "/HivemindPrism-Orchestration/LongRunningExecutionAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "LongRunningExecutionAlarm1118F589"
+          }
+        ],
+        "/HivemindPrism-Orchestration/MCPTaskFailureAlarm/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "MCPTaskFailureAlarmD7F5671B"
           }
         ],
         "/HivemindPrism-Orchestration/StateMachineArn": [

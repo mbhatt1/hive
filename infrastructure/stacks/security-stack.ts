@@ -133,6 +133,49 @@ export class SecurityStack extends cdk.Stack {
       maxSessionDuration: cdk.Duration.hours(1),
     });
 
+    // Add KMS permissions for CLI role
+    this.cliUserRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'kms:Encrypt',
+          'kms:Decrypt',
+          'kms:ReEncrypt*',
+          'kms:GenerateDataKey*',
+          'kms:DescribeKey',
+        ],
+        resources: [this.kmsKey.keyArn],
+      })
+    );
+
+    // Add S3 permissions for CLI role
+    this.cliUserRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          's3:PutObject',
+          's3:PutObjectAcl',
+          's3:AbortMultipartUpload',
+          's3:ListMultipartUploadParts',
+        ],
+        resources: [`arn:aws:s3:::hivemind-uploads-${cdk.Stack.of(this).account}/uploads/*`],
+      })
+    );
+
+    // Add DynamoDB permissions for CLI role
+    this.cliUserRole.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: [
+          'dynamodb:PutItem',
+          'dynamodb:GetItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:Query',
+        ],
+        resources: [`arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/HivemindMissionStatus`],
+      })
+    );
+
     // Outputs
     new cdk.CfnOutput(this, 'KmsKeyId', {
       value: this.kmsKey.keyId,

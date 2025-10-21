@@ -8,26 +8,26 @@
         "packaging": "zip"
       },
       "destinations": {
-        "current_account-us-east-1-b3ca7882": {
-          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
+        "909507831547-us-west-2-d58e14fa": {
+          "bucketName": "cdk-hnb659fds-assets-909507831547-us-west-2",
           "objectKey": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip",
-          "region": "us-east-1",
-          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+          "region": "us-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-file-publishing-role-909507831547-us-west-2"
         }
       }
     },
-    "06edc34e74972425973546a587641e01a1e1b532b184663147f30a8729620130": {
+    "49349e6661f436bb2a81673e0516bbe62baf499a09b469a1c4d357f30833479a": {
       "displayName": "HivemindPrism-Network Template",
       "source": {
         "path": "HivemindPrism-Network.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "current_account-us-east-1-737e099e": {
-          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
-          "objectKey": "06edc34e74972425973546a587641e01a1e1b532b184663147f30a8729620130.json",
-          "region": "us-east-1",
-          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        "909507831547-us-west-2-6a8f1421": {
+          "bucketName": "cdk-hnb659fds-assets-909507831547-us-west-2",
+          "objectKey": "49349e6661f436bb2a81673e0516bbe62baf499a09b469a1c4d357f30833479a.json",
+          "region": "us-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-file-publishing-role-909507831547-us-west-2"
         }
       }
     }

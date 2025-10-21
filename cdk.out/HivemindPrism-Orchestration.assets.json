@@ -1,18 +1,18 @@
 {
   "version": "48.0.0",
   "files": {
-    "013d7d8b5ccd73c6a867d8b89212d71383cb9242d563cbc697c8bf565ea56bcd": {
+    "82f49d07cc7c5fe9bc0a4f46443364ed795b48bb408c5db0e17368a69e05490c": {
       "displayName": "HivemindPrism-Orchestration Template",
       "source": {
         "path": "HivemindPrism-Orchestration.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "current_account-us-east-1-f5e43867": {
-          "bucketName": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1",
-          "objectKey": "013d7d8b5ccd73c6a867d8b89212d71383cb9242d563cbc697c8bf565ea56bcd.json",
-          "region": "us-east-1",
-          "assumeRoleArn": "arn:${AWS::Partition}:iam::${AWS::AccountId}:role/cdk-hnb659fds-file-publishing-role-${AWS::AccountId}-us-east-1"
+        "909507831547-us-west-2-2ae04c8f": {
+          "bucketName": "cdk-hnb659fds-assets-909507831547-us-west-2",
+          "objectKey": "82f49d07cc7c5fe9bc0a4f46443364ed795b48bb408c5db0e17368a69e05490c.json",
+          "region": "us-west-2",
+          "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-file-publishing-role-909507831547-us-west-2"
         }
       }
     }

@@ -1,0 +1,9 @@
+setup.py
+hivemind_cli/__init__.py
+hivemind_cli/cli.py
+hivemind_cli.egg-info/PKG-INFO
+hivemind_cli.egg-info/SOURCES.txt
+hivemind_cli.egg-info/dependency_links.txt
+hivemind_cli.egg-info/entry_points.txt
+hivemind_cli.egg-info/requires.txt
+hivemind_cli.egg-info/top_level.txt

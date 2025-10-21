@@ -23,7 +23,7 @@ console = Console()
 class HivemindClient:
     """Client for interacting with Hivemind-Prism platform."""
     
-    def __init__(self, region: str = "us-east-1", profile: Optional[str] = None):
+    def __init__(self, region: str = "us-west-2", profile: Optional[str] = None):
         """Initialize client with AWS credentials."""
         session = boto3.Session(profile_name=profile, region_name=region)
         
@@ -239,7 +239,7 @@ def cli():
 @click.option('--path', required=True, help='Path to code directory')
 @click.option('--repo-name', required=True, help='Repository name')
 @click.option('--profile', default=None, help='AWS profile name')
-@click.option('--region', default='us-east-1', help='AWS region')
+@click.option('--region', default='us-west-2', help='AWS region')
 @click.option('--wait', is_flag=True, help='Wait for completion')
 def scan(path: str, repo_name: str, profile: Optional[str], region: str, wait: bool):
     """Scan local code directory for security issues."""
@@ -257,7 +257,7 @@ def scan(path: str, repo_name: str, profile: Optional[str], region: str, wait: b
 @cli.command()
 @click.option('--mission-id', required=True, help='Mission ID')
 @click.option('--profile', default=None, help='AWS profile name')
-@click.option('--region', default='us-east-1', help='AWS region')
+@click.option('--region', default='us-west-2', help='AWS region')
 def status(mission_id: str, profile: Optional[str], region: str):
     """Check mission status."""
     try:
@@ -281,12 +281,16 @@ def status(mission_id: str, profile: Optional[str], region: str):
 @click.option('--mission-id', required=True, help='Mission ID')
 @click.option('--format', type=click.Choice(['json', 'table']), default='table', help='Output format')
 @click.option('--profile', default=None, help='AWS profile name')
-@click.option('--region', default='us-east-1', help='AWS region')
+@click.option('--region', default='us-west-2', help='AWS region')
 def get_findings(mission_id: str, format: str, profile: Optional[str], region: str):
     """Retrieve findings for a mission."""
     console.print(f"[yellow]⚠[/yellow] Findings retrieval not yet implemented")
     console.print(f"Mission ID: {mission_id}")
     # TODO: Implement findings retrieval from DynamoDB
 
-if __name__ == '__main__':
+def main():
+    """Main entry point for the CLI."""
     cli()
+
+if __name__ == '__main__':
+    main()

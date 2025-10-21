@@ -56,7 +56,7 @@ export class IntelligenceStack extends cdk.Stack {
       description: 'Institutional memory index for security findings and patterns',
       documentMetadataConfigurations: [
         {
-          name: '_severity',
+          name: 'severity',
           type: 'STRING_VALUE',
           search: {
             displayable: true,
@@ -66,7 +66,7 @@ export class IntelligenceStack extends cdk.Stack {
           },
         },
         {
-          name: '_repo_name',
+          name: 'repo_name',
           type: 'STRING_VALUE',
           search: {
             displayable: true,
@@ -76,7 +76,7 @@ export class IntelligenceStack extends cdk.Stack {
           },
         },
         {
-          name: '_timestamp',
+          name: 'timestamp',
           type: 'DATE_VALUE',
           search: {
             displayable: true,
@@ -86,7 +86,7 @@ export class IntelligenceStack extends cdk.Stack {
           },
         },
         {
-          name: '_pattern_type',
+          name: 'pattern_type',
           type: 'STRING_VALUE',
           search: {
             displayable: true,
@@ -96,7 +96,7 @@ export class IntelligenceStack extends cdk.Stack {
           },
         },
         {
-          name: '_agent_consensus_score',
+          name: 'agent_consensus_score',
           type: 'LONG_VALUE',
           search: {
             displayable: true,

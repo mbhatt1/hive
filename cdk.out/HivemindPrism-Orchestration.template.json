@@ -512,118 +512,6 @@
               "Fn::Split": [
                ":",
                {
-                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-               }
-              ]
-             }
-            ]
-           },
-           ":",
-           {
-            "Fn::Select": [
-             2,
-             {
-              "Fn::Split": [
-               ":",
-               {
-                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-               }
-              ]
-             }
-            ]
-           },
-           ":",
-           {
-            "Fn::Select": [
-             3,
-             {
-              "Fn::Split": [
-               ":",
-               {
-                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-               }
-              ]
-             }
-            ]
-           },
-           ":",
-           {
-            "Fn::Select": [
-             4,
-             {
-              "Fn::Split": [
-               ":",
-               {
-                "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-               }
-              ]
-             }
-            ]
-           },
-           ":",
-           {
-            "Fn::Select": [
-             0,
-             {
-              "Fn::Split": [
-               "/",
-               {
-                "Fn::Select": [
-                 5,
-                 {
-                  "Fn::Split": [
-                   ":",
-                   {
-                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           "/",
-           {
-            "Fn::Select": [
-             1,
-             {
-              "Fn::Split": [
-               "/",
-               {
-                "Fn::Select": [
-                 5,
-                 {
-                  "Fn::Split": [
-                   ":",
-                   {
-                    "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
-                   }
-                  ]
-                 }
-                ]
-               }
-              ]
-             }
-            ]
-           },
-           ":*"
-          ]
-         ]
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           "arn:",
-           {
-            "Fn::Select": [
-             1,
-             {
-              "Fn::Split": [
-               ":",
-               {
                 "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefstrategistTaskDef40F5F6096E9DBBB0"
                }
               ]
@@ -879,9 +767,6 @@
          "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttCriticTaskRoleCAC1AFB2Arn6FE7F62A"
         },
         {
-         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC"
-        },
-        {
          "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttStrategistTaskRole541CBCB4Arn97D1F2E4"
         },
         {
@@ -900,19 +785,10 @@
          "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttcriticExecutionRole5F426FC7Arn9919F376"
         },
         {
-         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3"
-        },
-        {
-         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0"
-        },
-        {
          "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttstrategistExecutionRole47F607FBArn74D02AA8"
         },
         {
          "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttsynthesizerExecutionRoleCB81EBADArn618B8CB0"
-        },
-        {
-         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0"
         }
        ]
       },
@@ -923,18 +799,7 @@
         "events:PutTargets"
        ],
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:events:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":rule/StepFunctionsGetEventsForECSTaskRule"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:events:us-west-2:909507831547:rule/StepFunctionsGetEventsForECSTaskRule"
       },
       {
        "Action": "sns:Publish",
@@ -1034,7 +899,7 @@
        {
         "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
        },
-       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"strategist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}}]},\"CoordinatorDecision\":{\"Next\":\"DynamicMCPInvocation\",\"Type\":\"Task\",\"ResultPath\":\"$.coordinatordecision_result\",\"Resource\":\"arn:",
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"strategist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}}]},\"CoordinatorDecision\":{\"Next\":\"LaunchSynthesisCrucible\",\"Type\":\"Task\",\"ResultPath\":\"$.coordinatordecision_result\",\"Resource\":\"arn:",
        {
         "Ref": "AWS::Partition"
        },
@@ -1074,27 +939,7 @@
        {
         "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
        },
-       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"strategist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"DynamicMCPInvocation\":{\"Type\":\"Map\",\"ResultPath\":\"$.mcp_results\",\"Next\":\"WaitForAllTools\",\"ItemsPath\":\"$.execution_plan.tools\",\"MaxConcurrency\":5,\"Iterator\":{\"StartAt\":\"InvokeMCPTool\",\"States\":{\"InvokeMCPTool\":{\"End\":true,\"Type\":\"Task\",\"Resource\":\"arn:",
-       {
-        "Ref": "AWS::Partition"
-       },
-       ":states:::ecs:runTask.sync\",\"Parameters\":{\"Cluster\":\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
-       },
-       "\",\"TaskDefinition\":\"hivemind-semgrep-mcp\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
-       },
-       "\"],\"SecurityGroups\":[\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2"
-       },
-       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"semgrep-mcp\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}}}}},\"WaitForAllTools\":{\"Type\":\"Wait\",\"Seconds\":5,\"Next\":\"LaunchSynthesisCrucible\"},\"LaunchSynthesisCrucible\":{\"Type\":\"Parallel\",\"ResultPath\":\"$.synthesis_results\",\"Next\":\"WaitForConsensus\",\"Branches\":[{\"StartAt\":\"SynthesizerTask\",\"States\":{\"SynthesizerTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.synthesizertask_result\",\"Resource\":\"arn:",
+       "\"]}},\"Overrides\":{\"ContainerOverrides\":[{\"Name\":\"strategist-agent\",\"Environment\":[{\"Name\":\"MISSION_ID\",\"Value.$\":\"$.mission_id\"}]}]},\"LaunchType\":\"FARGATE\",\"PlatformVersion\":\"LATEST\"}},\"LaunchSynthesisCrucible\":{\"Type\":\"Parallel\",\"ResultPath\":\"$.synthesis_results\",\"Next\":\"WaitForConsensus\",\"Branches\":[{\"StartAt\":\"SynthesizerTask\",\"States\":{\"SynthesizerTask\":{\"End\":true,\"Type\":\"Task\",\"ResultPath\":\"$.synthesizertask_result\",\"Resource\":\"arn:",
        {
         "Ref": "AWS::Partition"
        },
@@ -1306,10 +1151,103 @@
     "aws:cdk:path": "HivemindPrism-Orchestration/CodeUploadTrigger/Resource"
    }
   },
+  "ExecutionFailureAlarm65D8EF83": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CompletionTopic50E1DF26"
+     }
+    ],
+    "AlarmDescription": "Alert when Step Functions execution fails",
+    "AlarmName": "Hivemind-StateMachine-Failures",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "StateMachineArn",
+      "Value": {
+       "Ref": "AgenticOrchestrator5676879C"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "ExecutionsFailed",
+    "Namespace": "AWS/States",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 1,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/ExecutionFailureAlarm/Resource"
+   }
+  },
+  "LongRunningExecutionAlarm1118F589": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CompletionTopic50E1DF26"
+     }
+    ],
+    "AlarmDescription": "Alert when Step Functions execution runs longer than 45 minutes",
+    "AlarmName": "Hivemind-StateMachine-LongRunning",
+    "ComparisonOperator": "GreaterThanThreshold",
+    "Dimensions": [
+     {
+      "Name": "StateMachineArn",
+      "Value": {
+       "Ref": "AgenticOrchestrator5676879C"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "ExecutionTime",
+    "Namespace": "AWS/States",
+    "Period": 300,
+    "Statistic": "Maximum",
+    "Threshold": 2700000,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/LongRunningExecutionAlarm/Resource"
+   }
+  },
+  "MCPTaskFailureAlarmD7F5671B": {
+   "Type": "AWS::CloudWatch::Alarm",
+   "Properties": {
+    "AlarmActions": [
+     {
+      "Ref": "CompletionTopic50E1DF26"
+     }
+    ],
+    "AlarmDescription": "Alert when MCP tasks fail",
+    "AlarmName": "Hivemind-MCP-Task-Failures",
+    "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+    "Dimensions": [
+     {
+      "Name": "ClusterName",
+      "Value": {
+       "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputRefHivemindCluster9425597927C437AA"
+      }
+     }
+    ],
+    "EvaluationPeriods": 1,
+    "MetricName": "TasksFailed",
+    "Namespace": "AWS/ECS",
+    "Period": 300,
+    "Statistic": "Sum",
+    "Threshold": 1,
+    "TreatMissingData": "notBreaching"
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Orchestration/MCPTaskFailureAlarm/Resource"
+   }
+  },
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/11P22rDMAz9lr4rXhf6B2WMwUpDUuhjURy1UePYIbJTRvC/z0k3GHs6Nwkd5SrPt2q7wYdkuukyw7WaK4+6g2RdZsZezaUzBPurXbFwhvXXIp8sglhR88kNrBd3Jcn0NFyD1Z6dlYtH6dLQJ/Z1gx92ch3Bm5Yy2FNKoLJShNqwtP8W1VzgiMaQgX3rWBMccIAzsocqaE3UQCrr6YC6ZbuW/KsjGHdb7rrb++jCsOS/PAJNZH1Ky/DzXsIYoSRxYdSrdQx+CD6CdQ2pu7xM+U7t1OvmLszZGKznnlT5xG+1xz7nSwEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/12PQWvDMAyFf0vvqpbltOsoYwxWFpLCjkVR1MaNY4fIbhnG/30k3WDs9L6nJyGpxLIssNjQTbfcDVtrWkxNIB6AbnpMhkZMtbcCu5NbtfLW8Ndi75RBnWI6+MnwUl0hgwaZTtFxMN7pMZAOiumdxrajN3f1g8ALax3dgXSAxmkVW2u0/zeIqaKZrBULu94bFvgkE6CJzCIdNIGC7Il749YD//oM1p+Xnf78Ovs4LfkvZ5CruKCY6vjzWrSSga2P3Y0C95ieLc3jEq2QM9SiPs68tn/EMMWQwflO8KIP18cnLAssNxc1ZjtHF8woWN/1G/N1SW9kAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Orchestration/CDKMetadata/Default"

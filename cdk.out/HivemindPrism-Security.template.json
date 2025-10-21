@@ -12,18 +12,7 @@
        "Action": "kms:*",
        "Effect": "Allow",
        "Principal": {
-        "AWS": {
-         "Fn::Join": [
-          "",
-          [
-           "arn:aws:iam::",
-           {
-            "Ref": "AWS::AccountId"
-           },
-           ":root"
-          ]
-         ]
-        }
+        "AWS": "arn:aws:iam::909507831547:root"
        },
        "Resource": "*"
       },
@@ -34,7 +23,7 @@
        ],
        "Condition": {
         "StringEquals": {
-         "kms:ViaService": "s3.us-east-1.amazonaws.com"
+         "kms:ViaService": "s3.us-west-2.amazonaws.com"
         }
        },
        "Effect": "Allow",
@@ -52,7 +41,7 @@
        ],
        "Condition": {
         "StringEquals": {
-         "kms:ViaService": "dynamodb.us-east-1.amazonaws.com"
+         "kms:ViaService": "dynamodb.us-west-2.amazonaws.com"
         }
        },
        "Effect": "Allow",
@@ -281,18 +270,7 @@
        "Action": "sts:AssumeRole",
        "Effect": "Allow",
        "Principal": {
-        "AWS": {
-         "Fn::Join": [
-          "",
-          [
-           "arn:aws:iam::",
-           {
-            "Ref": "AWS::AccountId"
-           },
-           ":root"
-          ]
-         ]
-        }
+        "AWS": "arn:aws:iam::909507831547:root"
        }
       }
      ],
@@ -306,10 +284,65 @@
     "aws:cdk:path": "HivemindPrism-Security/HivemindCliUserRole/Resource"
    }
   },
+  "HivemindCliUserRoleDefaultPolicyB6ECF48F": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "kms:Decrypt",
+        "kms:DescribeKey",
+        "kms:Encrypt",
+        "kms:GenerateDataKey*",
+        "kms:ReEncrypt*"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "HivemindKeyB4006B32",
+         "Arn"
+        ]
+       }
+      },
+      {
+       "Action": [
+        "s3:AbortMultipartUpload",
+        "s3:ListMultipartUploadParts",
+        "s3:PutObject",
+        "s3:PutObjectAcl"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:s3:::hivemind-uploads-909507831547/uploads/*"
+      },
+      {
+       "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:Query",
+        "dynamodb:UpdateItem"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:dynamodb:us-west-2:909507831547:table/HivemindMissionStatus"
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "HivemindCliUserRoleDefaultPolicyB6ECF48F",
+    "Roles": [
+     {
+      "Ref": "HivemindCliUserRoleD02399F7"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Security/HivemindCliUserRole/DefaultPolicy/Resource"
+   }
+  },
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/32KTQrCMBCFz9J9OtbQC4iIiAuhHkBiOsr0JymZRCkhd7epS8HV9973ngQpK6gK9eZSt3050B3i1Svdi0XdYj8yxDPOYv8wGbuBFOeyhiRQy+WPOjjy89HZMOXxvziZp0PmH39YdRKkRoiNHTA/MlMSDbINTq/qEvwUfBLGtggdb16yhhq2RcdEpQvG04jQfPkBu2Xw8+AAAAA="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/32OQQ7CIBBFz+KejpWVW2OMMS407QEM0tHQUmgYsGkIdzfQpYmr9+f9vxgOnNdQb8RMleyGSqsnxNYLOTAx0yMOI0G84sKOL5Nx0EpQPkpIDCWH2KIMTvnl7GyYcvlfXMzbIdGPPxWdmBIjxMZqzIvCu9VKlh/WlBJrkGxwsmxuwU/BJ2Zsh9DT9rPbA6+Bb3pSqnLBeDUiNCu/D6hN+/IAAAA="
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Security/CDKMetadata/Default"
@@ -381,17 +414,6 @@
    },
    "Export": {
     "Name": "HivemindPrism-Security:ExportsOutputFnGetAttAgentTasksSg17243AF5GroupId133748B8"
-   }
-  },
-  "ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2": {
-   "Value": {
-    "Fn::GetAtt": [
-     "McpToolsSg1B279A8A",
-     "GroupId"
-    ]
-   },
-   "Export": {
-    "Name": "HivemindPrism-Security:ExportsOutputFnGetAttMcpToolsSg1B279A8AGroupId2565F5B2"
    }
   }
  },

@@ -26,14 +26,7 @@
   "HivemindVpcPublicSubnet1Subnet595DA15C": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      0,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "us-west-2a",
     "CidrBlock": "10.10.0.0/24",
     "MapPublicIpOnLaunch": true,
     "Tags": [
@@ -168,14 +161,7 @@
   "HivemindVpcPublicSubnet2Subnet0590139A": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      1,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "us-west-2b",
     "CidrBlock": "10.10.1.0/24",
     "MapPublicIpOnLaunch": true,
     "Tags": [
@@ -260,14 +246,7 @@
   "HivemindVpcPrivateSubnet1Subnet5BE540C4": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      0,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "us-west-2a",
     "CidrBlock": "10.10.2.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -349,14 +328,7 @@
   "HivemindVpcPrivateSubnet2Subnet3DF9DED0": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      1,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "us-west-2b",
     "CidrBlock": "10.10.3.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -438,14 +410,7 @@
   "HivemindVpcIsolatedSubnet1Subnet01ABE97E": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      0,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "us-west-2a",
     "CidrBlock": "10.10.4.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -512,14 +477,7 @@
   "HivemindVpcIsolatedSubnet2SubnetC3A23F9E": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
-    "AvailabilityZone": {
-     "Fn::Select": [
-      1,
-      {
-       "Fn::GetAZs": ""
-      }
-     ]
-    },
+    "AvailabilityZone": "us-west-2b",
     "CidrBlock": "10.10.5.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
@@ -630,9 +588,7 @@
       "DefaultSecurityGroup"
      ]
     },
-    "Account": {
-     "Ref": "AWS::AccountId"
-    }
+    "Account": "909507831547"
    },
    "UpdateReplacePolicy": "Delete",
    "DeletionPolicy": "Delete",
@@ -805,7 +761,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.ecr.api",
+    "ServiceName": "com.amazonaws.us-west-2.ecr.api",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -902,7 +858,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.ecr.dkr",
+    "ServiceName": "com.amazonaws.us-west-2.ecr.dkr",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -999,7 +955,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.logs",
+    "ServiceName": "com.amazonaws.us-west-2.logs",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1096,7 +1052,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.secretsmanager",
+    "ServiceName": "com.amazonaws.us-west-2.secretsmanager",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1193,7 +1149,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.sts",
+    "ServiceName": "com.amazonaws.us-west-2.sts",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1290,7 +1246,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.states",
+    "ServiceName": "com.amazonaws.us-west-2.states",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1387,7 +1343,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.events",
+    "ServiceName": "com.amazonaws.us-west-2.events",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1484,7 +1440,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.sns",
+    "ServiceName": "com.amazonaws.us-west-2.sns",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1581,7 +1537,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.kms",
+    "ServiceName": "com.amazonaws.us-west-2.kms",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1678,7 +1634,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.bedrock-runtime",
+    "ServiceName": "com.amazonaws.us-west-2.bedrock-runtime",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1775,7 +1731,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.monitoring",
+    "ServiceName": "com.amazonaws.us-west-2.monitoring",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1872,7 +1828,7 @@
       ]
      }
     ],
-    "ServiceName": "com.amazonaws.us-east-1.xray",
+    "ServiceName": "com.amazonaws.us-west-2.xray",
     "SubnetIds": [
      {
       "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
@@ -1939,11 +1895,7 @@
            "Fn::Join": [
             "",
             [
-             "arn:aws:ec2:us-east-1:",
-             {
-              "Ref": "AWS::AccountId"
-             },
-             ":security-group/",
+             "arn:aws:ec2:us-west-2:909507831547:security-group/",
              {
               "Fn::GetAtt": [
                "HivemindVpc63A10AFB",
@@ -1968,9 +1920,7 @@
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
-     "S3Bucket": {
-      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
-     },
+     "S3Bucket": "cdk-hnb659fds-assets-909507831547-us-west-2",
      "S3Key": "7fa1e366ee8a9ded01fc355f704cff92bfd179574e6f9cfee800a3541df1b200.zip"
     },
     "Timeout": 900,
@@ -1997,7 +1947,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/22QwW7CMAyGn4V7mrGIFwCEEBcWtRNXlKaGGVqnSpwihHj3pdBRDjv595c/1m8rqdRUTifmEjJbnbMaS3kr2NizSGgPVsnbrrVieaCdXgodyxptEUsC7tmochcZvk1Zw8hHNg/BWTSMjl7mXqw2ui9bw2vDcDFXoT12SY6DN8Tgk/4zPJMM3ZxT1J8GiMVAUtgVVa1D4sH6ah+TDsbCu6cAGz3yde1dbB/R38Fd5BBc9DaljYFdM7Zpi/+ftHcdVuAXJoBIiwOnex6Rjv2fr8ht5LsgV4E8hY9OzeRMfk5OATHzkRgbkPmz/gKnKKgEnAEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/3WOwW6DQAxEvyX3zZZy6pWiKMolRVBxrcxiUifgRbteUBTl3ysSBLn0NJ7n8cixjuNIRxsY/dbUl21Llb4VAuaiYPQ/aGJ9K3uj0obLLFVZqFoyRagYZWLrlNsg+A1ViytfWeK9NQRClpfwNOwO2SRHkD0IjnBVmaMBBNfiAws6xiXw/GR2iQiY3w5Z1EzK3uy47i2xzNHFPpoaMPiaKdAER3LdOxv6x+uv4K5y9DY4gyoNXmy32ob/WWXODlSj+wSPKvEepRA4EZ+mm68gfZC7YlujPvu34f1Dx5GON2dPtHWBhTrU+VP/ADYNe62dAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Network/CDKMetadata/Default"

@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
+import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
@@ -207,11 +208,10 @@ export class ComputeStack extends cdk.Stack {
       });
 
       // Add container
+      const ecrRepo = ecr.Repository.fromRepositoryName(this, `${agentName}EcrRepo`, `hivemind-${agentName}`);
       const container = taskDef.addContainer(`${agentName}Container`, {
         containerName: `${agentName}-agent`,
-        image: ecs.ContainerImage.fromRegistry(
-          `${cdk.Stack.of(this).account}.dkr.ecr.${cdk.Stack.of(this).region}.amazonaws.com/hivemind-${agentName}:latest`
-        ),
+        image: ecs.ContainerImage.fromEcrRepository(ecrRepo, 'latest'),
         logging: ecs.LogDriver.awsLogs({
           streamPrefix: agentName,
           logGroup: new logs.LogGroup(this, `${agentName}LogGroup`, {
@@ -261,11 +261,10 @@ export class ComputeStack extends cdk.Stack {
         executionRole: this.createExecutionRole(`${toolName}ExecutionRole`),
       });
 
+      const ecrRepo = ecr.Repository.fromRepositoryName(this, `${toolName}EcrRepo`, toolName);
       const container = taskDef.addContainer(`${toolName}Container`, {
         containerName: toolName,
-        image: ecs.ContainerImage.fromRegistry(
-          `${cdk.Stack.of(this).account}.dkr.ecr.${cdk.Stack.of(this).region}.amazonaws.com/${toolName}:latest`
-        ),
+        image: ecs.ContainerImage.fromEcrRepository(ecrRepo, 'latest'),
         logging: ecs.LogDriver.awsLogs({
           streamPrefix: toolName,
           logGroup: new logs.LogGroup(this, `${toolName}LogGroup`, {

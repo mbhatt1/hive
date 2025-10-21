@@ -44,18 +44,7 @@
         "logs:PutLogEvents"
        ],
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:logs:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":log-group:/aws/kendra/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:logs:us-west-2:909507831547:log-group:/aws/kendra/*"
       }
      ],
      "Version": "2012-10-17"
@@ -77,7 +66,7 @@
     "Description": "Institutional memory index for security findings and patterns",
     "DocumentMetadataConfigurations": [
      {
-      "Name": "_severity",
+      "Name": "severity",
       "Search": {
        "Displayable": true,
        "Facetable": true,
@@ -87,7 +76,7 @@
       "Type": "STRING_VALUE"
      },
      {
-      "Name": "_repo_name",
+      "Name": "repo_name",
       "Search": {
        "Displayable": true,
        "Facetable": true,
@@ -97,7 +86,7 @@
       "Type": "STRING_VALUE"
      },
      {
-      "Name": "_timestamp",
+      "Name": "timestamp",
       "Search": {
        "Displayable": true,
        "Facetable": true,
@@ -107,7 +96,7 @@
       "Type": "DATE_VALUE"
      },
      {
-      "Name": "_pattern_type",
+      "Name": "pattern_type",
       "Search": {
        "Displayable": true,
        "Facetable": true,
@@ -117,7 +106,7 @@
       "Type": "STRING_VALUE"
      },
      {
-      "Name": "_agent_consensus_score",
+      "Name": "agent_consensus_score",
       "Search": {
        "Displayable": true,
        "Facetable": false,
@@ -268,7 +257,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yWJSw7CIBRF19I5fVbSHejEkYYuwCA8k1coGD5+Qti7pR2dc8/lwPkAQyc/sVfa9JYeUKYklWFruheSCxThLbLT0228eUvq1+ZulRl0Okgoa7o4jd/2nWWSk89BYa1MYNy0HdecXjlV5rxGmOPhzUcY4djNkagP2SVaEMTOP1yGdCWdAAAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/yWJSw7CIBQAz9I9fSIr93XjStMewDzhNaFQMHyshnB3Q7uamYwAITjwDrfYS2V6q19QpoTSMNzis2hcoYzeEhtmt/PhrZa/lodVZsipgFCG2d2com97V0w4+Rwk1cpGiru2cc/pnVNlziuCJZ4+5wsIDqJbotZ9yC7plWA8+AcM+jWHngAAAA=="
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Intelligence/CDKMetadata/Default"

@@ -41,12 +41,6 @@ export class StorageStack extends cdk.Stack {
           id: 'DeleteOldUploads',
           prefix: 'uploads/',
           enabled: true,
-          transitions: [
-            {
-              storageClass: s3.StorageClass.INFREQUENT_ACCESS,
-              transitionAfter: cdk.Duration.days(1),
-            },
-          ],
           expiration: cdk.Duration.days(7),
         },
       ],
@@ -193,7 +187,7 @@ export class StorageStack extends cdk.Stack {
       cacheSubnetGroupName: subnetGroup.ref,
       vpcSecurityGroupIds: [props.elastiCacheSecurityGroup.securityGroupId],
       preferredMaintenanceWindow: 'sun:05:00-sun:06:00',
-      snapshotRetentionLimit: 7,
+      snapshotRetentionLimit: 0, // No snapshots = faster deletion
       autoMinorVersionUpgrade: true,
       transitEncryptionEnabled: false, // VPC isolation provides security
     });
@@ -205,6 +199,8 @@ export class StorageStack extends cdk.Stack {
     this.eventBus = new events.EventBus(this, 'HivemindEventBus', {
       eventBusName: 'HivemindPrism',
     });
+
+    // CLI permissions are now handled in security stack to avoid circular dependency
 
     // ========== OUTPUTS ==========
 

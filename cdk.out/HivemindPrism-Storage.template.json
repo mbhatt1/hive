@@ -16,30 +16,14 @@
       }
      ]
     },
-    "BucketName": {
-     "Fn::Join": [
-      "",
-      [
-       "hivemind-uploads-",
-       {
-        "Ref": "AWS::AccountId"
-       }
-      ]
-     ]
-    },
+    "BucketName": "hivemind-uploads-909507831547",
     "LifecycleConfiguration": {
      "Rules": [
       {
        "ExpirationInDays": 7,
        "Id": "DeleteOldUploads",
        "Prefix": "uploads/",
-       "Status": "Enabled",
-       "Transitions": [
-        {
-         "StorageClass": "STANDARD_IA",
-         "TransitionInDays": 1
-        }
-       ]
+       "Status": "Enabled"
       }
      ]
     },
@@ -237,17 +221,7 @@
       }
      ]
     },
-    "BucketName": {
-     "Fn::Join": [
-      "",
-      [
-       "hivemind-artifacts-",
-       {
-        "Ref": "AWS::AccountId"
-       }
-      ]
-     ]
-    },
+    "BucketName": "hivemind-artifacts-909507831547",
     "LifecycleConfiguration": {
      "Rules": [
       {
@@ -347,17 +321,7 @@
       }
      ]
     },
-    "BucketName": {
-     "Fn::Join": [
-      "",
-      [
-       "hivemind-kendra-memories-",
-       {
-        "Ref": "AWS::AccountId"
-       }
-      ]
-     ]
-    },
+    "BucketName": "hivemind-kendra-memories-909507831547",
     "PublicAccessBlockConfiguration": {
      "BlockPublicAcls": true,
      "BlockPublicPolicy": true,
@@ -628,7 +592,7 @@
     "Engine": "redis",
     "NumCacheNodes": 1,
     "PreferredMaintenanceWindow": "sun:05:00-sun:06:00",
-    "SnapshotRetentionLimit": 7,
+    "SnapshotRetentionLimit": 0,
     "TransitEncryptionEnabled": false,
     "VpcSecurityGroupIds": [
      {
@@ -655,7 +619,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WNQW7CMBBFz8LemdLACYiqLouAPXKcQZg4dpSZASHLd6+dlLL6f95/0tRQ12tYr/SDKtP1lbMtxCNr06uMzpE2EHdiemTVXPxfW2IfnDXPN17upKweIB6CwzLN+TZfTvf0eghd/nXS7WLOJSl0mtgaba4IMeOjtB75ewoyFqspQ+OEGKcs39EzQfwquRMqxqunNP9HCjIZVP8lwx/hUTgpHzqEG33c6y1s4XN1I2urSTzbAeGw5C+CaFzxIQEAAA=="
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/0WNwW7CMAxAv4V7arrssjMR4rgJdp/S1NVC0wTVNghF+fcpLYzTe7afZA1at9Bu7I0a149N8B3kE1s3Knujn0zvkHfiRmRlhviwFV8peHd/rde5KG8nyMcUsJ4Wvspn09+jnVLfQf623VouUhQGS+yddb8I2QzxJF1EPsxJLrUy9WCCEONcFF4xMkHeV+6EavH0Upb/SElmh+pfzBA/hS/CRcXUI5xpe337AN2C3pzJ+2aWyH5COK78AzEtiuYiAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Storage/CDKMetadata/Default"

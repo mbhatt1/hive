@@ -43,18 +43,7 @@
       {
        "Action": "secretsmanager:GetSecretValue",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:secretsmanager:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":secret:hivemind/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/*"
       },
       {
        "Action": [
@@ -251,18 +240,7 @@
       {
        "Action": "secretsmanager:GetSecretValue",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:secretsmanager:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":secret:hivemind/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/*"
       },
       {
        "Action": [
@@ -459,18 +437,7 @@
       {
        "Action": "secretsmanager:GetSecretValue",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:secretsmanager:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":secret:hivemind/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/*"
       },
       {
        "Action": [
@@ -667,18 +634,7 @@
       {
        "Action": "secretsmanager:GetSecretValue",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:secretsmanager:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":secret:hivemind/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/*"
       },
       {
        "Action": [
@@ -875,18 +831,7 @@
       {
        "Action": "secretsmanager:GetSecretValue",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:secretsmanager:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":secret:hivemind/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/*"
       },
       {
        "Action": [
@@ -1083,18 +1028,7 @@
       {
        "Action": "secretsmanager:GetSecretValue",
        "Effect": "Allow",
-       "Resource": {
-        "Fn::Join": [
-         "",
-         [
-          "arn:aws:secretsmanager:us-east-1:",
-          {
-           "Ref": "AWS::AccountId"
-          },
-          ":secret:hivemind/*"
-         ]
-        ]
-       }
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/*"
       },
       {
        "Action": [
@@ -1264,7 +1198,21 @@
      ],
      "Version": "2012-10-17"
     },
-    "Description": "Role for MCP tool server tasks (read-only code access)",
+    "Description": "Role for MCP tool server tasks (code scanning + AWS security auditing)",
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/SecurityAudit"
+       ]
+      ]
+     }
+    ],
     "RoleName": "HivemindMcpServerTaskRole"
    },
    "Metadata": {
@@ -1276,6 +1224,36 @@
    "Properties": {
     "PolicyDocument": {
      "Statement": [
+      {
+       "Action": [
+        "cloudtrail:GetEventSelectors",
+        "cloudtrail:GetTrailStatus",
+        "cloudtrail:ListTags",
+        "config:DescribeConfigurationRecorderStatus",
+        "config:DescribeConfigurationRecorders",
+        "ec2:DescribeImages",
+        "ec2:DescribeSnapshotAttribute",
+        "ec2:DescribeSnapshots",
+        "iam:GetAccountPasswordPolicy",
+        "iam:GetAccountSummary",
+        "iam:ListAccessKeys",
+        "iam:ListMFADevices",
+        "iam:ListVirtualMFADevices",
+        "lambda:GetFunction",
+        "lambda:GetFunctionConfiguration",
+        "lambda:GetPolicy",
+        "s3:GetAccountPublicAccessBlock",
+        "s3:GetBucketPolicyStatus",
+        "s3:GetBucketPublicAccessBlock"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": "secretsmanager:GetSecretValue",
+       "Effect": "Allow",
+       "Resource": "arn:aws:secretsmanager:us-west-2:909507831547:secret:hivemind/aws-scan-credentials-*"
+      },
       {
        "Action": [
         "s3:GetBucket*",
@@ -1336,6 +1314,28 @@
             "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
            },
            "/tool-results/gitleaks-mcp/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/tool-results/pacu-mcp/*"
+          ]
+         ]
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+           },
+           "/tool-results/scoutsuite-mcp/*"
           ]
          ]
         },
@@ -1910,6 +1910,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/hivemind-archaeologist"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -1943,7 +1952,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -2007,10 +2016,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-archaeologist:latest"
+         "/hivemind-archaeologist:latest"
         ]
        ]
       },
@@ -2021,7 +2031,7 @@
          "Ref": "archaeologistLogGroupE40905D9"
         },
         "awslogs-stream-prefix": "archaeologist",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "archaeologist-agent"
@@ -2114,6 +2124,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/hivemind-strategist"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -2147,7 +2166,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -2211,10 +2230,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-strategist:latest"
+         "/hivemind-strategist:latest"
         ]
        ]
       },
@@ -2225,7 +2245,7 @@
          "Ref": "strategistLogGroupEE1A63CD"
         },
         "awslogs-stream-prefix": "strategist",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "strategist-agent"
@@ -2318,6 +2338,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/hivemind-coordinator"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -2351,7 +2380,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -2415,10 +2444,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-coordinator:latest"
+         "/hivemind-coordinator:latest"
         ]
        ]
       },
@@ -2429,7 +2459,7 @@
          "Ref": "coordinatorLogGroupC38D7199"
         },
         "awslogs-stream-prefix": "coordinator",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "coordinator-agent"
@@ -2522,6 +2552,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/hivemind-synthesizer"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -2555,7 +2594,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -2619,10 +2658,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-synthesizer:latest"
+         "/hivemind-synthesizer:latest"
         ]
        ]
       },
@@ -2633,7 +2673,7 @@
          "Ref": "synthesizerLogGroup1B251BC4"
         },
         "awslogs-stream-prefix": "synthesizer",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "synthesizer-agent"
@@ -2726,6 +2766,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/hivemind-critic"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -2759,7 +2808,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -2823,10 +2872,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-critic:latest"
+         "/hivemind-critic:latest"
         ]
        ]
       },
@@ -2837,7 +2887,7 @@
          "Ref": "criticLogGroup91479CCF"
         },
         "awslogs-stream-prefix": "critic",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "critic-agent"
@@ -2930,6 +2980,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/hivemind-archivist"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -2963,7 +3022,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -3027,10 +3086,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/hivemind-archivist:latest"
+         "/hivemind-archivist:latest"
         ]
        ]
       },
@@ -3041,7 +3101,7 @@
          "Ref": "archivistLogGroupFC914BE5"
         },
         "awslogs-stream-prefix": "archivist",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "archivist-agent"
@@ -3134,6 +3194,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/semgrep-mcp"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -3167,7 +3236,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -3191,10 +3260,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/semgrep-mcp:latest"
+         "/semgrep-mcp:latest"
         ]
        ]
       },
@@ -3205,7 +3275,7 @@
          "Ref": "semgrepmcpLogGroupC4C639F6"
         },
         "awslogs-stream-prefix": "semgrep-mcp",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "semgrep-mcp"
@@ -3298,6 +3368,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/gitleaks-mcp"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -3331,7 +3410,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -3355,10 +3434,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/gitleaks-mcp:latest"
+         "/gitleaks-mcp:latest"
         ]
        ]
       },
@@ -3369,7 +3449,7 @@
          "Ref": "gitleaksmcpLogGroup4914FC3F"
         },
         "awslogs-stream-prefix": "gitleaks-mcp",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "gitleaks-mcp"
@@ -3462,6 +3542,15 @@
       },
       {
        "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/trivy-mcp"
+      },
+      {
+       "Action": [
         "logs:CreateLogStream",
         "logs:PutLogEvents"
        ],
@@ -3495,7 +3584,7 @@
       "Environment": [
        {
         "Name": "AWS_REGION",
-        "Value": "us-east-1"
+        "Value": "us-west-2"
        },
        {
         "Name": "S3_ARTIFACTS_BUCKET",
@@ -3519,10 +3608,11 @@
        "Fn::Join": [
         "",
         [
+         "909507831547.dkr.ecr.us-west-2.",
          {
-          "Ref": "AWS::AccountId"
+          "Ref": "AWS::URLSuffix"
          },
-         ".dkr.ecr.us-east-1.amazonaws.com/trivy-mcp:latest"
+         "/trivy-mcp:latest"
         ]
        ]
       },
@@ -3533,7 +3623,7 @@
          "Ref": "trivymcpLogGroupE8CDE4CC"
         },
         "awslogs-stream-prefix": "trivy-mcp",
-        "awslogs-region": "us-east-1"
+        "awslogs-region": "us-west-2"
        }
       },
       "Name": "trivy-mcp"
@@ -3575,6 +3665,354 @@
     "aws:cdk:path": "HivemindPrism-Compute/trivy-mcpLogGroup/Resource"
    }
   },
+  "scoutsuitemcpExecutionRole12A086E0": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/scoutsuite-mcpExecutionRole/Resource"
+   }
+  },
+  "scoutsuitemcpExecutionRoleDefaultPolicyA02B2681": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/scoutsuite-mcp"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "scoutsuitemcpLogGroupE156C9EA",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "scoutsuitemcpExecutionRoleDefaultPolicyA02B2681",
+    "Roles": [
+     {
+      "Ref": "scoutsuitemcpExecutionRole12A086E0"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/scoutsuite-mcpExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "scoutsuitemcpTaskDefC2536807": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-west-2"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "TOOL_NAME",
+        "Value": "scoutsuite-mcp"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         "909507831547.dkr.ecr.us-west-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/scoutsuite-mcp:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "scoutsuitemcpLogGroupE156C9EA"
+        },
+        "awslogs-stream-prefix": "scoutsuite-mcp",
+        "awslogs-region": "us-west-2"
+       }
+      },
+      "Name": "scoutsuite-mcp"
+     }
+    ],
+    "Cpu": "2048",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "scoutsuitemcpExecutionRole12A086E0",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-scoutsuite-mcp",
+    "Memory": "4096",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "McpServerTaskRoleB19E5A08",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/scoutsuite-mcpTaskDef/Resource"
+   }
+  },
+  "scoutsuitemcpLogGroupE156C9EA": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/scoutsuite-mcp",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/scoutsuite-mcpLogGroup/Resource"
+   }
+  },
+  "pacumcpExecutionRole7CCD7D4B": {
+   "Type": "AWS::IAM::Role",
+   "Properties": {
+    "AssumeRolePolicyDocument": {
+     "Statement": [
+      {
+       "Action": "sts:AssumeRole",
+       "Effect": "Allow",
+       "Principal": {
+        "Service": "ecs-tasks.amazonaws.com"
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "ManagedPolicyArns": [
+     {
+      "Fn::Join": [
+       "",
+       [
+        "arn:",
+        {
+         "Ref": "AWS::Partition"
+        },
+        ":iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+       ]
+      ]
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/pacu-mcpExecutionRole/Resource"
+   }
+  },
+  "pacumcpExecutionRoleDefaultPolicy9E5D977D": {
+   "Type": "AWS::IAM::Policy",
+   "Properties": {
+    "PolicyDocument": {
+     "Statement": [
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetAuthorizationToken",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "*"
+      },
+      {
+       "Action": [
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:BatchGetImage",
+        "ecr:GetDownloadUrlForLayer"
+       ],
+       "Effect": "Allow",
+       "Resource": "arn:aws:ecr:us-west-2:909507831547:repository/pacu-mcp"
+      },
+      {
+       "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+       ],
+       "Effect": "Allow",
+       "Resource": {
+        "Fn::GetAtt": [
+         "pacumcpLogGroupAB4093EB",
+         "Arn"
+        ]
+       }
+      }
+     ],
+     "Version": "2012-10-17"
+    },
+    "PolicyName": "pacumcpExecutionRoleDefaultPolicy9E5D977D",
+    "Roles": [
+     {
+      "Ref": "pacumcpExecutionRole7CCD7D4B"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/pacu-mcpExecutionRole/DefaultPolicy/Resource"
+   }
+  },
+  "pacumcpTaskDef015493B9": {
+   "Type": "AWS::ECS::TaskDefinition",
+   "Properties": {
+    "ContainerDefinitions": [
+     {
+      "Environment": [
+       {
+        "Name": "AWS_REGION",
+        "Value": "us-west-2"
+       },
+       {
+        "Name": "S3_ARTIFACTS_BUCKET",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9"
+        }
+       },
+       {
+        "Name": "DYNAMODB_TOOL_RESULTS_TABLE",
+        "Value": {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefToolResultsTable82CE91FE867ADBA2"
+        }
+       },
+       {
+        "Name": "TOOL_NAME",
+        "Value": "pacu-mcp"
+       }
+      ],
+      "Essential": true,
+      "Image": {
+       "Fn::Join": [
+        "",
+        [
+         "909507831547.dkr.ecr.us-west-2.",
+         {
+          "Ref": "AWS::URLSuffix"
+         },
+         "/pacu-mcp:latest"
+        ]
+       ]
+      },
+      "LogConfiguration": {
+       "LogDriver": "awslogs",
+       "Options": {
+        "awslogs-group": {
+         "Ref": "pacumcpLogGroupAB4093EB"
+        },
+        "awslogs-stream-prefix": "pacu-mcp",
+        "awslogs-region": "us-west-2"
+       }
+      },
+      "Name": "pacu-mcp"
+     }
+    ],
+    "Cpu": "2048",
+    "ExecutionRoleArn": {
+     "Fn::GetAtt": [
+      "pacumcpExecutionRole7CCD7D4B",
+      "Arn"
+     ]
+    },
+    "Family": "hivemind-pacu-mcp",
+    "Memory": "4096",
+    "NetworkMode": "awsvpc",
+    "RequiresCompatibilities": [
+     "FARGATE"
+    ],
+    "TaskRoleArn": {
+     "Fn::GetAtt": [
+      "McpServerTaskRoleB19E5A08",
+      "Arn"
+     ]
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/pacu-mcpTaskDef/Resource"
+   }
+  },
+  "pacumcpLogGroupAB4093EB": {
+   "Type": "AWS::Logs::LogGroup",
+   "Properties": {
+    "LogGroupName": "/ecs/pacu-mcp",
+    "RetentionInDays": 7
+   },
+   "UpdateReplacePolicy": "Delete",
+   "DeletionPolicy": "Delete",
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Compute/pacu-mcpLogGroup/Resource"
+   }
+  },
   "UnpackLambdaSecurityGroup6A180B17": {
    "Type": "AWS::EC2::SecurityGroup",
    "Properties": {
@@ -3598,10 +4036,8 @@
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
-     "S3Bucket": {
-      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
-     },
-     "S3Key": "741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f.zip"
+     "S3Bucket": "cdk-hnb659fds-assets-909507831547-us-west-2",
+     "S3Key": "15fb2042a81057a6655b62fdab459d24472c9397078386fa90c938719b85e706.zip"
     },
     "Environment": {
      "Variables": {
@@ -3652,7 +4088,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Compute/UnpackLambda/Resource",
-    "aws:asset:path": "asset.741be1c5955e1dbfdd1d234a7b343bf3d4ec660ef9dfc9eb91f88445522aee0f",
+    "aws:asset:path": "asset.15fb2042a81057a6655b62fdab459d24472c9397078386fa90c938719b85e706",
     "aws:asset:is-bundled": false,
     "aws:asset:property": "Code"
    }
@@ -3751,9 +4187,7 @@
     "Runtime": "nodejs22.x",
     "Timeout": 900,
     "Code": {
-     "S3Bucket": {
-      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
-     },
+     "S3Bucket": "cdk-hnb659fds-assets-909507831547-us-west-2",
      "S3Key": "2819175352ad1ce0dae768e83fc328fb70fb5f10b4a8ff0ccbcb791f02b0716d.zip"
     },
     "Role": {
@@ -3797,10 +4231,8 @@
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
-     "S3Bucket": {
-      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
-     },
-     "S3Key": "acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb.zip"
+     "S3Bucket": "cdk-hnb659fds-assets-909507831547-us-west-2",
+     "S3Key": "bfa9408fefe293b92a9a857f027929bc36bbc928c636a1cce422a2b350244539.zip"
     },
     "Environment": {
      "Variables": {
@@ -3851,7 +4283,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Compute/MemoryIngestorLambda/Resource",
-    "aws:asset:path": "asset.acab34dc814da6933475e876a3e1082c11da8e0b111f178b7837054ddf10aaeb",
+    "aws:asset:path": "asset.bfa9408fefe293b92a9a857f027929bc36bbc928c636a1cce422a2b350244539",
     "aws:asset:is-bundled": false,
     "aws:asset:property": "Code"
    }
@@ -3905,10 +4337,8 @@
    "Type": "AWS::Lambda::Function",
    "Properties": {
     "Code": {
-     "S3Bucket": {
-      "Fn::Sub": "cdk-hnb659fds-assets-${AWS::AccountId}-us-east-1"
-     },
-     "S3Key": "99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d.zip"
+     "S3Bucket": "cdk-hnb659fds-assets-909507831547-us-west-2",
+     "S3Key": "3d99d2c6420993c422c4b611f72443de929c174d7e2e39f30395d7b7a907e060.zip"
     },
     "Environment": {
      "Variables": {
@@ -3953,7 +4383,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Compute/FailureHandlerLambda/Resource",
-    "aws:asset:path": "asset.99075b8ceb6cb38fe73deeb670887b87a24093b72b10c94eced3e92c230ac37d",
+    "aws:asset:path": "asset.3d99d2c6420993c422c4b611f72443de929c174d7e2e39f30395d7b7a907e060",
     "aws:asset:is-bundled": false,
     "aws:asset:property": "Code"
    }
@@ -3987,7 +4417,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WQ0U7DMAxFv2XvmRllP7AVjRckpsL75KVe5bVNqjgZmqr8O0lHh4AnX5/EufEtoChWsFrgpyx13S47PsL47lG3KqHDyNjDWNmOVHkyU93bjvU1tzcVFWmBseyCeHKZ/5clDqjZX/fOXrgmtxGxmtGzNaJ26Br09IHSPtOJDWech/8SazyyIffDoupsk8xfbfPibBjy1F0nUZEn830R+2ONMO6C0bPBrKOSpwOKkBfY5JJ62Abdkt+iUFqwSKGQDi7tcDf6BWJUFYkNTpOankgZNmyaKbb5IOm34IfgozK2JjjLw6VYwxoeF2dhXrqQPtsTVLf6BXAp8WqcAQAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/2WQQW/CMAyFfwv34LFy2RU6sQvSUNkdmdRUpiWpYgdURf3vU4pg2nZ6z5/1/CQXUBQLWMzwJnNbt/OOj5D2irY1eJNDYrxAqnxHpjy5SXe+Yzvk8e5GQ1YglV0UpZD5f1tij5Z12AV/5ZrCSsRbRmXvxGwwNKj0hdK+04kdZ5zDf4l3iuwo/LDcHaCi3gurD8MahUznG4G09c1H8LHPh55+65uKlNw92+HlWCOkTXT20fnwo5HlAUVIBVZZjCxhHW1LOpWQLSDtycbAOjyLfoFxNBWJj8GSmU7sFRt2zfTJx6I8uc+ofdTROF8TnOXl+voGxQKK2VmY5yE65QtBdddvrHugbLABAAA="
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Compute/CDKMetadata/Default"
@@ -4046,14 +4476,6 @@
    },
    "Export": {
     "Name": "HivemindPrism-Compute:ExportsOutputRefarchaeologistTaskDef0C0F4ADA4DC35875"
-   }
-  },
-  "ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8": {
-   "Value": {
-    "Ref": "semgrepmcpTaskDef4F4E8F78"
-   },
-   "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputRefsemgrepmcpTaskDef4F4E8F78CFB99EA8"
    }
   },
   "ExportsOutputRefsynthesizerTaskDef22D2EEBC35D6B5CC": {
@@ -4146,17 +4568,6 @@
     "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttArchivistTaskRoleEE36BB64Arn77DF6974"
    }
   },
-  "ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC": {
-   "Value": {
-    "Fn::GetAtt": [
-     "McpServerTaskRoleB19E5A08",
-     "Arn"
-    ]
-   },
-   "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttMcpServerTaskRoleB19E5A08ArnF4BE63CC"
-   }
-  },
   "ExportsOutputFnGetAttarchaeologistExecutionRoleE7945B2BArnCAEC5042": {
    "Value": {
     "Fn::GetAtt": [
@@ -4223,39 +4634,6 @@
     "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttarchivistExecutionRole522CA1A4Arn50372367"
    }
   },
-  "ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0": {
-   "Value": {
-    "Fn::GetAtt": [
-     "semgrepmcpExecutionRole97487FBA",
-     "Arn"
-    ]
-   },
-   "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttsemgrepmcpExecutionRole97487FBAArn20B5C4F0"
-   }
-  },
-  "ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3": {
-   "Value": {
-    "Fn::GetAtt": [
-     "gitleaksmcpExecutionRoleD51A8FB4",
-     "Arn"
-    ]
-   },
-   "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttgitleaksmcpExecutionRoleD51A8FB4Arn0755AEE3"
-   }
-  },
-  "ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0": {
-   "Value": {
-    "Fn::GetAtt": [
-     "trivymcpExecutionRole6C379FEC",
-     "Arn"
-    ]
-   },
-   "Export": {
-    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAtttrivymcpExecutionRole6C379FECArn603C25F0"
-   }
-  },
   "ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5": {
    "Value": {
     "Fn::GetAtt": [
@@ -4265,6 +4643,14 @@
    },
    "Export": {
     "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttHivemindCluster94255979Arn66AE51A5"
+   }
+  },
+  "ExportsOutputRefHivemindCluster9425597927C437AA": {
+   "Value": {
+    "Ref": "HivemindCluster94255979"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputRefHivemindCluster9425597927C437AA"
    }
   }
  },
