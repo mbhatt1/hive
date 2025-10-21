@@ -347,7 +347,8 @@ pip install -r requirements-test.txt
 # Run all tests with coverage
 pytest tests/ -v --cov=src --cov-report=html
 
-# Expected: 136 passed, 72%+ coverage
+# Expected: 131 passed, 68%+ coverage
+# Note: Coverage requirement is 80%, but current implementation is at ~68%
 ```
 
 ### 3. Deploy to AWS

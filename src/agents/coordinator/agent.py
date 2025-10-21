@@ -73,10 +73,7 @@ class CoordinatorAgent:
             
             # ACT: Execute MCP tools in parallel
             self._update_state("ACTING")
-            results = await self.cognitive_kernel.invoke_mcp_tools_parallel(
-                tool_invocations,
-                max_concurrency=max_concurrency
-            )
+            results = await self._act(tool_invocations, max_concurrency)
             
             # Process and store results
             processed_results = self._process_tool_results(results)
@@ -256,6 +253,26 @@ class CoordinatorAgent:
         
         logger.info(f"Decided concurrency: {max_concurrency}")
         return max_concurrency
+    
+    async def _act(self, tool_invocations: List[Dict[str, Any]], max_concurrency: int = 5) -> List[Dict[str, Any]]:
+        """
+        Execute MCP tools based on invocation plan.
+        
+        Args:
+            tool_invocations: List of tool invocation specifications
+            max_concurrency: Maximum number of parallel tool executions
+            
+        Returns:
+            List of tool execution results
+        """
+        logger.info(f"Executing {len(tool_invocations)} MCP tools with concurrency={max_concurrency}")
+        
+        results = await self.cognitive_kernel.invoke_mcp_tools_parallel(
+            tool_invocations,
+            max_concurrency=max_concurrency
+        )
+        
+        return results
     
     def _process_tool_results(self, results: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Process and format tool execution results."""
