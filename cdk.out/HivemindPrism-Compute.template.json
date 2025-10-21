@@ -32,6 +32,8 @@
        "Action": [
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
+        "elasticache:DescribeCacheClusters",
+        "elasticache:DescribeReplicationGroups",
         "kendra:Query",
         "kendra:Retrieve",
         "xray:PutTelemetryRecords",
@@ -47,9 +49,16 @@
       },
       {
        "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
         "s3:GetBucket*",
         "s3:GetObject*",
-        "s3:List*"
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
        ],
        "Effect": "Allow",
        "Resource": [
@@ -98,27 +107,23 @@
       },
       {
        "Action": [
-        "s3:Abort*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging"
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
        ],
        "Effect": "Allow",
        "Resource": [
         {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
         },
         {
          "Fn::Join": [
           "",
           [
            {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
            },
-           "/agent-outputs/archaeologist/*"
+           "/*"
           ]
          ]
         }
@@ -148,6 +153,9 @@
          "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
         },
         {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -157,27 +165,6 @@
            "/index/*"
           ]
          ]
-        },
-        {
-         "Ref": "AWS::NoValue"
-        }
-       ]
-      },
-      {
-       "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:ConditionCheckItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:GetShardIterator",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
         },
         {
          "Ref": "AWS::NoValue"
@@ -229,6 +216,8 @@
        "Action": [
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
+        "elasticache:DescribeCacheClusters",
+        "elasticache:DescribeReplicationGroups",
         "kendra:Query",
         "kendra:Retrieve",
         "xray:PutTelemetryRecords",
@@ -244,9 +233,16 @@
       },
       {
        "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
         "s3:GetBucket*",
         "s3:GetObject*",
-        "s3:List*"
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
        ],
        "Effect": "Allow",
        "Resource": [
@@ -295,27 +291,23 @@
       },
       {
        "Action": [
-        "s3:Abort*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging"
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
        ],
        "Effect": "Allow",
        "Resource": [
         {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
         },
         {
          "Fn::Join": [
           "",
           [
            {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
            },
-           "/agent-outputs/strategist/*"
+           "/*"
           ]
          ]
         }
@@ -345,6 +337,9 @@
          "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
         },
         {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -354,27 +349,6 @@
            "/index/*"
           ]
          ]
-        },
-        {
-         "Ref": "AWS::NoValue"
-        }
-       ]
-      },
-      {
-       "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:ConditionCheckItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:GetShardIterator",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
         },
         {
          "Ref": "AWS::NoValue"
@@ -426,6 +400,8 @@
        "Action": [
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
+        "elasticache:DescribeCacheClusters",
+        "elasticache:DescribeReplicationGroups",
         "kendra:Query",
         "kendra:Retrieve",
         "xray:PutTelemetryRecords",
@@ -441,9 +417,16 @@
       },
       {
        "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
         "s3:GetBucket*",
         "s3:GetObject*",
-        "s3:List*"
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
        ],
        "Effect": "Allow",
        "Resource": [
@@ -492,27 +475,23 @@
       },
       {
        "Action": [
-        "s3:Abort*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging"
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
        ],
        "Effect": "Allow",
        "Resource": [
         {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
         },
         {
          "Fn::Join": [
           "",
           [
            {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
            },
-           "/agent-outputs/coordinator/*"
+           "/*"
           ]
          ]
         }
@@ -542,6 +521,9 @@
          "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
         },
         {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -551,27 +533,6 @@
            "/index/*"
           ]
          ]
-        },
-        {
-         "Ref": "AWS::NoValue"
-        }
-       ]
-      },
-      {
-       "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:ConditionCheckItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:GetShardIterator",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
         },
         {
          "Ref": "AWS::NoValue"
@@ -623,6 +584,8 @@
        "Action": [
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
+        "elasticache:DescribeCacheClusters",
+        "elasticache:DescribeReplicationGroups",
         "kendra:Query",
         "kendra:Retrieve",
         "xray:PutTelemetryRecords",
@@ -638,9 +601,16 @@
       },
       {
        "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
         "s3:GetBucket*",
         "s3:GetObject*",
-        "s3:List*"
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
        ],
        "Effect": "Allow",
        "Resource": [
@@ -689,27 +659,23 @@
       },
       {
        "Action": [
-        "s3:Abort*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging"
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
        ],
        "Effect": "Allow",
        "Resource": [
         {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
         },
         {
          "Fn::Join": [
           "",
           [
            {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
            },
-           "/agent-outputs/synthesizer/*"
+           "/*"
           ]
          ]
         }
@@ -739,6 +705,9 @@
          "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
         },
         {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -748,27 +717,6 @@
            "/index/*"
           ]
          ]
-        },
-        {
-         "Ref": "AWS::NoValue"
-        }
-       ]
-      },
-      {
-       "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:ConditionCheckItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:GetShardIterator",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
         },
         {
          "Ref": "AWS::NoValue"
@@ -820,6 +768,8 @@
        "Action": [
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
+        "elasticache:DescribeCacheClusters",
+        "elasticache:DescribeReplicationGroups",
         "kendra:Query",
         "kendra:Retrieve",
         "xray:PutTelemetryRecords",
@@ -835,9 +785,16 @@
       },
       {
        "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
         "s3:GetBucket*",
         "s3:GetObject*",
-        "s3:List*"
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
        ],
        "Effect": "Allow",
        "Resource": [
@@ -886,27 +843,23 @@
       },
       {
        "Action": [
-        "s3:Abort*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging"
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
        ],
        "Effect": "Allow",
        "Resource": [
         {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
         },
         {
          "Fn::Join": [
           "",
           [
            {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
            },
-           "/agent-outputs/critic/*"
+           "/*"
           ]
          ]
         }
@@ -936,6 +889,9 @@
          "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
         },
         {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -945,27 +901,6 @@
            "/index/*"
           ]
          ]
-        },
-        {
-         "Ref": "AWS::NoValue"
-        }
-       ]
-      },
-      {
-       "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:ConditionCheckItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:GetShardIterator",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
         },
         {
          "Ref": "AWS::NoValue"
@@ -1017,6 +952,8 @@
        "Action": [
         "bedrock:InvokeModel",
         "bedrock:InvokeModelWithResponseStream",
+        "elasticache:DescribeCacheClusters",
+        "elasticache:DescribeReplicationGroups",
         "kendra:Query",
         "kendra:Retrieve",
         "xray:PutTelemetryRecords",
@@ -1032,9 +969,16 @@
       },
       {
        "Action": [
+        "s3:Abort*",
+        "s3:DeleteObject*",
         "s3:GetBucket*",
         "s3:GetObject*",
-        "s3:List*"
+        "s3:List*",
+        "s3:PutObject",
+        "s3:PutObjectLegalHold",
+        "s3:PutObjectRetention",
+        "s3:PutObjectTagging",
+        "s3:PutObjectVersionTagging"
        ],
        "Effect": "Allow",
        "Resource": [
@@ -1083,27 +1027,23 @@
       },
       {
        "Action": [
-        "s3:Abort*",
-        "s3:DeleteObject*",
-        "s3:PutObject",
-        "s3:PutObjectLegalHold",
-        "s3:PutObjectRetention",
-        "s3:PutObjectTagging",
-        "s3:PutObjectVersionTagging"
+        "s3:GetBucket*",
+        "s3:GetObject*",
+        "s3:List*"
        ],
        "Effect": "Allow",
        "Resource": [
         {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
         },
         {
          "Fn::Join": [
           "",
           [
            {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
+            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
            },
-           "/agent-outputs/archivist/*"
+           "/*"
           ]
          ]
         }
@@ -1133,6 +1073,9 @@
          "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
         },
         {
+         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
+        },
+        {
          "Fn::Join": [
           "",
           [
@@ -1142,27 +1085,6 @@
            "/index/*"
           ]
          ]
-        },
-        {
-         "Ref": "AWS::NoValue"
-        }
-       ]
-      },
-      {
-       "Action": [
-        "dynamodb:BatchGetItem",
-        "dynamodb:ConditionCheckItem",
-        "dynamodb:DescribeTable",
-        "dynamodb:GetItem",
-        "dynamodb:GetRecords",
-        "dynamodb:GetShardIterator",
-        "dynamodb:Query",
-        "dynamodb:Scan"
-       ],
-       "Effect": "Allow",
-       "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
         },
         {
          "Ref": "AWS::NoValue"
@@ -2004,7 +1926,7 @@
        },
        {
         "Name": "BEDROCK_MODEL_ID",
-        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+        "Value": "anthropic.claude-3-5-sonnet-20241022-v2:0"
        },
        {
         "Name": "AGENT_NAME",
@@ -2218,7 +2140,7 @@
        },
        {
         "Name": "BEDROCK_MODEL_ID",
-        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+        "Value": "anthropic.claude-3-5-sonnet-20241022-v2:0"
        },
        {
         "Name": "AGENT_NAME",
@@ -2432,7 +2354,7 @@
        },
        {
         "Name": "BEDROCK_MODEL_ID",
-        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+        "Value": "anthropic.claude-3-5-sonnet-20241022-v2:0"
        },
        {
         "Name": "AGENT_NAME",
@@ -2646,7 +2568,7 @@
        },
        {
         "Name": "BEDROCK_MODEL_ID",
-        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+        "Value": "anthropic.claude-3-5-sonnet-20241022-v2:0"
        },
        {
         "Name": "AGENT_NAME",
@@ -2860,7 +2782,7 @@
        },
        {
         "Name": "BEDROCK_MODEL_ID",
-        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+        "Value": "anthropic.claude-3-5-sonnet-20241022-v2:0"
        },
        {
         "Name": "AGENT_NAME",
@@ -3074,7 +2996,7 @@
        },
        {
         "Name": "BEDROCK_MODEL_ID",
-        "Value": "anthropic.claude-sonnet-4-20250514-v1:0"
+        "Value": "anthropic.claude-3-5-sonnet-20241022-v2:0"
        },
        {
         "Name": "AGENT_NAME",
@@ -4037,7 +3959,7 @@
    "Properties": {
     "Code": {
      "S3Bucket": "cdk-hnb659fds-assets-909507831547-us-west-2",
-     "S3Key": "15fb2042a81057a6655b62fdab459d24472c9397078386fa90c938719b85e706.zip"
+     "S3Key": "514a966bf7e02afd1fdf93edcebae12443c8fed13c527cfdf267c22d13eb92d9.zip"
     },
     "Environment": {
      "Variables": {
@@ -4052,9 +3974,12 @@
       }
      }
     },
+    "EphemeralStorage": {
+     "Size": 10240
+    },
     "FunctionName": "HivemindUnpackAndValidate",
     "Handler": "index.handler",
-    "MemorySize": 512,
+    "MemorySize": 3008,
     "Role": {
      "Fn::GetAtt": [
       "UnpackLambdaRoleCC4ECDC5",
@@ -4062,7 +3987,7 @@
      ]
     },
     "Runtime": "python3.12",
-    "Timeout": 300,
+    "Timeout": 900,
     "VpcConfig": {
      "SecurityGroupIds": [
       {
@@ -4074,10 +3999,7 @@
      ],
      "SubnetIds": [
       {
-       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-      },
-      {
-       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
       }
      ]
     }
@@ -4088,7 +4010,7 @@
    ],
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Compute/UnpackLambda/Resource",
-    "aws:asset:path": "asset.15fb2042a81057a6655b62fdab459d24472c9397078386fa90c938719b85e706",
+    "aws:asset:path": "asset.514a966bf7e02afd1fdf93edcebae12443c8fed13c527cfdf267c22d13eb92d9",
     "aws:asset:is-bundled": false,
     "aws:asset:property": "Code"
    }
@@ -4269,10 +4191,7 @@
      ],
      "SubnetIds": [
       {
-       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-      },
-      {
-       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
       }
      ]
     }
@@ -4369,10 +4288,7 @@
      ],
      "SubnetIds": [
       {
-       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-      },
-      {
-       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+       "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
       }
      ]
     }
@@ -4452,6 +4368,17 @@
    },
    "Export": {
     "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+   }
+  },
+  "ExportsOutputFnGetAttFailureHandlerLambda9F818F09Arn4EA3F01E": {
+   "Value": {
+    "Fn::GetAtt": [
+     "FailureHandlerLambda9F818F09",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Compute:ExportsOutputFnGetAttFailureHandlerLambda9F818F09Arn4EA3F01E"
    }
   },
   "ExportsOutputRefcoordinatorTaskDefD6FC88DD67855FC0": {

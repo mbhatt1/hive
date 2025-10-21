@@ -10,10 +10,17 @@ import { OrchestrationStack } from '../infrastructure/stacks/orchestration-stack
 
 const app = new cdk.App();
 
-// Environment configuration
+// Environment configuration with validation
+const account = process.env.CDK_DEFAULT_ACCOUNT || process.env.AWS_ACCOUNT_ID;
+const region = process.env.CDK_DEFAULT_REGION || 'us-east-1';
+
+if (!account) {
+  throw new Error('AWS account ID must be provided via CDK_DEFAULT_ACCOUNT or AWS_ACCOUNT_ID environment variable');
+}
+
 const env = {
-  account: process.env.CDK_DEFAULT_ACCOUNT || process.env.AWS_ACCOUNT_ID,
-  region: process.env.CDK_DEFAULT_REGION || 'us-east-1',
+  account,
+  region,
 };
 
 // Stack name prefix
@@ -103,8 +110,8 @@ const orchestrationStack = new OrchestrationStack(app, `${stackPrefix}-Orchestra
   uploadsBucket: storageStack.uploadsBucket,
   missionStatusTable: storageStack.missionStatusTable,
   agentTaskDefinitions: computeStack.agentTaskDefinitions,
-  mcpTaskDefinitions: computeStack.mcpTaskDefinitions,
   unpackLambda: computeStack.unpackLambda,
+  failureHandlerLambda: computeStack.failureHandlerLambda,
   ecsCluster: computeStack.ecsCluster,
   vpc: networkStack.vpc,
   agentSecurityGroup: securityStack.agentSecurityGroup,

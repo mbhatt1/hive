@@ -298,12 +298,7 @@
         "kms:ReEncrypt*"
        ],
        "Effect": "Allow",
-       "Resource": {
-        "Fn::GetAtt": [
-         "HivemindKeyB4006B32",
-         "Arn"
-        ]
-       }
+       "Resource": "arn:aws:kms:*:909507831547:key/*"
       },
       {
        "Action": [
@@ -323,7 +318,10 @@
         "dynamodb:UpdateItem"
        ],
        "Effect": "Allow",
-       "Resource": "arn:aws:dynamodb:us-west-2:909507831547:table/HivemindMissionStatus"
+       "Resource": [
+        "arn:aws:dynamodb:*:909507831547:table/HivemindMissionStatus",
+        "arn:aws:dynamodb:*:909507831547:table/HivemindMissionStatus-909507831547"
+       ]
       }
      ],
      "Version": "2012-10-17"

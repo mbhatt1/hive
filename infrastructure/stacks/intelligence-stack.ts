@@ -51,7 +51,7 @@ export class IntelligenceStack extends cdk.Stack {
     // Create Kendra Index
     this.kendraIndex = new kendra.CfnIndex(this, 'InstitutionalMemoryIndex', {
       name: 'HivemindInstitutionalMemory',
-      edition: 'DEVELOPER_EDITION', // Enterprise for production
+      edition: 'DEVELOPER_EDITION', // Use ENTERPRISE_EDITION for production
       roleArn: kendraIndexRole.roleArn,
       description: 'Institutional memory index for security findings and patterns',
       documentMetadataConfigurations: [
@@ -115,6 +115,7 @@ export class IntelligenceStack extends cdk.Stack {
     });
 
     props.kendraBucket.grantRead(kendraDataSourceRole);
+    props.kmsKey.grantDecrypt(kendraDataSourceRole);
 
     kendraDataSourceRole.addToPolicy(
       new iam.PolicyStatement({

@@ -5,6 +5,7 @@ import * as elasticache from 'aws-cdk-lib/aws-elasticache';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as kms from 'aws-cdk-lib/aws-kms';
 import * as events from 'aws-cdk-lib/aws-events';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { Construct } from 'constructs';
 
 export interface StorageStackProps extends cdk.StackProps {
@@ -90,7 +91,7 @@ export class StorageStack extends cdk.Stack {
 
     // Mission Status Table
     this.missionStatusTable = new dynamodb.Table(this, 'MissionStatusTable', {
-      tableName: 'HivemindMissionStatus',
+      tableName: `HivemindMissionStatus-${cdk.Stack.of(this).account}`,
       partitionKey: {
         name: 'mission_id',
         type: dynamodb.AttributeType.STRING,
@@ -106,7 +107,7 @@ export class StorageStack extends cdk.Stack {
 
     // Tool Results Index Table
     this.toolResultsTable = new dynamodb.Table(this, 'ToolResultsTable', {
-      tableName: 'HivemindToolResults',
+      tableName: `HivemindToolResults-${cdk.Stack.of(this).account}`,
       partitionKey: {
         name: 'mission_id',
         type: dynamodb.AttributeType.STRING,
@@ -125,7 +126,7 @@ export class StorageStack extends cdk.Stack {
 
     // Findings Archive Table
     this.findingsArchiveTable = new dynamodb.Table(this, 'FindingsArchiveTable', {
-      tableName: 'HivemindFindingsArchive',
+      tableName: `HivemindFindingsArchive-${cdk.Stack.of(this).account}`,
       partitionKey: {
         name: 'finding_id',
         type: dynamodb.AttributeType.STRING,
@@ -175,7 +176,7 @@ export class StorageStack extends cdk.Stack {
     // Create subnet group for ElastiCache
     const subnetGroup = new elasticache.CfnSubnetGroup(this, 'RedisSubnetGroup', {
       description: 'Subnet group for Hivemind ElastiCache Redis',
-      subnetIds: props.vpc.privateSubnets.map((subnet: ec2.ISubnet) => subnet.subnetId),
+      subnetIds: props.vpc.isolatedSubnets.map((subnet: ec2.ISubnet) => subnet.subnetId),
       cacheSubnetGroupName: 'hivemind-redis-subnet-group',
     });
 
@@ -200,7 +201,38 @@ export class StorageStack extends cdk.Stack {
       eventBusName: 'HivemindPrism',
     });
 
-    // CLI permissions are now handled in security stack to avoid circular dependency
+    // CLI permissions will be granted in a separate stack to avoid circular dependency
+    
+    // Add KMS key policies for S3 and DynamoDB
+    props.kmsKey.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'Allow S3 to use key',
+        effect: iam.Effect.ALLOW,
+        principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
+        actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
+          },
+        },
+      })
+    );
+
+    props.kmsKey.addToResourcePolicy(
+      new iam.PolicyStatement({
+        sid: 'Allow DynamoDB to use key',
+        effect: iam.Effect.ALLOW,
+        principals: [new iam.ServicePrincipal('dynamodb.amazonaws.com')],
+        actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:CreateGrant'],
+        resources: ['*'],
+        conditions: {
+          StringEquals: {
+            'kms:ViaService': `dynamodb.${cdk.Stack.of(this).region}.amazonaws.com`,
+          },
+        },
+      })
+    );
 
     // ========== OUTPUTS ==========
 
@@ -229,13 +261,13 @@ export class StorageStack extends cdk.Stack {
     });
 
     new cdk.CfnOutput(this, 'RedisEndpoint', {
-      value: this.elastiCacheCluster.attrRedisEndpointAddress,
+      value: this.elastiCacheCluster.attrRedisEndpointAddress || 'pending',
       description: 'ElastiCache Redis endpoint',
       exportName: 'HivemindPrism-RedisEndpoint',
     });
 
     new cdk.CfnOutput(this, 'RedisPort', {
-      value: this.elastiCacheCluster.attrRedisEndpointPort,
+      value: this.elastiCacheCluster.attrRedisEndpointPort || '6379',
       description: 'ElastiCache Redis port',
     });
 

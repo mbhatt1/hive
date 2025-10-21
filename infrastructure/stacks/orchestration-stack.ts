@@ -19,8 +19,8 @@ export interface OrchestrationStackProps extends cdk.StackProps {
   uploadsBucket: s3.Bucket;
   missionStatusTable: dynamodb.Table;
   agentTaskDefinitions: { [key: string]: ecs.FargateTaskDefinition };
-  mcpTaskDefinitions: { [key: string]: ecs.FargateTaskDefinition };
   unpackLambda: lambda.Function;
+  failureHandlerLambda: lambda.Function;
   ecsCluster: ecs.Cluster;
   vpc: ec2.Vpc;
   agentSecurityGroup: ec2.SecurityGroup;
@@ -149,7 +149,7 @@ export class OrchestrationStack extends cdk.Stack {
 
     // 10. Failure Handler
     const handleFailure = new tasks.LambdaInvoke(this, 'HandleFailure', {
-      lambdaFunction: props.unpackLambda, // Reuse for simplicity, should be separate
+      lambdaFunction: props.failureHandlerLambda,
       payload: sfn.TaskInput.fromObject({
         mission_id: sfn.JsonPath.stringAt('$.mission_id'),
         error: sfn.JsonPath.stringAt('$.error'),
@@ -198,7 +198,7 @@ export class OrchestrationStack extends cdk.Stack {
     stepFunctionsRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['lambda:InvokeFunction'],
-        resources: [props.unpackLambda.functionArn],
+        resources: [props.unpackLambda.functionArn, props.failureHandlerLambda.functionArn],
       })
     );
     
@@ -365,7 +365,7 @@ export class OrchestrationStack extends cdk.Stack {
         },
       ],
       securityGroups: [props.agentSecurityGroup],
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       resultPath: `$.${id.toLowerCase()}_result`,
     });
   }

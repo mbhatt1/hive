@@ -10,22 +10,13 @@ export class NetworkStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // Create VPC with public, private, and isolated subnets
+    // Create VPC with isolated subnets only (no NAT gateway to avoid EIP limit)
+    // AWS services accessed via VPC endpoints
     this.vpc = new ec2.Vpc(this, 'HivemindVpc', {
       ipAddresses: ec2.IpAddresses.cidr('10.10.0.0/16'),
-      maxAzs: 1, // Reduce to 1 AZ to use fewer EIPs
-      natGateways: 0, // No NAT gateway to avoid EIP usage
+      maxAzs: 1,
+      natGateways: 0, // No NAT gateway - use VPC endpoints instead
       subnetConfiguration: [
-        {
-          name: 'Public',
-          subnetType: ec2.SubnetType.PUBLIC,
-          cidrMask: 24,
-        },
-        {
-          name: 'Private',
-          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-          cidrMask: 24,
-        },
         {
           name: 'Isolated',
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
@@ -36,7 +27,7 @@ export class NetworkStack extends cdk.Stack {
       enableDnsSupport: true,
     });
 
-    this.privateSubnets = this.vpc.privateSubnets;
+    this.privateSubnets = this.vpc.isolatedSubnets; // Using isolated subnets as private
     this.isolatedSubnets = this.vpc.isolatedSubnets;
 
     // Add VPC Gateway Endpoints for S3 and DynamoDB (no cost, better performance)
@@ -54,8 +45,21 @@ export class NetworkStack extends cdk.Stack {
       ],
     });
 
+    // Create security group for VPC endpoints
+    const vpcEndpointSecurityGroup = new ec2.SecurityGroup(this, 'VpcEndpointSecurityGroup', {
+      vpc: this.vpc,
+      description: 'Security group for VPC interface endpoints',
+      allowAllOutbound: false,
+    });
+
+    // Allow HTTPS traffic from private subnets
+    vpcEndpointSecurityGroup.addIngressRule(
+      ec2.Peer.ipv4(this.vpc.vpcCidrBlock),
+      ec2.Port.tcp(443),
+      'Allow HTTPS from VPC'
+    );
+
     // Add VPC Interface Endpoints for AWS services
-    // Security groups will be added by the Security Stack
     const interfaceEndpoints = [
       {
         name: 'EcrApi',
@@ -99,6 +103,7 @@ export class NetworkStack extends cdk.Stack {
       this.vpc.addInterfaceEndpoint(endpoint.name, {
         service: endpoint.service,
         privateDnsEnabled: true,
+        securityGroups: [vpcEndpointSecurityGroup],
         subnets: {
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
         },
@@ -112,6 +117,7 @@ export class NetworkStack extends cdk.Stack {
         443
       ),
       privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup],
       subnets: {
         subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
@@ -121,6 +127,7 @@ export class NetworkStack extends cdk.Stack {
     this.vpc.addInterfaceEndpoint('CloudWatchMonitoring', {
       service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_MONITORING,
       privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup],
       subnets: {
         subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },
@@ -130,6 +137,7 @@ export class NetworkStack extends cdk.Stack {
     this.vpc.addInterfaceEndpoint('XRay', {
       service: ec2.InterfaceVpcEndpointAwsService.XRAY,
       privateDnsEnabled: true,
+      securityGroups: [vpcEndpointSecurityGroup],
       subnets: {
         subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
       },

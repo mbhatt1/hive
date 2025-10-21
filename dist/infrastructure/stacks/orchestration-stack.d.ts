@@ -14,10 +14,8 @@ export interface OrchestrationStackProps extends cdk.StackProps {
     agentTaskDefinitions: {
         [key: string]: ecs.FargateTaskDefinition;
     };
-    mcpTaskDefinitions: {
-        [key: string]: ecs.FargateTaskDefinition;
-    };
     unpackLambda: lambda.Function;
+    failureHandlerLambda: lambda.Function;
     ecsCluster: ecs.Cluster;
     vpc: ec2.Vpc;
     agentSecurityGroup: ec2.SecurityGroup;

@@ -61,8 +61,9 @@ class HivemindClient:
                 region_name=region
             )
             
-            self.uploads_bucket = os.environ.get('HIVEMIND_UPLOADS_BUCKET', f'hivemind-uploads-{sts.get_caller_identity()["Account"]}')
-            self.mission_table = os.environ.get('HIVEMIND_MISSION_TABLE', 'HivemindMissionStatus')
+            account_id = sts.get_caller_identity()["Account"]
+            self.uploads_bucket = os.environ.get('HIVEMIND_UPLOADS_BUCKET', f'hivemind-uploads-{account_id}')
+            self.mission_table = os.environ.get('HIVEMIND_MISSION_TABLE', f'HivemindMissionStatus-{account_id}')
             
             console.print("[green]✓[/green] Authenticated with AWS")
             

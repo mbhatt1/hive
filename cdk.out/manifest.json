@@ -23,7 +23,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/49349e6661f436bb2a81673e0516bbe62baf499a09b469a1c4d357f30833479a.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/76c3e2fa66d387b207450ddc14ea632b399a44ae46b82b73f0d5f5117a4b9d1e.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -64,114 +64,6 @@
             "data": "HivemindVpc63A10AFB"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/Subnet": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet1Subnet595DA15C"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/RouteTable": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet1RouteTableA849C5AB"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/RouteTableAssociation": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet1RouteTableAssociation279E13C0"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/DefaultRoute": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet1DefaultRoute71CE1587"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/EIP": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet1EIP1AFE2783"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet1/NATGateway": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet1NATGateway7062C7E7"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/Subnet": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet2Subnet0590139A"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/RouteTable": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet2RouteTableCF7671C5"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/RouteTableAssociation": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet2RouteTableAssociation28B1B8A5"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PublicSubnet2/DefaultRoute": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPublicSubnet2DefaultRoute97B05E66"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/Subnet": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/RouteTable": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet1RouteTable6760B120"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/RouteTableAssociation": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet1RouteTableAssociation9DBFFD90"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet1/DefaultRoute": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet1DefaultRoute94C8077C"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/Subnet": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet2Subnet3DF9DED0"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/RouteTable": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet2RouteTableC0CB98E2"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/RouteTableAssociation": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet2RouteTableAssociationEA8285E1"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/PrivateSubnet2/DefaultRoute": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcPrivateSubnet2DefaultRoute7998389F"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet1/Subnet": [
           {
             "type": "aws:cdk:logicalId",
@@ -188,36 +80,6 @@
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcIsolatedSubnet1RouteTableAssociationB6F4B831"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet2/Subnet": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcIsolatedSubnet2SubnetC3A23F9E"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet2/RouteTable": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcIsolatedSubnet2RouteTableF7CBA305"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/IsolatedSubnet2/RouteTableAssociation": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcIsolatedSubnet2RouteTableAssociationD250D1E2"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/IGW": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcIGW5BC705E4"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/VPCGW": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcVPCGWD2997AA7"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/RestrictDefaultSecurityGroupCustomResource/Default": [
@@ -238,22 +100,10 @@
             "data": "HivemindVpcDynamoDbEndpointA3A3E209"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/EcrApi/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcEcrApiSecurityGroup6AD98DCE"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/EcrApi/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcEcrApi9D0AB230"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/EcrDocker/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcEcrDockerSecurityGroup7D50F6EC"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/EcrDocker/Resource": [
@@ -262,22 +112,10 @@
             "data": "HivemindVpcEcrDocker405B244D"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/CloudWatchLogs/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcCloudWatchLogsSecurityGroup7E0EB03A"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/CloudWatchLogs/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcCloudWatchLogs2E158E32"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/SecretsManager/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcSecretsManagerSecurityGroup23612D9C"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/SecretsManager/Resource": [
@@ -286,22 +124,10 @@
             "data": "HivemindVpcSecretsManagerD03BB291"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/Sts/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcStsSecurityGroupDC027C45"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/Sts/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcSts3A76C1A1"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/StepFunctions/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcStepFunctionsSecurityGroup7594477B"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/StepFunctions/Resource": [
@@ -310,22 +136,10 @@
             "data": "HivemindVpcStepFunctionsF2D892F2"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/EventBridge/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcEventBridgeSecurityGroup1AA0AC91"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/EventBridge/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcEventBridgeB9B6D141"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/Sns/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcSnsSecurityGroupCFAD3FEF"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/Sns/Resource": [
@@ -334,22 +148,10 @@
             "data": "HivemindVpcSns0927B97E"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/Kms/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcKmsSecurityGroup9E9BC97D"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/Kms/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcKmsC11180EF"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/BedrockRuntime/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcBedrockRuntimeSecurityGroupB3A47095"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/BedrockRuntime/Resource": [
@@ -358,22 +160,10 @@
             "data": "HivemindVpcBedrockRuntimeE7F992F6"
           }
         ],
-        "/HivemindPrism-Network/HivemindVpc/CloudWatchMonitoring/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcCloudWatchMonitoringSecurityGroupE15A20D1"
-          }
-        ],
         "/HivemindPrism-Network/HivemindVpc/CloudWatchMonitoring/Resource": [
           {
             "type": "aws:cdk:logicalId",
             "data": "HivemindVpcCloudWatchMonitoringCDC3AF49"
-          }
-        ],
-        "/HivemindPrism-Network/HivemindVpc/XRay/SecurityGroup/Resource": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "HivemindVpcXRaySecurityGroup604EE429"
           }
         ],
         "/HivemindPrism-Network/HivemindVpc/XRay/Resource": [
@@ -400,6 +190,12 @@
             "data": "CustomVpcRestrictDefaultSGCustomResourceProviderHandlerDC833E5E"
           }
         ],
+        "/HivemindPrism-Network/VpcEndpointSecurityGroup/Resource": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "VpcEndpointSecurityGroup02EA44AC"
+          }
+        ],
         "/HivemindPrism-Network/VpcId": [
           {
             "type": "aws:cdk:logicalId",
@@ -424,16 +220,10 @@
             "data": "ExportsOutputRefHivemindVpc63A10AFB0D723A0E"
           }
         ],
-        "/HivemindPrism-Network/Exports/Output{\"Ref\":\"HivemindVpcPrivateSubnet1Subnet5BE540C4\"}": [
+        "/HivemindPrism-Network/Exports/Output{\"Ref\":\"HivemindVpcIsolatedSubnet1Subnet01ABE97E\"}": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-          }
-        ],
-        "/HivemindPrism-Network/Exports/Output{\"Ref\":\"HivemindVpcPrivateSubnet2Subnet3DF9DED0\"}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+            "data": "ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
           }
         ],
         "/HivemindPrism-Network/BootstrapVersion": [
@@ -473,7 +263,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/ac5907baa7ce60090e3821c94d813bbba656fe31c3e11368c122e2d925c2c1d1.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/88c711e13997c7c37771879e33652bef5584c442ed96af4677fdb0c4ef384df6.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -666,7 +456,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/de2b3d0a3f597b9c9f90eab6c8b227b34d0f5f9b98e945c7fc55d6b03a960ec5.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/1096f84e166a766e416c45916c8e41b48472ccb0603ea84597867697274d73c7.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -889,16 +679,16 @@
             "data": "ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
           }
         ],
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"UploadsBucket5E5E9B64\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+          }
+        ],
         "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"MissionStatusTable4039F7D7\",\"Arn\"]}": [
           {
             "type": "aws:cdk:logicalId",
             "data": "ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
-          }
-        ],
-        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"FindingsArchiveTable557F1EE3\",\"Arn\"]}": [
-          {
-            "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
           }
         ],
         "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"ToolResultsTable82CE91FE\",\"Arn\"]}": [
@@ -907,10 +697,10 @@
             "data": "ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
           }
         ],
-        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"UploadsBucket5E5E9B64\",\"Arn\"]}": [
+        "/HivemindPrism-Storage/Exports/Output{\"Fn::GetAtt\":[\"FindingsArchiveTable557F1EE3\",\"Arn\"]}": [
           {
             "type": "aws:cdk:logicalId",
-            "data": "ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+            "data": "ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
           }
         ],
         "/HivemindPrism-Storage/Exports/Output{\"Ref\":\"ArtifactsBucket2AAC5544\"}": [
@@ -1138,7 +928,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/33c9b138e8ab6e933aeb3b2077e6d3999469a650d88c249199c2e5ff5a6485a8.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/b300641293a30edbc47db2b9a350c8e57d5e9958d1a47547b0fe300751def202.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [
@@ -1669,6 +1459,12 @@
             "data": "ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
           }
         ],
+        "/HivemindPrism-Compute/Exports/Output{\"Fn::GetAtt\":[\"FailureHandlerLambda9F818F09\",\"Arn\"]}": [
+          {
+            "type": "aws:cdk:logicalId",
+            "data": "ExportsOutputFnGetAttFailureHandlerLambda9F818F09Arn4EA3F01E"
+          }
+        ],
         "/HivemindPrism-Compute/Exports/Output{\"Ref\":\"coordinatorTaskDefD6FC88DD\"}": [
           {
             "type": "aws:cdk:logicalId",
@@ -1826,7 +1622,7 @@
         "validateOnSynth": false,
         "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-deploy-role-909507831547-us-west-2",
         "cloudFormationExecutionRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-cfn-exec-role-909507831547-us-west-2",
-        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/82f49d07cc7c5fe9bc0a4f46443364ed795b48bb408c5db0e17368a69e05490c.json",
+        "stackTemplateAssetObjectUrl": "s3://cdk-hnb659fds-assets-909507831547-us-west-2/faba399747e6059928272ac584dc7123776f2560408275b0d09ab3554e2aedcf.json",
         "requiresBootstrapStackVersion": 6,
         "bootstrapStackVersionSsmParameter": "/cdk-bootstrap/hnb659fds/version",
         "additionalDependencies": [

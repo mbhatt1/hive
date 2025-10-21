@@ -28,36 +28,7 @@ export class SecurityStack extends cdk.Stack {
       pendingWindow: cdk.Duration.days(30),
     });
 
-    // Add key policy for AWS services
-    this.kmsKey.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'Allow S3 to use key',
-        effect: iam.Effect.ALLOW,
-        principals: [new iam.ServicePrincipal('s3.amazonaws.com')],
-        actions: ['kms:Decrypt', 'kms:GenerateDataKey'],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'kms:ViaService': `s3.${cdk.Stack.of(this).region}.amazonaws.com`,
-          },
-        },
-      })
-    );
-
-    this.kmsKey.addToResourcePolicy(
-      new iam.PolicyStatement({
-        sid: 'Allow DynamoDB to use key',
-        effect: iam.Effect.ALLOW,
-        principals: [new iam.ServicePrincipal('dynamodb.amazonaws.com')],
-        actions: ['kms:Decrypt', 'kms:DescribeKey', 'kms:CreateGrant'],
-        resources: ['*'],
-        conditions: {
-          StringEquals: {
-            'kms:ViaService': `dynamodb.${cdk.Stack.of(this).region}.amazonaws.com`,
-          },
-        },
-      })
-    );
+    // KMS key policies will be added by resource stacks to avoid circular dependencies
 
     // ========== SECURITY GROUPS ==========
     
@@ -133,7 +104,7 @@ export class SecurityStack extends cdk.Stack {
       maxSessionDuration: cdk.Duration.hours(1),
     });
 
-    // Add KMS permissions for CLI role
+    // Add KMS permissions for CLI role (allow all KMS keys in account for cross-region access)
     this.cliUserRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -144,11 +115,11 @@ export class SecurityStack extends cdk.Stack {
           'kms:GenerateDataKey*',
           'kms:DescribeKey',
         ],
-        resources: [this.kmsKey.keyArn],
+        resources: [`arn:aws:kms:*:${cdk.Stack.of(this).account}:key/*`],
       })
     );
 
-    // Add S3 permissions for CLI role
+    // Add S3 and DynamoDB permissions using ARN patterns to avoid circular dependencies
     this.cliUserRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -162,7 +133,6 @@ export class SecurityStack extends cdk.Stack {
       })
     );
 
-    // Add DynamoDB permissions for CLI role
     this.cliUserRole.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -172,7 +142,10 @@ export class SecurityStack extends cdk.Stack {
           'dynamodb:UpdateItem',
           'dynamodb:Query',
         ],
-        resources: [`arn:aws:dynamodb:${cdk.Stack.of(this).region}:${cdk.Stack.of(this).account}:table/HivemindMissionStatus`],
+        resources: [
+          `arn:aws:dynamodb:*:${cdk.Stack.of(this).account}:table/HivemindMissionStatus-${cdk.Stack.of(this).account}`,
+          `arn:aws:dynamodb:*:${cdk.Stack.of(this).account}:table/HivemindMissionStatus`,
+        ],
       })
     );
 

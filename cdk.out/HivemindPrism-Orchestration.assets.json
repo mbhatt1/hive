@@ -1,16 +1,16 @@
 {
   "version": "48.0.0",
   "files": {
-    "82f49d07cc7c5fe9bc0a4f46443364ed795b48bb408c5db0e17368a69e05490c": {
+    "faba399747e6059928272ac584dc7123776f2560408275b0d09ab3554e2aedcf": {
       "displayName": "HivemindPrism-Orchestration Template",
       "source": {
         "path": "HivemindPrism-Orchestration.template.json",
         "packaging": "file"
       },
       "destinations": {
-        "909507831547-us-west-2-2ae04c8f": {
+        "909507831547-us-west-2-576e2e5e": {
           "bucketName": "cdk-hnb659fds-assets-909507831547-us-west-2",
-          "objectKey": "82f49d07cc7c5fe9bc0a4f46443364ed795b48bb408c5db0e17368a69e05490c.json",
+          "objectKey": "faba399747e6059928272ac584dc7123776f2560408275b0d09ab3554e2aedcf.json",
           "region": "us-west-2",
           "assumeRoleArn": "arn:${AWS::Partition}:iam::909507831547:role/cdk-hnb659fds-file-publishing-role-909507831547-us-west-2"
         }

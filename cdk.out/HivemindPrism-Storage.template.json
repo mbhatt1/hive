@@ -417,7 +417,7 @@
     "StreamSpecification": {
      "StreamViewType": "NEW_AND_OLD_IMAGES"
     },
-    "TableName": "HivemindMissionStatus",
+    "TableName": "HivemindMissionStatus-909507831547",
     "TimeToLiveSpecification": {
      "AttributeName": "ttl",
      "Enabled": true
@@ -463,7 +463,7 @@
      "SSEEnabled": true,
      "SSEType": "KMS"
     },
-    "TableName": "HivemindToolResults",
+    "TableName": "HivemindToolResults-909507831547",
     "TimeToLiveSpecification": {
      "AttributeName": "ttl",
      "Enabled": true
@@ -551,7 +551,7 @@
      "SSEEnabled": true,
      "SSEType": "KMS"
     },
-    "TableName": "HivemindFindingsArchive",
+    "TableName": "HivemindFindingsArchive-909507831547",
     "TimeToLiveSpecification": {
      "AttributeName": "ttl",
      "Enabled": true
@@ -570,10 +570,7 @@
     "Description": "Subnet group for Hivemind ElastiCache Redis",
     "SubnetIds": [
      {
-      "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-     },
-     {
-      "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+      "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
      }
     ]
    },
@@ -723,6 +720,17 @@
     "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttArtifactsBucket2AAC5544ArnD57FAE19"
    }
   },
+  "ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131": {
+   "Value": {
+    "Fn::GetAtt": [
+     "UploadsBucket5E5E9B64",
+     "Arn"
+    ]
+   },
+   "Export": {
+    "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+   }
+  },
   "ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1": {
    "Value": {
     "Fn::GetAtt": [
@@ -732,17 +740,6 @@
    },
    "Export": {
     "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttMissionStatusTable4039F7D7ArnEFD2A9B1"
-   }
-  },
-  "ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86": {
-   "Value": {
-    "Fn::GetAtt": [
-     "FindingsArchiveTable557F1EE3",
-     "Arn"
-    ]
-   },
-   "Export": {
-    "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
    }
   },
   "ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED": {
@@ -756,15 +753,15 @@
     "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttToolResultsTable82CE91FEArnDA855BED"
    }
   },
-  "ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131": {
+  "ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86": {
    "Value": {
     "Fn::GetAtt": [
-     "UploadsBucket5E5E9B64",
+     "FindingsArchiveTable557F1EE3",
      "Arn"
     ]
    },
    "Export": {
-    "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttUploadsBucket5E5E9B64Arn8603C131"
+    "Name": "HivemindPrism-Storage:ExportsOutputFnGetAttFindingsArchiveTable557F1EE3Arn6A182E86"
    }
   },
   "ExportsOutputRefArtifactsBucket2AAC55442DB5E6C9": {

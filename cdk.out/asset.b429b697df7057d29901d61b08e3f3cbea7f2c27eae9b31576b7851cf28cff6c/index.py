@@ -30,15 +30,8 @@ def handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
-    # Extract S3 key
-    s3_key = event['detail']['object']['key']
-    
-    # Ignore metadata.json uploads - only process source.tar.gz
-    if not s3_key.endswith('source.tar.gz'):
-        logger.info(f"Ignoring non-archive file: {s3_key}")
-        return {'status': 'skipped', 'reason': 'not a source archive'}
-    
     # Extract mission_id from S3 key
+    s3_key = event['detail']['object']['key']
     mission_id = s3_key.split('/')[1]  # uploads/{mission_id}/source.tar.gz
     
     try:
@@ -50,11 +43,7 @@ def handler(event, context):
         
         # Download archive
         local_archive = f"/tmp/{mission_id}.tar.gz"
-        logger.info(f"Downloading from s3://{UPLOADS_BUCKET}/{s3_key}")
-        
         s3_client.download_file(UPLOADS_BUCKET, s3_key, local_archive)
-        file_size = os.path.getsize(local_archive)
-        logger.info(f"Downloaded {file_size} bytes")
         
         # Verify checksum
         computed_sha256 = compute_sha256(local_archive)
@@ -64,7 +53,7 @@ def handler(event, context):
         extract_dir = f"/tmp/{mission_id}"
         os.makedirs(extract_dir, exist_ok=True)
         
-        with tarfile.open(local_archive, 'r:*') as tar:
+        with tarfile.open(local_archive, 'r:gz') as tar:
             # Security: Check for path traversal
             for member in tar.getmembers():
                 if member.name.startswith('/') or '..' in member.name:

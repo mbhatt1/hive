@@ -207,7 +207,7 @@ export class ComputeStack extends cdk.Stack {
         executionRole: this.createExecutionRole(`${agentName}ExecutionRole`),
       });
 
-      // Add container
+      // Add container - ECR repo must exist before deployment
       const ecrRepo = ecr.Repository.fromRepositoryName(this, `${agentName}EcrRepo`, `hivemind-${agentName}`);
       const container = taskDef.addContainer(`${agentName}Container`, {
         containerName: `${agentName}-agent`,
@@ -230,21 +230,40 @@ export class ComputeStack extends cdk.Stack {
           REDIS_ENDPOINT: props.elastiCacheCluster.attrRedisEndpointAddress,
           REDIS_PORT: props.elastiCacheCluster.attrRedisEndpointPort,
           KENDRA_INDEX_ID: props.kendraIndex.attrId,
-          BEDROCK_MODEL_ID: 'anthropic.claude-sonnet-4-20250514-v1:0',
+          BEDROCK_MODEL_ID: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
           AGENT_NAME: agentName,
         },
       });
 
-      // Grant permissions
-      props.artifactsBucket.grantRead(this.agentTaskRoles[agentName]);
-      props.artifactsBucket.grantWrite(this.agentTaskRoles[agentName], `agent-outputs/${agentName}/*`);
-      props.kendraBucket.grantRead(this.agentTaskRoles[agentName]);
-      props.missionStatusTable.grantReadWriteData(this.agentTaskRoles[agentName]);
-      props.toolResultsTable.grantReadData(this.agentTaskRoles[agentName]);
-      props.findingsTable.grantReadWriteData(this.agentTaskRoles[agentName]);
-
       this.agentTaskDefinitions[agentName] = taskDef;
     });
+
+    // Grant permissions to all agent roles
+    Object.values(this.agentTaskRoles).forEach((role) => {
+      props.artifactsBucket.grantReadWrite(role);
+      props.uploadsBucket.grantRead(role);
+      props.kendraBucket.grantReadWrite(role);
+      props.missionStatusTable.grantReadWriteData(role);
+      props.toolResultsTable.grantReadWriteData(role);
+      props.findingsTable.grantReadWriteData(role);
+      props.kmsKey.grantDecrypt(role);
+    });
+
+    // Add ElastiCache permissions for agents
+    const elastiCachePolicy = new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      actions: [
+        'elasticache:DescribeCacheClusters',
+        'elasticache:DescribeReplicationGroups',
+      ],
+      resources: ['*'],
+    });
+
+    Object.values(this.agentTaskRoles).forEach((role) => {
+      role.addToPolicy(elastiCachePolicy);
+    });
+
+    // CLI permissions are granted via IAM policy in Security stack to avoid circular dependency
 
     // ========== MCP TOOL TASK DEFINITIONS ==========
     this.mcpTaskDefinitions = {};
@@ -261,6 +280,7 @@ export class ComputeStack extends cdk.Stack {
         executionRole: this.createExecutionRole(`${toolName}ExecutionRole`),
       });
 
+      // ECR repo must exist before deployment
       const ecrRepo = ecr.Repository.fromRepositoryName(this, `${toolName}EcrRepo`, toolName);
       const container = taskDef.addContainer(`${toolName}Container`, {
         containerName: toolName,
@@ -297,8 +317,9 @@ export class ComputeStack extends cdk.Stack {
       runtime: lambda.Runtime.PYTHON_3_12,
       handler: 'index.handler',
       code: lambda.Code.fromAsset('src/lambdas/unpack'),
-      timeout: cdk.Duration.minutes(5),
-      memorySize: 512,
+      timeout: cdk.Duration.minutes(15),
+      memorySize: 3008,
+      ephemeralStorageSize: cdk.Size.gibibytes(10),
       role: unpackLambdaRole,
       environment: {
         UPLOADS_BUCKET: props.uploadsBucket.bucketName,

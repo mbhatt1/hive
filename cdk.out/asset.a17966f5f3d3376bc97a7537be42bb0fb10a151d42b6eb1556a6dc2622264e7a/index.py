@@ -30,15 +30,8 @@ def handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
-    # Extract S3 key
-    s3_key = event['detail']['object']['key']
-    
-    # Ignore metadata.json uploads - only process source.tar.gz
-    if not s3_key.endswith('source.tar.gz'):
-        logger.info(f"Ignoring non-archive file: {s3_key}")
-        return {'status': 'skipped', 'reason': 'not a source archive'}
-    
     # Extract mission_id from S3 key
+    s3_key = event['detail']['object']['key']
     mission_id = s3_key.split('/')[1]  # uploads/{mission_id}/source.tar.gz
     
     try:

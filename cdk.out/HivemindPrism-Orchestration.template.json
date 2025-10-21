@@ -33,7 +33,21 @@
        "Effect": "Allow",
        "Resource": [
         {
+         "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttFailureHandlerLambda9F818F09Arn4EA3F01E"
+        },
+        {
          "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+        },
+        {
+         "Fn::Join": [
+          "",
+          [
+           {
+            "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttFailureHandlerLambda9F818F09Arn4EA3F01E"
+           },
+           ":*"
+          ]
+         ]
         },
         {
          "Fn::Join": [
@@ -869,11 +883,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-archaeologist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -889,11 +899,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-strategist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -909,11 +915,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-coordinator-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -929,11 +931,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-strategist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -949,11 +947,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-synthesizer-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -969,11 +963,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-critic-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -989,11 +979,7 @@
        },
        "\",\"TaskDefinition\":\"hivemind-archivist-agent\",\"NetworkConfiguration\":{\"AwsvpcConfiguration\":{\"Subnets\":[\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
-       },
-       "\",\"",
-       {
-        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet2Subnet3DF9DED022A86747"
+        "Fn::ImportValue": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
        },
        "\"],\"SecurityGroups\":[\"",
        {
@@ -1013,7 +999,7 @@
        },
        ":states:::lambda:invoke\",\"Parameters\":{\"FunctionName\":\"",
        {
-        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttUnpackLambdaA542CFF8Arn3B0FFFD3"
+        "Fn::ImportValue": "HivemindPrism-Compute:ExportsOutputFnGetAttFailureHandlerLambda9F818F09Arn4EA3F01E"
        },
        "\",\"Payload\":{\"mission_id.$\":\"$.mission_id\",\"error.$\":\"$.error\"}}},\"FailureRecorded\":{\"Type\":\"Succeed\"}},\"TimeoutSeconds\":3600}"
       ]
