@@ -246,7 +246,12 @@ Draft findings in JSON array:
 def main():
     agent = SynthesizerAgent()
     findings = agent.run()
-    print(f"SUCCESS: {len(findings)} findings drafted")
+    output = {
+        'mission_id': agent.mission_id,
+        'findings_count': len(findings),
+        'confidence': sum(f.confidence_score for f in findings) / max(len(findings), 1)
+    }
+    print(json.dumps(output))
     return 0
 
 if __name__ == "__main__":

@@ -30,146 +30,172 @@ export class StorageStack extends cdk.Stack {
     // ========== S3 BUCKETS ==========
 
     // Uploads Bucket - for incoming code submissions
-    this.uploadsBucket = new s3.Bucket(this, 'UploadsBucket', {
-      bucketName: `hivemind-uploads-${cdk.Stack.of(this).account}`,
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: props.kmsKey,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      versioned: true,
-      enforceSSL: true,
-      lifecycleRules: [
-        {
-          id: 'DeleteOldUploads',
-          prefix: 'uploads/',
-          enabled: true,
-          expiration: cdk.Duration.days(7),
-        },
-      ],
-      eventBridgeEnabled: true, // Enable EventBridge notifications
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const uploadsBucketName = `hivemind-uploads-${cdk.Stack.of(this).account}`;
+    this.uploadsBucket = s3.Bucket.fromBucketName(this, 'UploadsBucketImport', uploadsBucketName) as s3.Bucket ||
+      new s3.Bucket(this, 'UploadsBucket', {
+        bucketName: uploadsBucketName,
+        encryption: s3.BucketEncryption.KMS,
+        encryptionKey: props.kmsKey,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        versioned: true,
+        enforceSSL: true,
+        lifecycleRules: [
+          {
+            id: 'DeleteOldUploads',
+            prefix: 'uploads/',
+            enabled: true,
+            expiration: cdk.Duration.days(7),
+          },
+        ],
+        eventBridgeEnabled: true,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      });
 
     // Artifacts Bucket - for processing and tool results
-    this.artifactsBucket = new s3.Bucket(this, 'ArtifactsBucket', {
-      bucketName: `hivemind-artifacts-${cdk.Stack.of(this).account}`,
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: props.kmsKey,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      versioned: true,
-      enforceSSL: true,
-      lifecycleRules: [
-        {
-          id: 'TransitionOldArtifacts',
-          enabled: true,
-          transitions: [
-            {
-              storageClass: s3.StorageClass.INTELLIGENT_TIERING,
-              transitionAfter: cdk.Duration.days(30),
-            },
-            {
-              storageClass: s3.StorageClass.GLACIER,
-              transitionAfter: cdk.Duration.days(90),
-            },
-          ],
-        },
-      ],
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const artifactsBucketName = `hivemind-artifacts-${cdk.Stack.of(this).account}`;
+    this.artifactsBucket = s3.Bucket.fromBucketName(this, 'ArtifactsBucketImport', artifactsBucketName) as s3.Bucket ||
+      new s3.Bucket(this, 'ArtifactsBucket', {
+        bucketName: artifactsBucketName,
+        encryption: s3.BucketEncryption.KMS,
+        encryptionKey: props.kmsKey,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        versioned: true,
+        enforceSSL: true,
+        lifecycleRules: [
+          {
+            id: 'TransitionOldArtifacts',
+            enabled: true,
+            transitions: [
+              {
+                storageClass: s3.StorageClass.INTELLIGENT_TIERING,
+                transitionAfter: cdk.Duration.days(30),
+              },
+              {
+                storageClass: s3.StorageClass.GLACIER,
+                transitionAfter: cdk.Duration.days(90),
+              },
+            ],
+          },
+        ],
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      });
 
     // Kendra Memories Bucket - for institutional memory
-    this.kendraBucket = new s3.Bucket(this, 'KendraBucket', {
-      bucketName: `hivemind-kendra-memories-${cdk.Stack.of(this).account}`,
-      encryption: s3.BucketEncryption.KMS,
-      encryptionKey: props.kmsKey,
-      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-      versioned: true,
-      enforceSSL: true,
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const kendraBucketName = `hivemind-kendra-memories-${cdk.Stack.of(this).account}`;
+    this.kendraBucket = s3.Bucket.fromBucketName(this, 'KendraBucketImport', kendraBucketName) as s3.Bucket ||
+      new s3.Bucket(this, 'KendraBucket', {
+        bucketName: kendraBucketName,
+        encryption: s3.BucketEncryption.KMS,
+        encryptionKey: props.kmsKey,
+        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+        versioned: true,
+        enforceSSL: true,
+        removalPolicy: cdk.RemovalPolicy.DESTROY,
+        autoDeleteObjects: true,
+      });
 
     // ========== DYNAMODB TABLES ==========
 
     // Mission Status Table
-    this.missionStatusTable = new dynamodb.Table(this, 'MissionStatusTable', {
-      tableName: `HivemindMissionStatus-${cdk.Stack.of(this).account}`,
-      partitionKey: {
-        name: 'mission_id',
-        type: dynamodb.AttributeType.STRING,
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
-      encryptionKey: props.kmsKey,
-      pointInTimeRecovery: true,
-      stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
-      timeToLiveAttribute: 'ttl',
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const missionStatusTableName = `HivemindMissionStatus-${cdk.Stack.of(this).account}`;
+    try {
+      this.missionStatusTable = dynamodb.Table.fromTableName(this, 'MissionStatusTableImport', missionStatusTableName) as dynamodb.Table;
+    } catch {
+      this.missionStatusTable = new dynamodb.Table(this, 'MissionStatusTable', {
+        tableName: missionStatusTableName,
+        partitionKey: {
+          name: 'mission_id',
+          type: dynamodb.AttributeType.STRING,
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        encryptionKey: props.kmsKey,
+        pointInTimeRecovery: true,
+        stream: dynamodb.StreamViewType.NEW_AND_OLD_IMAGES,
+        timeToLiveAttribute: 'ttl',
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+    }
 
     // Tool Results Index Table
-    this.toolResultsTable = new dynamodb.Table(this, 'ToolResultsTable', {
-      tableName: `HivemindToolResults-${cdk.Stack.of(this).account}`,
-      partitionKey: {
-        name: 'mission_id',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'tool_timestamp',
-        type: dynamodb.AttributeType.STRING,
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
-      encryptionKey: props.kmsKey,
-      pointInTimeRecovery: true,
-      timeToLiveAttribute: 'ttl',
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const toolResultsTableName = `HivemindToolResults-${cdk.Stack.of(this).account}`;
+    try {
+      this.toolResultsTable = dynamodb.Table.fromTableName(this, 'ToolResultsTableImport', toolResultsTableName) as dynamodb.Table;
+    } catch {
+      this.toolResultsTable = new dynamodb.Table(this, 'ToolResultsTable', {
+        tableName: toolResultsTableName,
+        partitionKey: {
+          name: 'mission_id',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'tool_timestamp',
+          type: dynamodb.AttributeType.STRING,
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        encryptionKey: props.kmsKey,
+        pointInTimeRecovery: true,
+        timeToLiveAttribute: 'ttl',
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
+    }
 
     // Findings Archive Table
-    this.findingsArchiveTable = new dynamodb.Table(this, 'FindingsArchiveTable', {
-      tableName: `HivemindFindingsArchive-${cdk.Stack.of(this).account}`,
-      partitionKey: {
-        name: 'finding_id',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'timestamp',
-        type: dynamodb.AttributeType.NUMBER,
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
-      encryptionKey: props.kmsKey,
-      pointInTimeRecovery: true,
-      timeToLiveAttribute: 'ttl',
-      removalPolicy: cdk.RemovalPolicy.RETAIN,
-    });
+    const findingsArchiveTableName = `HivemindFindingsArchive-${cdk.Stack.of(this).account}`;
+    const findingsTableExists = this.node.tryGetContext('findingsTableExists') === 'true';
+    
+    if (findingsTableExists) {
+      this.findingsArchiveTable = dynamodb.Table.fromTableName(this, 'FindingsArchiveTableImport', findingsArchiveTableName) as dynamodb.Table;
+    } else {
+      this.findingsArchiveTable = new dynamodb.Table(this, 'FindingsArchiveTable', {
+        tableName: findingsArchiveTableName,
+        partitionKey: {
+          name: 'finding_id',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'timestamp',
+          type: dynamodb.AttributeType.NUMBER,
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.CUSTOMER_MANAGED,
+        encryptionKey: props.kmsKey,
+        pointInTimeRecovery: true,
+        timeToLiveAttribute: 'ttl',
+        removalPolicy: cdk.RemovalPolicy.RETAIN,
+      });
 
-    // GSI for repo_name queries
-    this.findingsArchiveTable.addGlobalSecondaryIndex({
-      indexName: 'repo_name-timestamp-index',
-      partitionKey: {
-        name: 'repo_name',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'timestamp',
-        type: dynamodb.AttributeType.NUMBER,
-      },
-      projectionType: dynamodb.ProjectionType.ALL,
-    });
+      // GSI for repo_name queries
+      this.findingsArchiveTable.addGlobalSecondaryIndex({
+        indexName: 'repo_name-timestamp-index',
+        partitionKey: {
+          name: 'repo_name',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'timestamp',
+          type: dynamodb.AttributeType.NUMBER,
+        },
+        projectionType: dynamodb.ProjectionType.ALL,
+      });
 
-    // GSI for severity queries
-    this.findingsArchiveTable.addGlobalSecondaryIndex({
-      indexName: 'severity-timestamp-index',
-      partitionKey: {
-        name: 'severity',
-        type: dynamodb.AttributeType.STRING,
-      },
-      sortKey: {
-        name: 'timestamp',
-        type: dynamodb.AttributeType.NUMBER,
-      },
-      projectionType: dynamodb.ProjectionType.ALL,
-    });
+      // GSI for severity queries
+      this.findingsArchiveTable.addGlobalSecondaryIndex({
+        indexName: 'severity-timestamp-index',
+        partitionKey: {
+          name: 'severity',
+          type: dynamodb.AttributeType.STRING,
+        },
+        sortKey: {
+          name: 'timestamp',
+          type: dynamodb.AttributeType.NUMBER,
+        },
+        projectionType: dynamodb.ProjectionType.ALL,
+      });
+    }
 
     // ========== ELASTICACHE REDIS ==========
 

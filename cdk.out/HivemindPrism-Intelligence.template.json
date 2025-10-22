@@ -163,27 +163,12 @@
        ],
        "Effect": "Allow",
        "Resource": [
-        {
-         "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
-        },
-        {
-         "Fn::Join": [
-          "",
-          [
-           {
-            "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputFnGetAttKendraBucket8BF62693Arn114FE289"
-           },
-           "/*"
-          ]
-         ]
-        }
+        "arn:aws:s3:::hivemind-kendra-memories-909507831547",
+        "arn:aws:s3:::hivemind-kendra-memories-909507831547/*"
        ]
       },
       {
-       "Action": [
-        "kms:Decrypt",
-        "kms:DescribeKey"
-       ],
+       "Action": "kms:Decrypt",
        "Effect": "Allow",
        "Resource": {
         "Fn::ImportValue": "HivemindPrism-Security:ExportsOutputFnGetAttHivemindKeyB4006B32ArnC7048005"
@@ -221,9 +206,7 @@
    "Properties": {
     "DataSourceConfiguration": {
      "S3Configuration": {
-      "BucketName": {
-       "Fn::ImportValue": "HivemindPrism-Storage:ExportsOutputRefKendraBucket8BF6269392D44149"
-      },
+      "BucketName": "hivemind-kendra-memories-909507831547",
       "InclusionPrefixes": [
        "findings/",
        "patterns/",
@@ -244,7 +227,7 @@
       "Arn"
      ]
     },
-    "Schedule": "cron(0/15 * * * ? *)",
+    "Schedule": "cron(0 * * * ? *)",
     "Type": "S3"
    },
    "DependsOn": [

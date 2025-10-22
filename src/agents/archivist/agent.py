@@ -266,7 +266,12 @@ class ArchivistAgent:
 def main():
     agent = ArchivistAgent()
     result = agent.run()
-    print(f"SUCCESS: {result['count']} findings archived")
+    output = {
+        'mission_id': agent.mission_id,
+        'count': result['count'],
+        'wiki_url': result.get('wiki_url', '')
+    }
+    print(json.dumps(output))
     return 0
 
 if __name__ == "__main__":

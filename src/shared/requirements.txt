@@ -7,3 +7,6 @@ tiktoken>=0.5.1
 
 # Redis for agent coordination
 redis>=4.5.0
+
+# MCP Protocol
+mcp>=0.9.0

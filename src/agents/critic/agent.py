@@ -161,7 +161,11 @@ Provide review in JSON:
 def main():
     agent = CriticAgent()
     agent.run()
-    print("SUCCESS: Reviews completed")
+    output = {
+        'mission_id': agent.mission_id,
+        'status': 'completed'
+    }
+    print(json.dumps(output))
     return 0
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@
   "HivemindVpc63A10AFB": {
    "Type": "AWS::EC2::VPC",
    "Properties": {
-    "CidrBlock": "10.10.0.0/16",
+    "CidrBlock": "10.20.0.0/16",
     "EnableDnsHostnames": true,
     "EnableDnsSupport": true,
     "InstanceTenancy": "default",
@@ -23,11 +23,228 @@
     "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/Resource"
    }
   },
+  "HivemindVpcPublicSubnet1Subnet595DA15C": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-west-2a",
+    "CidrBlock": "10.20.0.0/24",
+    "MapPublicIpOnLaunch": true,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Public"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Public"
+     },
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-Network/HivemindVpc/PublicSubnet1"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HivemindVpc63A10AFB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PublicSubnet1/Subnet"
+   }
+  },
+  "HivemindVpcPublicSubnet1RouteTableA849C5AB": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-Network/HivemindVpc/PublicSubnet1"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HivemindVpc63A10AFB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PublicSubnet1/RouteTable"
+   }
+  },
+  "HivemindVpcPublicSubnet1RouteTableAssociation279E13C0": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HivemindVpcPublicSubnet1RouteTableA849C5AB"
+    },
+    "SubnetId": {
+     "Ref": "HivemindVpcPublicSubnet1Subnet595DA15C"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PublicSubnet1/RouteTableAssociation"
+   }
+  },
+  "HivemindVpcPublicSubnet1DefaultRoute71CE1587": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "GatewayId": {
+     "Ref": "HivemindVpcIGW5BC705E4"
+    },
+    "RouteTableId": {
+     "Ref": "HivemindVpcPublicSubnet1RouteTableA849C5AB"
+    }
+   },
+   "DependsOn": [
+    "HivemindVpcVPCGWD2997AA7"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PublicSubnet1/DefaultRoute"
+   }
+  },
+  "HivemindVpcPublicSubnet1EIP1AFE2783": {
+   "Type": "AWS::EC2::EIP",
+   "Properties": {
+    "Domain": "vpc",
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-Network/HivemindVpc/PublicSubnet1"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PublicSubnet1/EIP"
+   }
+  },
+  "HivemindVpcPublicSubnet1NATGateway7062C7E7": {
+   "Type": "AWS::EC2::NatGateway",
+   "Properties": {
+    "AllocationId": {
+     "Fn::GetAtt": [
+      "HivemindVpcPublicSubnet1EIP1AFE2783",
+      "AllocationId"
+     ]
+    },
+    "SubnetId": {
+     "Ref": "HivemindVpcPublicSubnet1Subnet595DA15C"
+    },
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-Network/HivemindVpc/PublicSubnet1"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ]
+   },
+   "DependsOn": [
+    "HivemindVpcPublicSubnet1DefaultRoute71CE1587",
+    "HivemindVpcPublicSubnet1RouteTableAssociation279E13C0"
+   ],
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PublicSubnet1/NATGateway"
+   }
+  },
+  "HivemindVpcPrivateSubnet1Subnet5BE540C4": {
+   "Type": "AWS::EC2::Subnet",
+   "Properties": {
+    "AvailabilityZone": "us-west-2a",
+    "CidrBlock": "10.20.1.0/24",
+    "MapPublicIpOnLaunch": false,
+    "Tags": [
+     {
+      "Key": "aws-cdk:subnet-name",
+      "Value": "Private"
+     },
+     {
+      "Key": "aws-cdk:subnet-type",
+      "Value": "Private"
+     },
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-Network/HivemindVpc/PrivateSubnet1"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HivemindVpc63A10AFB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PrivateSubnet1/Subnet"
+   }
+  },
+  "HivemindVpcPrivateSubnet1RouteTable6760B120": {
+   "Type": "AWS::EC2::RouteTable",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-Network/HivemindVpc/PrivateSubnet1"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ],
+    "VpcId": {
+     "Ref": "HivemindVpc63A10AFB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PrivateSubnet1/RouteTable"
+   }
+  },
+  "HivemindVpcPrivateSubnet1RouteTableAssociation9DBFFD90": {
+   "Type": "AWS::EC2::SubnetRouteTableAssociation",
+   "Properties": {
+    "RouteTableId": {
+     "Ref": "HivemindVpcPrivateSubnet1RouteTable6760B120"
+    },
+    "SubnetId": {
+     "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PrivateSubnet1/RouteTableAssociation"
+   }
+  },
+  "HivemindVpcPrivateSubnet1DefaultRoute94C8077C": {
+   "Type": "AWS::EC2::Route",
+   "Properties": {
+    "DestinationCidrBlock": "0.0.0.0/0",
+    "NatGatewayId": {
+     "Ref": "HivemindVpcPublicSubnet1NATGateway7062C7E7"
+    },
+    "RouteTableId": {
+     "Ref": "HivemindVpcPrivateSubnet1RouteTable6760B120"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/PrivateSubnet1/DefaultRoute"
+   }
+  },
   "HivemindVpcIsolatedSubnet1Subnet01ABE97E": {
    "Type": "AWS::EC2::Subnet",
    "Properties": {
     "AvailabilityZone": "us-west-2a",
-    "CidrBlock": "10.10.0.0/24",
+    "CidrBlock": "10.20.2.0/24",
     "MapPublicIpOnLaunch": false,
     "Tags": [
      {
@@ -88,6 +305,38 @@
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/IsolatedSubnet1/RouteTableAssociation"
+   }
+  },
+  "HivemindVpcIGW5BC705E4": {
+   "Type": "AWS::EC2::InternetGateway",
+   "Properties": {
+    "Tags": [
+     {
+      "Key": "Name",
+      "Value": "HivemindPrism-VPC"
+     },
+     {
+      "Key": "SecurityLevel",
+      "Value": "High"
+     }
+    ]
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/IGW"
+   }
+  },
+  "HivemindVpcVPCGWD2997AA7": {
+   "Type": "AWS::EC2::VPCGatewayAttachment",
+   "Properties": {
+    "InternetGatewayId": {
+     "Ref": "HivemindVpcIGW5BC705E4"
+    },
+    "VpcId": {
+     "Ref": "HivemindVpc63A10AFB"
+    }
+   },
+   "Metadata": {
+    "aws:cdk:path": "HivemindPrism-Network/HivemindVpc/VPCGW"
    }
   },
   "HivemindVpcRestrictDefaultSecurityGroupCustomResourceC38F3672": {
@@ -761,7 +1010,7 @@
   "CDKMetadata": {
    "Type": "AWS::CDK::Metadata",
    "Properties": {
-    "Analytics": "v2:deflate64:H4sIAAAAAAAA/3WNvW7DMAyEnyW7rLqauqZGEXSKYRdeA1qmA+aHEkTKRhDk3YO0RZ2l0/E+8njOOlfacgWzFH44Fifq7bVV8EcDs+zQO3vtojfVyF1dmTrRBIpt7hn1AZepCVnxC/oTLnxha5HgCZQCmw0oznDpov/gIQZi/X3/Zz9ZMY3g8fmmRZ8T6WWTQo7fHc/gZhqUkJNHU2XRcF7syP+s6hQmGjC9g6BZi6C2Cnvi/SOzzRqz3gyHAe1BXqbXN+tK61YHISpSZqUz2uZH75rPzlNHAQAA"
+    "Analytics": "v2:deflate64:H4sIAAAAAAAA/3WOwW6DQAxEvyX3zZZy6pWiKMolRVBxrcxiUifgRbteUBTl3ysSBLn0NJ7n8cixjuNIRxsY/dbUl21Llb4VAuaiYPQ/aGJ9K3uj0obLLFVZqFoyRagYZWLrlNsg+A1ViytfWeK9NQRClpfwNOwO2SRHkD0IjnBVmaMBBNfiAws6xiXw/GR2iQiY3w5Z1EzK3uy47i2xzNHFPpoaMPiaKdAER3LdOxv6x+uv4K5y9DY4gyoNXmy32ob/WWXODlSj+wSPKvEepRA4EZ+mm68gfZC7YlujPvu34f1Dx5GON2dPtHWBhTrU+VP/ADYNe62dAQAA"
    },
    "Metadata": {
     "aws:cdk:path": "HivemindPrism-Network/CDKMetadata/Default"
@@ -801,6 +1050,14 @@
    },
    "Export": {
     "Name": "HivemindPrism-Network:ExportsOutputRefHivemindVpcIsolatedSubnet1Subnet01ABE97E363D737D"
+   }
+  },
+  "ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF": {
+   "Value": {
+    "Ref": "HivemindVpcPrivateSubnet1Subnet5BE540C4"
+   },
+   "Export": {
+    "Name": "HivemindPrism-Network:ExportsOutputRefHivemindVpcPrivateSubnet1Subnet5BE540C434344ABF"
    }
   }
  },

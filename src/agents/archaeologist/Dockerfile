@@ -9,21 +9,20 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy shared libraries (maintain src directory structure)
+# Copy shared libraries
 COPY src/shared /app/src/shared
 
 # Copy agent code
 COPY src/agents/archaeologist /app/agent
 
 # Install Python dependencies
-RUN pip install --no-cache-dir \
-    boto3>=1.34.0 \
-    redis>=5.0.0 \
-    botocore>=1.34.0
+COPY src/shared/requirements.txt /app/shared-requirements.txt
+RUN pip install --no-cache-dir -r /app/shared-requirements.txt
+RUN pip install --no-cache-dir mcp>=0.9.0
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/src
 
 # Run agent
 CMD ["python", "/app/agent/agent.py"]

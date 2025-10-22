@@ -13,7 +13,7 @@ from typing import Dict, List, Optional, Any
 from botocore.config import Config
 from dataclasses import dataclass
 import logging
-from src.shared.mcp_client import MCPToolRegistry
+from src.shared.mcp_client.client import MCPToolRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ class CognitiveKernel:
     def __init__(
         self,
         region: str = "us-east-1",
-        model_id: str = "anthropic.claude-sonnet-4-20250514-v1:0",
+        model_id: str = "anthropic.claude-3-5-sonnet-20241022-v2:0",
         kendra_index_id: Optional[str] = None
     ):
         """

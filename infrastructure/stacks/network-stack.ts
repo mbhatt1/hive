@@ -13,10 +13,20 @@ export class NetworkStack extends cdk.Stack {
     // Create VPC with isolated subnets only (no NAT gateway to avoid EIP limit)
     // AWS services accessed via VPC endpoints
     this.vpc = new ec2.Vpc(this, 'HivemindVpc', {
-      ipAddresses: ec2.IpAddresses.cidr('10.10.0.0/16'),
+      ipAddresses: ec2.IpAddresses.cidr('10.20.0.0/16'),
       maxAzs: 1,
-      natGateways: 0, // No NAT gateway - use VPC endpoints instead
+      natGateways: 1,
       subnetConfiguration: [
+        {
+          name: 'Public',
+          subnetType: ec2.SubnetType.PUBLIC,
+          cidrMask: 24,
+        },
+        {
+          name: 'Private',
+          subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS,
+          cidrMask: 24,
+        },
         {
           name: 'Isolated',
           subnetType: ec2.SubnetType.PRIVATE_ISOLATED,

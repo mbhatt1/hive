@@ -137,7 +137,7 @@ export class IntelligenceStack extends cdk.Stack {
           inclusionPrefixes: ['findings/', 'patterns/', 'policies/'],
         },
       },
-      schedule: 'cron(0/15 * * * ? *)', // Sync every 15 minutes
+      schedule: 'cron(0 * * * ? *)', // Sync every hour
     });
 
     this.kendraDataSource.addDependency(this.kendraIndex);

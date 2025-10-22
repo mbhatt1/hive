@@ -192,25 +192,27 @@ class MCPToolRegistry:
     
     def _load_server_configs(self) -> Dict[str, Dict[str, Any]]:
         """Load MCP server configurations."""
+        import os
+        mcp_base = os.environ.get('MCP_SERVERS_PATH', '/app/src/mcp_servers')
         return {
             'semgrep-mcp': {
-                'command': ['python', '/app/src/mcp_servers/semgrep_mcp/server.py'],
+                'command': ['python', f'{mcp_base}/semgrep_mcp/server.py'],
                 'description': 'SAST security scanning with Semgrep'
             },
             'gitleaks-mcp': {
-                'command': ['python', '/app/src/mcp_servers/gitleaks_mcp/server.py'],
+                'command': ['python', f'{mcp_base}/gitleaks_mcp/server.py'],
                 'description': 'Secret and credential detection'
             },
             'trivy-mcp': {
-                'command': ['python', '/app/src/mcp_servers/trivy_mcp/server.py'],
+                'command': ['python', f'{mcp_base}/trivy_mcp/server.py'],
                 'description': 'Container and dependency vulnerability scanning'
             },
             'scoutsuite-mcp': {
-                'command': ['python', '/app/src/mcp_servers/scoutsuite_mcp/server.py'],
+                'command': ['python', f'{mcp_base}/scoutsuite_mcp/server.py'],
                 'description': 'AWS security configuration assessment'
             },
             'pacu-mcp': {
-                'command': ['python', '/app/src/mcp_servers/pacu_mcp/server.py'],
+                'command': ['python', f'{mcp_base}/pacu_mcp/server.py'],
                 'description': 'AWS penetration testing framework'
             }
         }

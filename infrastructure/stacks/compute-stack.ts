@@ -207,11 +207,15 @@ export class ComputeStack extends cdk.Stack {
         executionRole: this.createExecutionRole(`${agentName}ExecutionRole`),
       });
 
-      // Add container - ECR repo must exist before deployment
-      const ecrRepo = ecr.Repository.fromRepositoryName(this, `${agentName}EcrRepo`, `hivemind-${agentName}`);
+      // Add container - CDK builds and pushes automatically
       const container = taskDef.addContainer(`${agentName}Container`, {
         containerName: `${agentName}-agent`,
-        image: ecs.ContainerImage.fromEcrRepository(ecrRepo, 'latest'),
+        image: ecs.ContainerImage.fromAsset('.', {
+          file: `src/agents/${agentName}/Dockerfile`,
+          buildArgs: {
+            AGENT_NAME: agentName,
+          },
+        }),
         logging: ecs.LogDriver.awsLogs({
           streamPrefix: agentName,
           logGroup: new logs.LogGroup(this, `${agentName}LogGroup`, {
@@ -266,48 +270,8 @@ export class ComputeStack extends cdk.Stack {
     // CLI permissions are granted via IAM policy in Security stack to avoid circular dependency
 
     // ========== MCP TOOL TASK DEFINITIONS ==========
+    // MCP servers run as child processes inside agents, not as separate ECS tasks
     this.mcpTaskDefinitions = {};
-
-    // Code scanning tools
-    const mcpTools = ['semgrep-mcp', 'gitleaks-mcp', 'trivy-mcp', 'scoutsuite-mcp', 'pacu-mcp'];
-
-    mcpTools.forEach((toolName) => {
-      const taskDef = new ecs.FargateTaskDefinition(this, `${toolName}TaskDef`, {
-        family: `hivemind-${toolName}`,
-        cpu: 2048, // 2 vCPU for intensive scanning
-        memoryLimitMiB: 4096, // 4GB RAM
-        taskRole: this.mcpServerTaskRole,
-        executionRole: this.createExecutionRole(`${toolName}ExecutionRole`),
-      });
-
-      // ECR repo must exist before deployment
-      const ecrRepo = ecr.Repository.fromRepositoryName(this, `${toolName}EcrRepo`, toolName);
-      const container = taskDef.addContainer(`${toolName}Container`, {
-        containerName: toolName,
-        image: ecs.ContainerImage.fromEcrRepository(ecrRepo, 'latest'),
-        logging: ecs.LogDriver.awsLogs({
-          streamPrefix: toolName,
-          logGroup: new logs.LogGroup(this, `${toolName}LogGroup`, {
-            logGroupName: `/ecs/${toolName}`,
-            retention: logs.RetentionDays.ONE_WEEK,
-            removalPolicy: cdk.RemovalPolicy.DESTROY,
-          }),
-        }),
-        environment: {
-          AWS_REGION: cdk.Stack.of(this).region,
-          S3_ARTIFACTS_BUCKET: props.artifactsBucket.bucketName,
-          DYNAMODB_TOOL_RESULTS_TABLE: props.toolResultsTable.tableName,
-          TOOL_NAME: toolName,
-        },
-      });
-
-      // Grant permissions (read-only code, write-only results)
-      props.artifactsBucket.grantRead(this.mcpServerTaskRole, 'unzipped/*');
-      props.artifactsBucket.grantWrite(this.mcpServerTaskRole, `tool-results/${toolName}/*`);
-      props.toolResultsTable.grantWriteData(this.mcpServerTaskRole);
-
-      this.mcpTaskDefinitions[toolName] = taskDef;
-    });
 
     // ========== LAMBDA FUNCTIONS ==========
 

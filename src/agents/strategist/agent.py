@@ -495,7 +495,12 @@ Focus on:
 def main():
     agent = StrategistAgent()
     strategy = agent.run()
-    print(f"SUCCESS: Strategy created with {len(strategy.tools)} tools")
+    output = {
+        'mission_id': strategy.mission_id,
+        'tools_count': len(strategy.tools),
+        'confidence': strategy.confidence_score
+    }
+    print(json.dumps(output))
     return 0
 
 if __name__ == "__main__":

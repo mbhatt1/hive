@@ -143,7 +143,7 @@ export class OrchestrationStack extends cdk.Stack {
       message: sfn.TaskInput.fromObject({
         mission_id: sfn.JsonPath.stringAt('$.mission_id'),
         status: 'COMPLETED',
-        findings_count: sfn.JsonPath.stringAt('$.archival_result.count'),
+        message: 'Analysis completed - check DynamoDB for findings',
       }),
     });
 
@@ -157,6 +157,7 @@ export class OrchestrationStack extends cdk.Stack {
     });
 
     const failureEnd = new sfn.Succeed(this, 'FailureRecorded');
+    handleFailure.next(failureEnd);
 
     // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> synthesis -> archivist
     const definition = unpackTask
@@ -169,8 +170,8 @@ export class OrchestrationStack extends cdk.Stack {
       .next(archivistTask)
       .next(notifyCompletion);
 
-    // Add error handling
-    unpackTask.addCatch(handleFailure.next(failureEnd), {
+    // Add error handling - only to unpack task to avoid state reuse issues
+    unpackTask.addCatch(handleFailure, {
       errors: ['States.ALL'],
       resultPath: '$.error',
     });
@@ -237,7 +238,7 @@ export class OrchestrationStack extends cdk.Stack {
 
     // ========== EVENTBRIDGE RULE ==========
 
-    // Create rule to trigger on S3 uploads
+    // Create rule to trigger on S3 uploads (only source.tar.gz files)
     this.eventRule = new events.Rule(this, 'CodeUploadTrigger', {
       ruleName: 'HivemindCodeUploadTrigger',
       description: 'Triggers Step Functions when code is uploaded to S3',
@@ -249,7 +250,7 @@ export class OrchestrationStack extends cdk.Stack {
             name: [props.uploadsBucket.bucketName],
           },
           object: {
-            key: [{ prefix: 'uploads/' }],
+            key: [{ suffix: 'source.tar.gz' }],
           },
         },
       },
@@ -361,11 +362,15 @@ export class OrchestrationStack extends cdk.Stack {
               name: 'MISSION_ID',
               value: sfn.JsonPath.stringAt('$.mission_id'),
             },
+            {
+              name: 'REPO_NAME',
+              value: sfn.JsonPath.stringAt('$.repo_name'),
+            },
           ],
         },
       ],
       securityGroups: [props.agentSecurityGroup],
-      subnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      subnets: { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
       resultPath: `$.${id.toLowerCase()}_result`,
     });
   }

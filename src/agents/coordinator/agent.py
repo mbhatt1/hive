@@ -9,6 +9,7 @@ import boto3
 import redis
 import logging
 import asyncio
+import time
 from typing import Dict, List, Any
 
 from src.shared.cognitive_kernel.bedrock_client import CognitiveKernel
@@ -34,11 +35,20 @@ class CoordinatorAgent:
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
-        self.redis_client = redis.Redis(
-            host=self.redis_endpoint,
-            port=self.redis_port,
-            decode_responses=True
-        )
+        
+        try:
+            self.redis_client = redis.Redis(
+                host=self.redis_endpoint,
+                port=self.redis_port,
+                decode_responses=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True
+            )
+            self.redis_client.ping()
+        except Exception as e:
+            logger.warning(f"Redis connection failed: {e}. Agent will run without state tracking.")
+            self.redis_client = None
         
         # Initialize cognitive kernel with MCP support
         self.cognitive_kernel = CognitiveKernel(
@@ -238,18 +248,19 @@ class CoordinatorAgent:
         max_concurrency = strategy.get('max_concurrency', 5)
         
         # Check available resources in Redis
-        try:
-            available_resources = self.redis_client.zcount(
-                "resource_pool:fargate",
-                '-inf',
-                '+inf'
-            )
-            
-            # Don't exceed available resources
-            if available_resources > 0:
-                max_concurrency = min(max_concurrency, available_resources)
-        except Exception as e:
-            logger.warning(f"Could not check Redis resources: {e}")
+        if self.redis_client:
+            try:
+                available_resources = self.redis_client.zcount(
+                    "resource_pool:fargate",
+                    '-inf',
+                    '+inf'
+                )
+                
+                # Don't exceed available resources
+                if available_resources > 0:
+                    max_concurrency = min(max_concurrency, available_resources)
+            except Exception as e:
+                logger.warning(f"Could not check Redis resources: {e}")
         
         logger.info(f"Decided concurrency: {max_concurrency}")
         return max_concurrency
@@ -346,10 +357,14 @@ class CoordinatorAgent:
         }
         
         # Log reflection
-        self.redis_client.rpush(
-            f"agent:{self.mission_id}:coordinator:reflections",
-            json.dumps(reflection)
-        )
+        if self.redis_client:
+            try:
+                self.redis_client.rpush(
+                    f"agent:{self.mission_id}:coordinator:reflections",
+                    json.dumps(reflection)
+                )
+            except Exception as e:
+                logger.warning(f"Failed to log reflection to Redis: {e}")
         
         logger.info(f"Reflection: {reflection}")
         return reflection
@@ -361,31 +376,38 @@ class CoordinatorAgent:
         error: str = None
     ):
         """Update agent state in Redis."""
+        if not self.redis_client:
+            logger.debug(f"State update skipped (no Redis): {status}")
+            return
+        
         state = {
             'status': status,
-            'last_heartbeat': str(int(os.times().elapsed)),
+            'last_heartbeat': str(int(time.time())),
             'confidence_score': str(confidence)
         }
         
         if error:
             state['error_message'] = error
         
-        self.redis_client.hset(
-            f"agent:{self.mission_id}:coordinator",
-            mapping=state
-        )
-        
-        # Add to active agents set
-        if status not in ['COMPLETED', 'FAILED']:
-            self.redis_client.sadd(
-                f"mission:{self.mission_id}:active_agents",
-                "coordinator"
+        try:
+            self.redis_client.hset(
+                f"agent:{self.mission_id}:coordinator",
+                mapping=state
             )
-        else:
-            self.redis_client.srem(
-                f"mission:{self.mission_id}:active_agents",
-                "coordinator"
-            )
+            
+            # Add to active agents set
+            if status not in ['COMPLETED', 'FAILED']:
+                self.redis_client.sadd(
+                    f"mission:{self.mission_id}:active_agents",
+                    "coordinator"
+                )
+            else:
+                self.redis_client.srem(
+                    f"mission:{self.mission_id}:active_agents",
+                    "coordinator"
+                )
+        except Exception as e:
+            logger.warning(f"Redis state update failed: {e}")
 
 
 def main():
@@ -393,8 +415,14 @@ def main():
     agent = CoordinatorAgent()
     result = asyncio.run(agent.run())
     
-    print(f"SUCCESS: Executed {result['tools_executed']} tools, {result['tools_succeeded']} succeeded")
-    print(f"Success Rate: {result['success_rate']:.1%}")
+    # Output JSON for Step Functions to capture
+    output = {
+        'mission_id': result['mission_id'],
+        'tools_executed': result['tools_executed'],
+        'tools_succeeded': result['tools_succeeded'],
+        'success_rate': result['success_rate']
+    }
+    print(json.dumps(output))
     
     return 0 if result['success_rate'] > 0.5 else 1
 

@@ -30,30 +30,48 @@ def handler(event, context):
     """
     logger.info(f"Received event: {json.dumps(event)}")
     
-    # Extract S3 key
-    s3_key = event['detail']['object']['key']
+    # Extract mission_id from S3 key - handle both EventBridge and direct S3 events
+    if 'detail' in event:
+        # EventBridge S3 event
+        s3_key = event['detail']['object']['key']
+    elif 'Records' in event:
+        # Direct S3 event
+        s3_key = event['Records'][0]['s3']['object']['key']
+    else:
+        raise ValueError(f"Unknown event structure: {event}")
     
-    # Ignore metadata.json uploads - only process source.tar.gz
-    if not s3_key.endswith('source.tar.gz'):
-        logger.info(f"Ignoring non-archive file: {s3_key}")
-        return {'status': 'skipped', 'reason': 'not a source archive'}
-    
-    # Extract mission_id from S3 key
     mission_id = s3_key.split('/')[1]  # uploads/{mission_id}/source.tar.gz
     
     try:
         
         logger.info(f"Processing mission: {mission_id}")
         
+        # Read metadata to get repo_name
+        metadata_key = f"uploads/{mission_id}/metadata.json"
+        try:
+            metadata_obj = s3_client.get_object(Bucket=UPLOADS_BUCKET, Key=metadata_key)
+            metadata = json.loads(metadata_obj['Body'].read())
+            repo_name = metadata.get('repo_name', 'unknown')
+        except Exception as e:
+            logger.warning(f"Could not read metadata: {e}")
+            repo_name = 'unknown'
+        
         # Update mission status
         update_status(mission_id, 'UNPACKING')
         
+        # Check file size before downloading
+        head_response = s3_client.head_object(Bucket=UPLOADS_BUCKET, Key=s3_key)
+        file_size = head_response['ContentLength']
+        max_size = 5 * 1024 * 1024 * 1024  # 5GB limit
+        
+        if file_size > max_size:
+            raise ValueError(f"Archive too large: {file_size} bytes (max {max_size})")
+        
         # Download archive
         local_archive = f"/tmp/{mission_id}.tar.gz"
-        logger.info(f"Downloading from s3://{UPLOADS_BUCKET}/{s3_key}")
+        logger.info(f"Downloading from s3://{UPLOADS_BUCKET}/{s3_key} ({file_size} bytes)")
         
         s3_client.download_file(UPLOADS_BUCKET, s3_key, local_archive)
-        file_size = os.path.getsize(local_archive)
         logger.info(f"Downloaded {file_size} bytes")
         
         # Verify checksum
@@ -82,6 +100,8 @@ def handler(event, context):
         return {
             'mission_id': mission_id,
             'status': 'success',
+            'scan_type': 'code',
+            'repo_name': repo_name,
             'unzipped_path': f"unzipped/{mission_id}/",
             'file_count': upload_count,
             'sha256': computed_sha256
@@ -122,20 +142,17 @@ def update_status(mission_id, status, error=None):
     """Update mission status in DynamoDB."""
     import time
     
-    update_expr = 'SET #status = :status, last_updated = :updated'
-    expr_values = {
-        ':status': {'S': status},
-        ':updated': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())}
+    item = {
+        'mission_id': {'S': mission_id},
+        'status': {'S': status},
+        'last_updated': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())},
+        'findings_count': {'N': '0'}
     }
     
     if error:
-        update_expr += ', error_message = :error'
-        expr_values[':error'] = {'S': error}
+        item['error_message'] = {'S': error}
     
-    dynamodb_client.update_item(
+    dynamodb_client.put_item(
         TableName=MISSION_TABLE,
-        Key={'mission_id': {'S': mission_id}},
-        UpdateExpression=update_expr,
-        ExpressionAttributeNames={'#status': 'status'},
-        ExpressionAttributeValues=expr_values
+        Item=item
     )

@@ -14,6 +14,7 @@ import json
 import boto3
 import logging
 import redis
+import time
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, asdict
 from pathlib import Path
@@ -64,11 +65,19 @@ class ArchaeologistAgent:
         self.s3_client = boto3.client('s3', region_name=region)
         
         # Redis for agent state
-        self.redis_client = redis.Redis(
-            host=self.redis_endpoint,
-            port=self.redis_port,
-            decode_responses=True
-        )
+        try:
+            self.redis_client = redis.Redis(
+                host=self.redis_endpoint,
+                port=self.redis_port,
+                decode_responses=True,
+                socket_connect_timeout=5,
+                socket_timeout=5,
+                retry_on_timeout=True
+            )
+            self.redis_client.ping()
+        except Exception as e:
+            logger.warning(f"Redis connection failed: {e}. Agent will run without state tracking.")
+            self.redis_client = None
         
         # Cognitive kernel for AI reasoning
         self.cognitive_kernel = CognitiveKernel(
@@ -126,20 +135,26 @@ class ArchaeologistAgent:
         error: Optional[str] = None
     ):
         """Update agent state in Redis."""
+        if not self.redis_client:
+            logger.debug(f"State update skipped (no Redis): {status}")
+            return
+        
         state = {
             'status': status,
-            'last_heartbeat': str(int(os.times().elapsed)),
+            'last_heartbeat': str(int(time.time())),
             'confidence_score': str(confidence)
         }
         
         if error:
             state['error_message'] = error
         
-        self.redis_client.hset(self.agent_state_key, mapping=state)
-        
-        # Add to active agents set
-        if status not in ['COMPLETED', 'FAILED']:
-            self.redis_client.sadd(f"mission:{self.mission_id}:active_agents", "archaeologist")
+        if self.redis_client:
+            try:
+                self.redis_client.hset(self.agent_state_key, mapping=state)
+                if status not in ['COMPLETED', 'FAILED']:
+                    self.redis_client.sadd(f"mission:{self.mission_id}:active_agents", "archaeologist")
+            except Exception as e:
+                logger.warning(f"Redis state update failed: {e}")
     
     def _download_source_code(self) -> Path:
         """Download and extract source code from S3."""
@@ -386,11 +401,15 @@ Provide your analysis in JSON format:
         )
         
         # Update Redis with output location
-        self.redis_client.hset(
-            self.agent_state_key,
-            'output_s3_uri',
-            f"s3://{self.s3_artifacts_bucket}/{output_key}"
-        )
+        if self.redis_client:
+            try:
+                self.redis_client.hset(
+                    self.agent_state_key,
+                    'output_s3_uri',
+                    f"s3://{self.s3_artifacts_bucket}/{output_key}"
+                )
+            except Exception as e:
+                logger.warning(f"Failed to update Redis with output location: {e}")
         
         logger.info(f"ContextManifest written to s3://{self.s3_artifacts_bucket}/{output_key}")
     
@@ -401,13 +420,17 @@ Provide your analysis in JSON format:
             'decision': 'context_discovery',
             'confidence': manifest.confidence_score,
             'criticality': manifest.criticality_tier,
-            'timestamp': str(int(os.times().elapsed))
+            'timestamp': str(int(time.time()))
         }
         
-        self.redis_client.rpush(
-            f"agent:{self.mission_id}:archaeologist:decisions",
-            json.dumps(decision_log)
-        )
+        if self.redis_client:
+            try:
+                self.redis_client.rpush(
+                    f"agent:{self.mission_id}:archaeologist:decisions",
+                    json.dumps(decision_log)
+                )
+            except Exception as e:
+                logger.warning(f"Failed to log decision to Redis: {e}")
         
         logger.info(f"Reflection: {decision_log}")
     
@@ -599,7 +622,14 @@ def main():
     """Main entry point for agent container."""
     agent = ArchaeologistAgent()
     manifest = agent.run()
-    print(f"SUCCESS: ContextManifest created with confidence {manifest.confidence_score}")
+    # Output JSON for Step Functions to capture
+    output = {
+        'mission_id': manifest.mission_id,
+        'confidence': manifest.confidence_score,
+        'file_count': manifest.file_count,
+        'criticality_tier': manifest.criticality_tier
+    }
+    print(json.dumps(output))
     return 0
 
 if __name__ == "__main__":
