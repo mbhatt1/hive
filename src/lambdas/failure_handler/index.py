@@ -12,10 +12,16 @@ import time
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb_client = boto3.client('dynamodb', region_name=os.environ['AWS_REGION'])
-sns_client = boto3.client('sns', region_name=os.environ['AWS_REGION'])
+try:
+    AWS_REGION = os.environ['AWS_REGION']
+    MISSION_TABLE = os.environ['MISSION_TABLE']
+except KeyError as e:
+    logger.error(f"Missing required environment variable: {e}")
+    raise RuntimeError(f"Configuration error: Missing environment variable {e}")
 
-MISSION_TABLE = os.environ['MISSION_TABLE']
+dynamodb_client = boto3.client('dynamodb', region_name=AWS_REGION)
+sns_client = boto3.client('sns', region_name=AWS_REGION)
+
 SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN', '')  # Optional - may not be set
 
 def handler(event, context):

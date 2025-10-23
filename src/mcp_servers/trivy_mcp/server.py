@@ -32,12 +32,6 @@ class TrivyMCPServer:
     def __init__(self):
         self.server = Server("trivy-mcp")
         self.mission_id = os.environ.get('MISSION_ID', 'test-scan-123')
-        self.s3_artifacts_bucket = os.environ.get('S3_ARTIFACTS_BUCKET', 'test-bucket')
-        self.dynamodb_tool_results_table = os.environ.get('DYNAMODB_TOOL_RESULTS_TABLE', 'test-table')
-        
-        region = os.environ.get('AWS_REGION', 'us-east-1')
-        self.s3_client = boto3.client('s3', region_name=region)
-        self.dynamodb_client = boto3.client('dynamodb', region_name=region)
         
         # Register MCP handlers
         self._register_handlers()
@@ -101,20 +95,6 @@ class TrivyMCPServer:
                         },
                         "required": ["image_name"]
                     }
-                ),
-                Tool(
-                    name="get_scan_results",
-                    description="Retrieve previously executed Trivy scan results",
-                    inputSchema={
-                        "type": "object",
-                        "properties": {
-                            "mission_id": {
-                                "type": "string",
-                                "description": "Mission ID of the scan"
-                            }
-                        },
-                        "required": ["mission_id"]
-                    }
                 )
             ]
         
@@ -135,14 +115,6 @@ class TrivyMCPServer:
                         type="text",
                         text=json.dumps(result, indent=2)
                     )]
-                
-                elif name == "get_scan_results":
-                    result = await self._get_scan_results(arguments)
-                    return [TextContent(
-                        type="text",
-                        text=json.dumps(result, indent=2)
-                    )]
-                
                 else:
                     raise ValueError(f"Unknown tool: {name}")
                     
@@ -451,43 +423,6 @@ class TrivyMCPServer:
             "digest": f"sha256:{digest}",
             "timestamp": timestamp
         }
-    
-    async def _get_scan_results(self, arguments: dict) -> dict:
-        """Retrieve scan results from DynamoDB."""
-        mission_id = arguments.get("mission_id", self.mission_id)
-        
-        loop = asyncio.get_event_loop()
-        response = await loop.run_in_executor(
-            None,
-            lambda: self.dynamodb_client.query(
-                TableName=self.dynamodb_tool_results_table,
-                KeyConditionExpression='mission_id = :mid AND begins_with(tool_timestamp, :tool)',
-                ExpressionAttributeValues={
-                    ':mid': {'S': mission_id},
-                    ':tool': {'S': 'trivy-mcp#'}
-                }
-            )
-        )
-        
-        items = response.get('Items', [])
-        if not items:
-            return {"error": "No results found", "mission_id": mission_id}
-        
-        # Get most recent result
-        latest = items[-1]
-        s3_uri = latest['s3_uri']['S']
-        
-        # Download from S3
-        if s3_uri.startswith('s3://'):
-            bucket, key = s3_uri[5:].split('/', 1)
-            obj = await loop.run_in_executor(
-                None,
-                lambda: self.s3_client.get_object(Bucket=bucket, Key=key)
-            )
-            content = obj['Body'].read().decode()
-            return json.loads(content)
-        
-        return {"error": "Invalid S3 URI", "s3_uri": s3_uri}
     
     async def run(self):
         """Start MCP server with stdio transport."""

@@ -29,12 +29,17 @@ class CoordinatorAgent:
     """
     
     def __init__(self, scan_id: str = None):
-        self.mission_id = scan_id or os.environ['MISSION_ID']
-        self.s3_artifacts_bucket = os.environ['S3_ARTIFACTS_BUCKET']
-        self.dynamodb_tool_results_table = os.environ['DYNAMODB_TOOL_RESULTS_TABLE']
-        self.redis_endpoint = os.environ['REDIS_ENDPOINT']
-        self.redis_port = int(os.environ['REDIS_PORT'])
-        self.kendra_index_id = os.environ['KENDRA_INDEX_ID']
+        try:
+            self.mission_id = scan_id or os.environ['MISSION_ID']
+            self.s3_artifacts_bucket = os.environ['S3_ARTIFACTS_BUCKET']
+            self.dynamodb_tool_results_table = os.environ['DYNAMODB_TOOL_RESULTS_TABLE']
+            self.redis_endpoint = os.environ['REDIS_ENDPOINT']
+            self.redis_port = int(os.environ['REDIS_PORT'])
+            self.kendra_index_id = os.environ['KENDRA_INDEX_ID']
+        except KeyError as e:
+            raise RuntimeError(f"Missing required environment variable: {e}")
+        except ValueError as e:
+            raise RuntimeError(f"Invalid environment variable value: {e}")
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)

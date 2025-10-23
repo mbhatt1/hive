@@ -17,9 +17,13 @@ logger.setLevel(logging.INFO)
 s3_client = boto3.client('s3')
 dynamodb_client = boto3.client('dynamodb')
 
-UPLOADS_BUCKET = os.environ['UPLOADS_BUCKET']
-ARTIFACTS_BUCKET = os.environ['ARTIFACTS_BUCKET']
-MISSION_TABLE = os.environ['MISSION_TABLE']
+try:
+    UPLOADS_BUCKET = os.environ['UPLOADS_BUCKET']
+    ARTIFACTS_BUCKET = os.environ['ARTIFACTS_BUCKET']
+    MISSION_TABLE = os.environ['MISSION_TABLE']
+except KeyError as e:
+    logger.error(f"Missing required environment variable: {e}")
+    raise RuntimeError(f"Configuration error: Missing environment variable {e}")
 
 def handler(event, context):
     """
@@ -154,7 +158,11 @@ def update_status(mission_id, status, error=None):
     if error:
         item['error_message'] = {'S': error}
     
-    dynamodb_client.put_item(
-        TableName=MISSION_TABLE,
-        Item=item
-    )
+    try:
+        dynamodb_client.put_item(
+            TableName=MISSION_TABLE,
+            Item=item
+        )
+    except Exception as e:
+        logger.error(f"Failed to update mission status in DynamoDB: {e}")
+        # Don't re-raise - status update failure shouldn't block workflow

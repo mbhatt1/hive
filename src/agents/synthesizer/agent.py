@@ -97,11 +97,15 @@ class SynthesizerAgent:
     
     def _read_tool_results(self) -> List[Dict]:
         """Read all MCP tool results from DynamoDB with evidence chain verification."""
-        response = self.dynamodb_client.query(
-            TableName=self.dynamodb_tool_results_table,
-            KeyConditionExpression='mission_id = :mid',
-            ExpressionAttributeValues={':mid': {'S': self.mission_id}}
-        )
+        try:
+            response = self.dynamodb_client.query(
+                TableName=self.dynamodb_tool_results_table,
+                KeyConditionExpression='mission_id = :mid',
+                ExpressionAttributeValues={':mid': {'S': self.mission_id}}
+            )
+        except Exception as e:
+            logger.error(f"Failed to query tool results from DynamoDB: {e}")
+            raise
         
         results = []
         for item in response.get('Items', []):

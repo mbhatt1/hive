@@ -12,13 +12,18 @@ import time
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb_client = boto3.client('dynamodb', region_name=os.environ['AWS_REGION'])
-s3_client = boto3.client('s3', region_name=os.environ['AWS_REGION'])
-kendra_client = boto3.client('kendra', region_name=os.environ['AWS_REGION'])
+try:
+    AWS_REGION = os.environ['AWS_REGION']
+    FINDINGS_TABLE = os.environ['FINDINGS_TABLE']
+    KENDRA_BUCKET = os.environ['KENDRA_BUCKET']
+    KENDRA_INDEX_ID = os.environ['KENDRA_INDEX_ID']
+except KeyError as e:
+    logger.error(f"Missing required environment variable: {e}")
+    raise RuntimeError(f"Configuration error: Missing environment variable {e}")
 
-FINDINGS_TABLE = os.environ['FINDINGS_TABLE']
-KENDRA_BUCKET = os.environ['KENDRA_BUCKET']
-KENDRA_INDEX_ID = os.environ['KENDRA_INDEX_ID']
+dynamodb_client = boto3.client('dynamodb', region_name=AWS_REGION)
+s3_client = boto3.client('s3', region_name=AWS_REGION)
+kendra_client = boto3.client('kendra', region_name=AWS_REGION)
 
 def handler(event, context):
     """
@@ -31,12 +36,16 @@ def handler(event, context):
         logger.info(f"Creating memories for mission: {mission_id}")
         
         # Query findings for this mission
-        response = dynamodb_client.query(
-            TableName=FINDINGS_TABLE,
-            IndexName='mission_id-timestamp-index',
-            KeyConditionExpression='mission_id = :mid',
-            ExpressionAttributeValues={':mid': {'S': mission_id}}
-        )
+        try:
+            response = dynamodb_client.query(
+                TableName=FINDINGS_TABLE,
+                IndexName='mission_id-timestamp-index',
+                KeyConditionExpression='mission_id = :mid',
+                ExpressionAttributeValues={':mid': {'S': mission_id}}
+            )
+        except Exception as e:
+            logger.error(f"Failed to query findings from DynamoDB: {e}")
+            raise
         
         findings = response.get('Items', [])
         logger.info(f"Found {len(findings)} findings to process")
@@ -45,23 +54,27 @@ def handler(event, context):
         documents_created = 0
         
         for finding in findings:
-            # Create finding memory document
-            doc = create_finding_document(finding)
-            doc_key = f"findings/{finding['finding_id']['S']}.json"
-            
-            s3_client.put_object(
-                Bucket=KENDRA_BUCKET,
-                Key=doc_key,
-                Body=json.dumps(doc, indent=2),
-                ContentType='application/json',
-                Metadata={
-                    '_severity': finding['severity']['S'],
-                    '_repo_name': finding['repo_name']['S'],
-                    '_timestamp': finding['created_at']['S']
-                }
-            )
-            
-            documents_created += 1
+            try:
+                # Create finding memory document
+                doc = create_finding_document(finding)
+                doc_key = f"findings/{finding['finding_id']['S']}.json"
+                
+                s3_client.put_object(
+                    Bucket=KENDRA_BUCKET,
+                    Key=doc_key,
+                    Body=json.dumps(doc, indent=2),
+                    ContentType='application/json',
+                    Metadata={
+                        '_severity': finding['severity']['S'],
+                        '_repo_name': finding['repo_name']['S'],
+                        '_timestamp': finding['created_at']['S']
+                    }
+                )
+                
+                documents_created += 1
+            except Exception as e:
+                logger.error(f"Failed to create memory document for finding {finding.get('finding_id', {}).get('S', 'unknown')}: {e}")
+                # Continue with other findings
         
         logger.info(f"Created {documents_created} memory documents")
         

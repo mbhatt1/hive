@@ -132,25 +132,29 @@ class ArchivistAgent:
         for finding in findings:
             timestamp = int(time.time())
             
-            self.dynamodb.put_item(
-                TableName=self.dynamodb_findings_table,
-                Item={
-                    'finding_id': {'S': finding['finding_id']},
-                    'timestamp': {'N': str(timestamp)},
-                    'mission_id': {'S': self.mission_id},
-                    'repo_name': {'S': os.environ.get('REPO_NAME', 'unknown')},
-                    'title': {'S': finding['title']},
-                    'description': {'S': finding['description']},
-                    'severity': {'S': finding['severity']},
-                    'confidence_score': {'N': str(finding['confidence_score'])},
-                    'file_path': {'S': finding['file_path']},
-                    'line_numbers': {'L': [{'N': str(ln)} for ln in finding['line_numbers']]},
-                    'evidence_digest': {'S': finding.get('evidence_digest', 'unknown')},
-                    'tool_source': {'S': finding['tool_source']},
-                    'created_at': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())},
-                    'ttl': {'N': str(timestamp + (5 * 365 * 24 * 60 * 60))}  # 5 years
-                }
-            )
+            try:
+                self.dynamodb.put_item(
+                    TableName=self.dynamodb_findings_table,
+                    Item={
+                        'finding_id': {'S': finding['finding_id']},
+                        'timestamp': {'N': str(timestamp)},
+                        'mission_id': {'S': self.mission_id},
+                        'repo_name': {'S': os.environ.get('REPO_NAME', 'unknown')},
+                        'title': {'S': finding['title']},
+                        'description': {'S': finding['description']},
+                        'severity': {'S': finding['severity']},
+                        'confidence_score': {'N': str(finding['confidence_score'])},
+                        'file_path': {'S': finding['file_path']},
+                        'line_numbers': {'L': [{'N': str(ln)} for ln in finding['line_numbers']]},
+                        'evidence_digest': {'S': finding.get('evidence_digest', 'unknown')},
+                        'tool_source': {'S': finding['tool_source']},
+                        'created_at': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())},
+                        'ttl': {'N': str(timestamp + (5 * 365 * 24 * 60 * 60))}  # 5 years
+                    }
+                )
+            except Exception as e:
+                logger.error(f"Failed to archive finding {finding['finding_id']} to DynamoDB: {e}")
+                # Continue with other findings
         
         logger.info(f"Archived {len(findings)} findings to DynamoDB")
         return len(findings)
