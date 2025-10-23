@@ -12,11 +12,11 @@ import time
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb_client = boto3.client('dynamodb', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
-sns_client = boto3.client('sns', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+dynamodb_client = boto3.client('dynamodb', region_name=os.environ['AWS_REGION'])
+sns_client = boto3.client('sns', region_name=os.environ['AWS_REGION'])
 
-MISSION_TABLE = os.environ.get('MISSION_TABLE', 'HivemindMissions')
-SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN', '')
+MISSION_TABLE = os.environ['MISSION_TABLE']
+SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN', '')  # Optional - may not be set
 
 def handler(event, context):
     """

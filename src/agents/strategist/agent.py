@@ -10,6 +10,7 @@ Responsibilities:
 
 import os
 import json
+import time
 import boto3
 import redis
 import logging
@@ -37,6 +38,7 @@ class StrategistAgent:
     
     def __init__(self, scan_id: str = None):
         self.mission_id = scan_id or os.environ.get('MISSION_ID', 'test-scan-123')
+        self.scan_type = os.environ.get('SCAN_TYPE', 'code')
         self.s3_artifacts_bucket = os.environ.get('S3_ARTIFACTS_BUCKET', 'test-bucket')
         self.redis_endpoint = os.environ.get('REDIS_ENDPOINT', 'localhost')
         self.redis_port = int(os.environ.get('REDIS_PORT', '6379'))
@@ -44,21 +46,51 @@ class StrategistAgent:
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
-        self.redis_client = redis.Redis(
-            host=self.redis_endpoint,
-            port=self.redis_port,
-            decode_responses=True
-        )
+        
+        # Connect to Redis with retry logic
+        self.redis_client = self._connect_redis_with_retry()
+        
         self.cognitive_kernel = CognitiveKernel(kendra_index_id=self.kendra_index_id)
         self.agent_state_key = f"agent:{self.mission_id}:strategist"
         
-        logger.info(f"StrategistAgent initialized for mission: {self.mission_id}")
+        logger.info(f"StrategistAgent initialized for mission: {self.mission_id}, scan_type: {self.scan_type}")
+    
+    def _connect_redis_with_retry(self, max_retries=3):
+        """Connect to Redis with exponential backoff retry."""
+        for attempt in range(max_retries):
+            try:
+                client = redis.Redis(
+                    host=self.redis_endpoint,
+                    port=self.redis_port,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True
+                )
+                client.ping()
+                logger.info(f"Redis connection established")
+                return client
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Redis connection failed (attempt {attempt+1}/{max_retries}): {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"Redis connection failed after {max_retries} attempts")
+                    raise RuntimeError(f"Failed to connect to Redis at {self.redis_endpoint}:{self.redis_port}") from e
     
     def run(self) -> ExecutionStrategy:
         """Main execution loop."""
         try:
             self._update_state("SENSING")
-            context = self._read_context_manifest()
+            
+            # AWS scans don't have Archaeologist context, code scans do
+            if self.scan_type == 'aws':
+                logger.info("AWS scan - creating minimal context (no Archaeologist)")
+                context = self._create_aws_context()
+            else:
+                logger.info("Code scan - reading context from Archaeologist")
+                context = self._read_context_manifest()
             
             self._update_state("THINKING")
             strategy = self._plan_execution(context)
@@ -80,15 +112,35 @@ class StrategistAgent:
             raise
     
     def _read_context_manifest(self) -> Dict:
-        """Read ContextManifest from Archaeologist."""
+        """Read ContextManifest from Archaeologist (code scans only)."""
         key = f"agent-outputs/archaeologist/{self.mission_id}/context-manifest.json"
         
-        response = self.s3_client.get_object(
-            Bucket=self.s3_artifacts_bucket,
-            Key=key
-        )
-        
-        return json.loads(response['Body'].read())
+        try:
+            response = self.s3_client.get_object(
+                Bucket=self.s3_artifacts_bucket,
+                Key=key
+            )
+            return json.loads(response['Body'].read())
+        except Exception as e:
+            logger.error(f"Failed to read Archaeologist context: {e}")
+            logger.warning("Falling back to minimal context")
+            return self._create_aws_context()
+    
+    def _create_aws_context(self) -> Dict:
+        """Create minimal context for AWS scans (no Archaeologist available)."""
+        return {
+            'scan_type': 'aws',
+            'mission_id': self.mission_id,
+            'service_name': os.environ.get('REPO_NAME', 'aws-infrastructure'),
+            'criticality_tier': 1,  # Default to high criticality for AWS
+            'handles_pii': True,  # Assume true for AWS to be conservative
+            'handles_payment': False,
+            'primary_languages': ['aws'],
+            'file_count': 0,
+            'aws_account_id': os.environ.get('AWS_ACCOUNT_ID', 'unknown'),
+            'aws_region': os.environ.get('AWS_REGION', 'us-east-1'),
+            'environment': os.environ.get('ENVIRONMENT', 'production')
+        }
     
     def _plan_execution(self, context: Dict) -> Dict:
         """Plan tool execution using AI with intelligent analysis."""
@@ -176,7 +228,19 @@ For AWS scans, use scoutsuite-mcp (priority 1) and pacu-mcp (priority 2)."""
             temperature=0.3
         )
         
-        return json.loads(response.content)
+        try:
+            return json.loads(response.content)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse Claude strategy response: {e}")
+            logger.error(f"Response content: {response.content[:500]}")
+            # Return default strategy on parse failure
+            return {
+                'tools': [{'name': 'semgrep-mcp', 'priority': 1}],
+                'parallel_execution': False,
+                'estimated_duration_minutes': 5,
+                'reasoning': 'Fallback strategy due to JSON parse error',
+                'confidence': 0.3
+            }
     
     def _decide_strategy(self, strategy: Dict, context: Dict) -> ExecutionStrategy:
         """Create final ExecutionStrategy."""
@@ -212,7 +276,7 @@ For AWS scans, use scoutsuite-mcp (priority 1) and pacu-mcp (priority 2)."""
         """Update agent state in Redis."""
         state = {
             'status': status,
-            'last_heartbeat': str(int(os.times().elapsed)),
+            'last_heartbeat': str(int(time.time())),
             'confidence_score': str(confidence)
         }
         if error:

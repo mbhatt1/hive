@@ -59,9 +59,16 @@ export class OrchestrationStack extends cdk.Stack {
       retryOnServiceExceptions: true,
     });
 
-    // 2. Coordinator Decision
-    const coordinatorTask = this.createAgentTask(
-      'CoordinatorDecision',
+    // 2a. Coordinator for AWS Path
+    const coordinatorTaskAWS = this.createAgentTask(
+      'CoordinatorDecisionAWS',
+      props.agentTaskDefinitions.coordinator,
+      props
+    );
+
+    // 2b. Coordinator for Code Path
+    const coordinatorTaskCode = this.createAgentTask(
+      'CoordinatorDecisionCode',
       props.agentTaskDefinitions.coordinator,
       props
     );
@@ -72,7 +79,7 @@ export class OrchestrationStack extends cdk.Stack {
       props.agentTaskDefinitions.strategist,
       props
     );
-    strategistTaskAWS.next(coordinatorTask);
+    strategistTaskAWS.next(coordinatorTaskAWS);
 
     // 3b. Code Scan Path - Deploy Context Agents (Parallel)
     const archaeologistTask = this.createAgentTask(
@@ -93,7 +100,7 @@ export class OrchestrationStack extends cdk.Stack {
 
     contextAgentsParallel.branch(archaeologistTask);
     contextAgentsParallel.branch(strategistTask);
-    contextAgentsParallel.next(coordinatorTask);
+    contextAgentsParallel.next(coordinatorTaskCode);
 
     // 3c. Scan Type Decision - Branch to appropriate path
     const scanTypeChoice = new sfn.Choice(this, 'ScanTypeDecision')
@@ -103,7 +110,12 @@ export class OrchestrationStack extends cdk.Stack {
       )
       .otherwise(contextAgentsParallel);
 
-    // 4. Synthesis Crucible (Parallel)
+    // 4. Merge Branches - Pass state to combine AWS and Code paths
+    const mergeBranches = new sfn.Pass(this, 'MergeExecutionPaths', {
+      comment: 'Merge AWS and Code execution paths before synthesis',
+    });
+
+    // 5. Synthesizer Task - Must run FIRST to write proposals to Redis
     // Note: Coordinator agent internally manages MCP tool invocation via MCPToolRegistry
     // MCP servers are spawned as child processes and communicate via stdio (JSON-RPC 2.0)
     const synthesizerTask = this.createAgentTask(
@@ -112,20 +124,15 @@ export class OrchestrationStack extends cdk.Stack {
       props
     );
 
+    // 6. Critic Task - Runs AFTER Synthesizer to read proposals from Redis
+    // This ensures proposals exist before Critic attempts to review them
     const criticTask = this.createAgentTask(
       'CriticTask',
       props.agentTaskDefinitions.critic,
       props
     );
 
-    const synthesisCrucible = new sfn.Parallel(this, 'LaunchSynthesisCrucible', {
-      resultPath: '$.synthesis_results',
-    });
-
-    synthesisCrucible.branch(synthesizerTask);
-    synthesisCrucible.branch(criticTask);
-
-    // 7. Wait for Negotiation
+    // 7. Wait for Negotiation - Allow time for any async negotiation
     const waitForConsensus = new sfn.Wait(this, 'WaitForConsensus', {
       time: sfn.WaitTime.duration(cdk.Duration.seconds(10)),
     });
@@ -137,7 +144,7 @@ export class OrchestrationStack extends cdk.Stack {
       props
     );
 
-    // 9. Notify Completion
+    // 8. Notify Completion
     const notifyCompletion = new tasks.SnsPublish(this, 'NotifyCompletion', {
       topic: this.completionTopic,
       message: sfn.TaskInput.fromObject({
@@ -147,7 +154,7 @@ export class OrchestrationStack extends cdk.Stack {
       }),
     });
 
-    // 10. Failure Handler
+    // 9. Failure Handler
     const handleFailure = new tasks.LambdaInvoke(this, 'HandleFailure', {
       lambdaFunction: props.failureHandlerLambda,
       payload: sfn.TaskInput.fromObject({
@@ -159,19 +166,54 @@ export class OrchestrationStack extends cdk.Stack {
     const failureEnd = new sfn.Succeed(this, 'FailureRecorded');
     handleFailure.next(failureEnd);
 
-    // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> synthesis -> archivist
+    // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> synthesizer -> critic -> archivist
     const definition = unpackTask
       .next(scanTypeChoice);
     
-    // After coordinator (which internally handles MCP tool execution), continue with synthesis
-    coordinatorTask
-      .next(synthesisCrucible)
-      .next(waitForConsensus)
-      .next(archivistTask)
+    // After coordinator (which internally handles MCP tool execution), merge branches then continue with SEQUENTIAL synthesis
+    // Both coordinator paths (AWS and Code) need to flow through merge to synthesis
+    coordinatorTaskAWS.next(mergeBranches);
+    coordinatorTaskCode.next(mergeBranches);
+    
+    // SEQUENTIAL execution to fix race condition:
+    // Synthesizer MUST complete before Critic starts (Critic reads Synthesizer's Redis proposals)
+    mergeBranches
+      .next(synthesizerTask)      // Run Synthesizer FIRST - writes proposals to Redis
+      .next(criticTask)            // THEN run Critic - reads proposals from Redis
+      .next(waitForConsensus)      // Wait for negotiation to settle
+      .next(archivistTask)         // Archive consensus findings
       .next(notifyCompletion);
 
-    // Add error handling - only to unpack task to avoid state reuse issues
+    // Add error handling to critical steps
     unpackTask.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
+    // Add error handling to coordinator tasks
+    coordinatorTaskAWS.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
+    coordinatorTaskCode.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
+    // Add error handling to synthesizer and critic tasks
+    synthesizerTask.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
+    criticTask.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
+    // Add error handling to archivist
+    archivistTask.addCatch(handleFailure, {
       errors: ['States.ALL'],
       resultPath: '$.error',
     });
@@ -304,8 +346,8 @@ export class OrchestrationStack extends cdk.Stack {
 
     longRunningAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.completionTopic));
 
-    // Alarm for MCP task failures (ScoutSuite and Pacu)
-    const mcpFailureMetric = new cloudwatch.Metric({
+    // Alarm for Agent task failures (MCPs run as subprocesses, not separate ECS tasks)
+    const agentFailureMetric = new cloudwatch.Metric({
       namespace: 'AWS/ECS',
       metricName: 'TasksFailed',
       dimensionsMap: {
@@ -315,17 +357,17 @@ export class OrchestrationStack extends cdk.Stack {
       period: cdk.Duration.minutes(5),
     });
 
-    const mcpTaskFailureAlarm = new cloudwatch.Alarm(this, 'MCPTaskFailureAlarm', {
-      alarmName: 'Hivemind-MCP-Task-Failures',
-      alarmDescription: 'Alert when MCP tasks fail',
-      metric: mcpFailureMetric,
+    const agentTaskFailureAlarm = new cloudwatch.Alarm(this, 'AgentTaskFailureAlarm', {
+      alarmName: 'Hivemind-Agent-Task-Failures',
+      alarmDescription: 'Alert when agent ECS tasks fail',
+      metric: agentFailureMetric,
       threshold: 1,
       evaluationPeriods: 1,
       comparisonOperator: cloudwatch.ComparisonOperator.GREATER_THAN_OR_EQUAL_TO_THRESHOLD,
       treatMissingData: cloudwatch.TreatMissingData.NOT_BREACHING,
     });
 
-    mcpTaskFailureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.completionTopic));
+    agentTaskFailureAlarm.addAlarmAction(new cloudwatch_actions.SnsAction(this.completionTopic));
 
     // ========== OUTPUTS ==========
 
@@ -365,6 +407,10 @@ export class OrchestrationStack extends cdk.Stack {
             {
               name: 'REPO_NAME',
               value: sfn.JsonPath.stringAt('$.repo_name'),
+            },
+            {
+              name: 'SCAN_TYPE',
+              value: sfn.JsonPath.stringAt('$.scan_type'),
             },
           ],
         },

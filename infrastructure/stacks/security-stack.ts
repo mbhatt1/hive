@@ -12,6 +12,7 @@ export class SecurityStack extends cdk.Stack {
   public readonly kmsKey: kms.Key;
   public readonly agentSecurityGroup: ec2.SecurityGroup;
   public readonly mcpToolsSecurityGroup: ec2.SecurityGroup;
+  public readonly lambdaSecurityGroup: ec2.SecurityGroup;
   public readonly elastiCacheSecurityGroup: ec2.SecurityGroup;
   public readonly vpcEndpointsSecurityGroup: ec2.SecurityGroup;
   public readonly cliUserRole: iam.Role;
@@ -52,6 +53,13 @@ export class SecurityStack extends cdk.Stack {
       ec2.Port.tcp(443),
       'Allow HTTPS to VPC endpoints'
     );
+    
+    // Allow agents to connect to ElastiCache Redis
+    this.agentSecurityGroup.addEgressRule(
+      this.elastiCacheSecurityGroup,
+      ec2.Port.tcp(6379),
+      'Allow agents to connect to Redis'
+    );
 
     // MCP Tools Security Group
     this.mcpToolsSecurityGroup = new ec2.SecurityGroup(this, 'McpToolsSg', {
@@ -62,6 +70,20 @@ export class SecurityStack extends cdk.Stack {
 
     // Allow MCP tools to communicate with VPC endpoints
     this.mcpToolsSecurityGroup.addEgressRule(
+      this.vpcEndpointsSecurityGroup,
+      ec2.Port.tcp(443),
+      'Allow HTTPS to VPC endpoints'
+    );
+
+    // Lambda Security Group
+    this.lambdaSecurityGroup = new ec2.SecurityGroup(this, 'LambdaSg', {
+      vpc: props.vpc,
+      description: 'Security group for Lambda functions',
+      allowAllOutbound: false,
+    });
+
+    // Allow Lambda to communicate with VPC endpoints
+    this.lambdaSecurityGroup.addEgressRule(
       this.vpcEndpointsSecurityGroup,
       ec2.Port.tcp(443),
       'Allow HTTPS to VPC endpoints'
@@ -92,6 +114,12 @@ export class SecurityStack extends cdk.Stack {
       this.mcpToolsSecurityGroup,
       ec2.Port.tcp(443),
       'Allow MCP tools to access endpoints'
+    );
+
+    this.vpcEndpointsSecurityGroup.addIngressRule(
+      this.lambdaSecurityGroup,
+      ec2.Port.tcp(443),
+      'Allow Lambda functions to access endpoints'
     );
 
     // ========== IAM ROLES ==========

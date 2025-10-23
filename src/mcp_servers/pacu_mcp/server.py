@@ -317,16 +317,15 @@ class PacuMCPServer:
                     'summary': self._parse_pacu_output(output)
                 }
                 
-                # Store results
-                storage_info = await self._store_results(results, module_name)
-                
+                # Return MCP-compliant response with results
+                # Coordinator will handle storing to S3/DynamoDB
                 return {
                     "success": True,
                     "tool": "pacu",
                     "module": module_name,
                     "dry_run": dry_run,
                     "mission_id": self.mission_id,
-                    "storage": storage_info,
+                    "results": results,
                     "summary": results['summary']
                 }
             else:

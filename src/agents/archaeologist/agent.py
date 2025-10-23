@@ -28,6 +28,7 @@ logger = logging.getLogger(__name__)
 class ContextManifest:
     """Output artifact from Archaeologist Agent with deep research."""
     mission_id: str
+    scan_type: str  # 'code' or 'aws' - critical for tool selection
     service_name: str
     criticality_tier: int  # 0 (critical) to 3 (low)
     handles_pii: bool
@@ -55,6 +56,7 @@ class ArchaeologistAgent:
     def __init__(self, scan_id: str = None):
         """Initialize agent with AWS clients and cognitive kernel."""
         self.mission_id = scan_id or os.environ.get('MISSION_ID', 'test-scan-123')
+        self.scan_type = os.environ.get('SCAN_TYPE', 'code')  # Archaeologist only runs for code scans
         self.s3_artifacts_bucket = os.environ.get('S3_ARTIFACTS_BUCKET', 'hivemind-artifacts')
         self.redis_endpoint = os.environ.get('REDIS_ENDPOINT', 'localhost')
         self.redis_port = int(os.environ.get('REDIS_PORT', '6379'))
@@ -95,6 +97,7 @@ class ArchaeologistAgent:
         Returns:
             ContextManifest with discovered context
         """
+        source_path = None
         try:
             # SENSE: Gather current state
             self._update_state("SENSING")
@@ -127,6 +130,15 @@ class ArchaeologistAgent:
             logger.error(f"ArchaeologistAgent failed: {str(e)}", exc_info=True)
             self._update_state("FAILED", error=str(e))
             raise
+        finally:
+            # Cleanup downloaded code
+            if source_path and source_path.exists():
+                try:
+                    import shutil
+                    shutil.rmtree(source_path)
+                    logger.info(f"Cleaned up downloaded code at {source_path}")
+                except Exception as e:
+                    logger.warning(f"Error cleaning up code directory: {e}")
     
     def _update_state(
         self,
@@ -369,6 +381,7 @@ Provide your analysis in JSON format:
         
         manifest = ContextManifest(
             mission_id=self.mission_id,
+            scan_type=self.scan_type,
             service_name=os.environ.get('REPO_NAME', 'unknown'),
             criticality_tier=ai.get('criticality_tier', 2),
             handles_pii=ai.get('handles_pii', False),

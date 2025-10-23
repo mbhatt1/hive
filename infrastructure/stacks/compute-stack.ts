@@ -16,6 +16,7 @@ export interface ComputeStackProps extends cdk.StackProps {
   vpc: ec2.Vpc;
   agentSecurityGroup: ec2.SecurityGroup;
   mcpToolsSecurityGroup: ec2.SecurityGroup;
+  lambdaSecurityGroup: ec2.SecurityGroup;
   uploadsBucket: s3.Bucket;
   artifactsBucket: s3.Bucket;
   kendraBucket: s3.Bucket;
@@ -115,6 +116,7 @@ export class ComputeStack extends cdk.Stack {
       actions: [
         'bedrock:InvokeModel',
         'bedrock:InvokeModelWithResponseStream',
+        'bedrock:ListFoundationModels',
         'kendra:Retrieve',
         'kendra:Query',
       ],
@@ -236,6 +238,8 @@ export class ComputeStack extends cdk.Stack {
           KENDRA_INDEX_ID: props.kendraIndex.attrId,
           BEDROCK_MODEL_ID: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
           AGENT_NAME: agentName,
+          MCP_SERVERS_PATH: '/app/src/mcp_servers',
+          ENABLE_MCP_TOOLS: 'true',
         },
       });
 
@@ -267,6 +271,15 @@ export class ComputeStack extends cdk.Stack {
       role.addToPolicy(elastiCachePolicy);
     });
 
+    // Add Lambda invoke permission for Archivist (needs to trigger MemoryIngestor)
+    this.agentTaskRoles.archivist.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['lambda:InvokeFunction'],
+        resources: [this.memoryIngestorLambda.functionArn],
+      })
+    );
+
     // CLI permissions are granted via IAM policy in Security stack to avoid circular dependency
 
     // ========== MCP TOOL TASK DEFINITIONS ==========
@@ -286,12 +299,14 @@ export class ComputeStack extends cdk.Stack {
       ephemeralStorageSize: cdk.Size.gibibytes(10),
       role: unpackLambdaRole,
       environment: {
+        AWS_REGION: cdk.Stack.of(this).region,
         UPLOADS_BUCKET: props.uploadsBucket.bucketName,
         ARTIFACTS_BUCKET: props.artifactsBucket.bucketName,
         MISSION_TABLE: props.missionStatusTable.tableName,
       },
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      securityGroups: [props.lambdaSecurityGroup],
       logRetention: logs.RetentionDays.ONE_WEEK,
     });
 
@@ -311,12 +326,14 @@ export class ComputeStack extends cdk.Stack {
       memorySize: 256,
       role: memoryIngestorLambdaRole,
       environment: {
+        AWS_REGION: cdk.Stack.of(this).region,
         FINDINGS_TABLE: props.findingsTable.tableName,
         KENDRA_BUCKET: props.kendraBucket.bucketName,
         KENDRA_INDEX_ID: props.kendraIndex.attrId,
       },
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      securityGroups: [props.lambdaSecurityGroup],
       logRetention: logs.RetentionDays.ONE_WEEK,
     });
 
@@ -340,10 +357,12 @@ export class ComputeStack extends cdk.Stack {
       memorySize: 128,
       role: failureHandlerLambdaRole,
       environment: {
+        AWS_REGION: cdk.Stack.of(this).region,
         MISSION_TABLE: props.missionStatusTable.tableName,
       },
       vpc: props.vpc,
       vpcSubnets: { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
+      securityGroups: [props.lambdaSecurityGroup],
       logRetention: logs.RetentionDays.ONE_WEEK,
     });
 

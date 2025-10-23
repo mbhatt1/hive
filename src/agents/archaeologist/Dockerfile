@@ -18,6 +18,10 @@ COPY src/agents/archaeologist /app/agent
 # Install Python dependencies
 COPY src/shared/requirements.txt /app/shared-requirements.txt
 RUN pip install --no-cache-dir -r /app/shared-requirements.txt
+
+COPY src/agents/archaeologist/requirements.txt /app/agent-requirements.txt
+RUN pip install --no-cache-dir -r /app/agent-requirements.txt
+
 RUN pip install --no-cache-dir mcp>=0.9.0
 
 # Set environment variables

@@ -42,10 +42,38 @@ class SynthesizerAgent:
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
         self.dynamodb_client = boto3.client('dynamodb', region_name=region)
-        self.redis_client = redis.Redis(host=self.redis_endpoint, port=self.redis_port, decode_responses=True)
+        
+        # Connect to Redis with retry logic
+        self.redis_client = self._connect_redis_with_retry()
+        
         self.cognitive_kernel = CognitiveKernel(kendra_index_id=self.kendra_index_id)
         
         logger.info(f"SynthesizerAgent initialized for mission: {self.mission_id}")
+    
+    def _connect_redis_with_retry(self, max_retries=3):
+        """Connect to Redis with exponential backoff retry."""
+        import time
+        for attempt in range(max_retries):
+            try:
+                client = redis.Redis(
+                    host=self.redis_endpoint,
+                    port=self.redis_port,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True
+                )
+                client.ping()
+                logger.info(f"Redis connection established")
+                return client
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Redis connection failed (attempt {attempt+1}/{max_retries}): {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"Redis connection failed after {max_retries} attempts")
+                    raise RuntimeError(f"Failed to connect to Redis at {self.redis_endpoint}:{self.redis_port}") from e
     
     def run(self) -> List[DraftFinding]:
         try:
@@ -80,24 +108,34 @@ class SynthesizerAgent:
             s3_uri = item['s3_uri']['S']
             stored_digest = item.get('digest', {}).get('S', '')
             tool_name = item.get('tool_name', {}).get('S', 'unknown')
+            status = item.get('status', {}).get('S', 'unknown')
             
-            bucket, key = s3_uri.replace('s3://', '').split('/', 1)
+            # Skip failed tools (they have empty S3 URIs)
+            if status == 'failed' or not s3_uri:
+                logger.warning(f"Skipping failed tool result: {tool_name}")
+                continue
             
-            obj = self.s3_client.get_object(Bucket=bucket, Key=key)
-            content = obj['Body'].read()
-            
-            # Verify evidence chain
-            if stored_digest:
-                computed_digest = f"sha256:{hashlib.sha256(content).hexdigest()}"
-                if computed_digest != stored_digest:
-                    logger.error(f"Evidence chain verification FAILED for {tool_name}: {s3_uri}")
-                    logger.error(f"Expected: {stored_digest}, Got: {computed_digest}")
-                    continue  # Skip this result
-                else:
-                    logger.info(f"Evidence chain verified for {tool_name}: {stored_digest}")
-            
-            result_data = json.loads(content)
-            result_data['_verified'] = True
+            try:
+                bucket, key = s3_uri.replace('s3://', '').split('/', 1)
+                
+                obj = self.s3_client.get_object(Bucket=bucket, Key=key)
+                content = obj['Body'].read()
+                
+                # Verify evidence chain
+                if stored_digest:
+                    computed_digest = f"sha256:{hashlib.sha256(content).hexdigest()}"
+                    if computed_digest != stored_digest:
+                        logger.error(f"Evidence chain verification FAILED for {tool_name}: {s3_uri}")
+                        logger.error(f"Expected: {stored_digest}, Got: {computed_digest}")
+                        continue  # Skip this result
+                    else:
+                        logger.info(f"Evidence chain verified for {tool_name}: {stored_digest}")
+                
+                result_data = json.loads(content)
+                result_data['_verified'] = True
+            except Exception as e:
+                logger.error(f"Failed to read tool result {tool_name} from {s3_uri}: {e}")
+                continue
             result_data['_digest'] = stored_digest
             result_data['_tool'] = tool_name
             results.append(result_data)
@@ -147,7 +185,13 @@ Draft findings in JSON array:
             temperature=0.3
         )
         
-        findings_data = json.loads(response.content)
+        try:
+            findings_data = json.loads(response.content)
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse Claude findings response: {e}")
+            logger.error(f"Response content: {response.content[:500]}")
+            return []  # Return empty findings on parse failure
+        
         findings = []
         
         for f in findings_data:
@@ -168,6 +212,7 @@ Draft findings in JSON array:
     
     def _write_proposals(self, findings: List[DraftFinding]):
         """Write draft findings to Redis for negotiation."""
+        import time
         for finding in findings:
             self.redis_client.rpush(
                 f"negotiation:{self.mission_id}:proposals",
@@ -175,7 +220,7 @@ Draft findings in JSON array:
                     'agent': 'synthesizer',
                     'action': 'PROPOSE',
                     'payload': asdict(finding),
-                    'timestamp': int(os.times().elapsed)
+                    'timestamp': int(time.time())
                 })
             )
         
@@ -189,7 +234,8 @@ Draft findings in JSON array:
         logger.info(f"Wrote {len(findings)} proposals to Redis")
     
     def _update_state(self, status: str, confidence: float = 0.0, error: str = None):
-        state = {'status': status, 'last_heartbeat': str(int(os.times().elapsed)), 'confidence_score': str(confidence)}
+        import time
+        state = {'status': status, 'last_heartbeat': str(int(time.time())), 'confidence_score': str(confidence)}
         if error:
             state['error_message'] = error
         self.redis_client.hset(f"agent:{self.mission_id}:synthesizer", mapping=state)

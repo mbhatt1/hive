@@ -137,25 +137,23 @@ class GitleaksMCPServer:
         
         logger.info(f"Starting Gitleaks scan: path={source_path}, timeout={timeout}")
         
-        # Download source if S3 path
-        if source_path.startswith("s3://") or source_path.startswith("unzipped/"):
-            local_path = await self._download_source_from_s3(source_path)
-        else:
-            local_path = Path(source_path)
+        # Source path is already local (downloaded by Coordinator)
+        local_path = Path(source_path)
+        
+        if not local_path.exists():
+            raise FileNotFoundError(f"Source path does not exist: {source_path}")
         
         # Execute Gitleaks
         results = await self._run_gitleaks(local_path, config_path, timeout, no_git)
         
-        # Store results in S3 and DynamoDB
-        storage_info = await self._store_results(results)
-        
-        # Return MCP-compliant response
+        # Return MCP-compliant response with results
+        # Coordinator will handle storing to S3/DynamoDB
         return {
             "success": True,
             "tool": "gitleaks",
             "mission_id": self.mission_id,
             "secrets_found": len(results.get('results', [])),
-            "storage": storage_info,
+            "results": results,
             "summary": {
                 "total_secrets": len(results.get('results', [])),
                 "unique_rules": len(set(r.get('rule_id') for r in results.get('results', []))),

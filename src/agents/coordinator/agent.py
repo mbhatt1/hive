@@ -10,6 +10,8 @@ import redis
 import logging
 import asyncio
 import time
+import shutil
+from pathlib import Path
 from typing import Dict, List, Any
 
 from src.shared.cognitive_kernel.bedrock_client import CognitiveKernel
@@ -27,14 +29,16 @@ class CoordinatorAgent:
     """
     
     def __init__(self, scan_id: str = None):
-        self.mission_id = scan_id or os.environ.get('MISSION_ID', 'test-scan-123')
-        self.s3_artifacts_bucket = os.environ.get('S3_ARTIFACTS_BUCKET', 'hivemind-artifacts')
-        self.redis_endpoint = os.environ.get('REDIS_ENDPOINT', 'localhost')
-        self.redis_port = int(os.environ.get('REDIS_PORT', '6379'))
-        self.kendra_index_id = os.environ.get('KENDRA_INDEX_ID', 'test-index-123')
+        self.mission_id = scan_id or os.environ['MISSION_ID']
+        self.s3_artifacts_bucket = os.environ['S3_ARTIFACTS_BUCKET']
+        self.dynamodb_tool_results_table = os.environ['DYNAMODB_TOOL_RESULTS_TABLE']
+        self.redis_endpoint = os.environ['REDIS_ENDPOINT']
+        self.redis_port = int(os.environ['REDIS_PORT'])
+        self.kendra_index_id = os.environ['KENDRA_INDEX_ID']
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
         self.s3_client = boto3.client('s3', region_name=region)
+        self.dynamodb_client = boto3.client('dynamodb', region_name=region)
         
         try:
             self.redis_client = redis.Redis(
@@ -58,6 +62,61 @@ class CoordinatorAgent:
         
         logger.info(f"CoordinatorAgent initialized for mission: {self.mission_id} with MCP support")
     
+    def _download_code_from_s3(self) -> str:
+        """
+        Download code from S3 to local filesystem for MCP tool access.
+        
+        Returns:
+            Local path where code was downloaded
+        """
+        local_base = f"/tmp/{self.mission_id}"
+        s3_prefix = f"unzipped/{self.mission_id}/"
+        
+        try:
+            # Create local directory
+            Path(local_base).mkdir(parents=True, exist_ok=True)
+            
+            # List and download all objects with the prefix
+            paginator = self.s3_client.get_paginator('list_objects_v2')
+            page_iterator = paginator.paginate(
+                Bucket=self.s3_artifacts_bucket,
+                Prefix=s3_prefix
+            )
+            
+            downloaded_count = 0
+            for page in page_iterator:
+                if 'Contents' not in page:
+                    continue
+                    
+                for obj in page['Contents']:
+                    s3_key = obj['Key']
+                    # Remove prefix to get relative path
+                    relative_path = s3_key[len(s3_prefix):]
+                    
+                    if not relative_path:  # Skip directory markers
+                        continue
+                    
+                    local_file = os.path.join(local_base, relative_path)
+                    
+                    # Create parent directories
+                    Path(local_file).parent.mkdir(parents=True, exist_ok=True)
+                    
+                    # Download file
+                    logger.info(f"Downloading {s3_key} to {local_file}")
+                    self.s3_client.download_file(
+                        self.s3_artifacts_bucket,
+                        s3_key,
+                        local_file
+                    )
+                    downloaded_count += 1
+            
+            logger.info(f"Downloaded {downloaded_count} files from S3 to {local_base}")
+            return local_base
+            
+        except Exception as e:
+            logger.error(f"Failed to download code from S3: {e}", exc_info=True)
+            raise RuntimeError(f"Code download failed: {e}")
+    
     async def run(self) -> Dict[str, Any]:
         """
         Main async execution loop with MCP tool invocation.
@@ -65,17 +124,20 @@ class CoordinatorAgent:
         Returns:
             Dictionary with execution results
         """
+        local_code_path = None
         try:
-            # SENSE: Read strategy and list available MCP tools
+            # SENSE: Download code from S3 and read strategy
             self._update_state("SENSING")
+            local_code_path = self._download_code_from_s3()
             strategy = await self._read_execution_strategy()
             available_tools = await self.cognitive_kernel.list_mcp_tools()
             
+            logger.info(f"Code downloaded to: {local_code_path}")
             logger.info(f"Available MCP tools: {list(available_tools.keys())}")
             
-            # THINK: Create MCP tool invocation plan
+            # THINK: Create MCP tool invocation plan with local path
             self._update_state("THINKING")
-            tool_invocations = self._create_mcp_invocation_plan(strategy, available_tools)
+            tool_invocations = self._create_mcp_invocation_plan(strategy, available_tools, local_code_path)
             
             # DECIDE: Determine parallel execution strategy
             self._update_state("DECIDING")
@@ -120,6 +182,14 @@ class CoordinatorAgent:
                 logger.info("MCP connections cleaned up")
             except Exception as e:
                 logger.warning(f"Error during MCP cleanup: {e}")
+            
+            # Cleanup downloaded code
+            if local_code_path and os.path.exists(local_code_path):
+                try:
+                    shutil.rmtree(local_code_path)
+                    logger.info(f"Cleaned up downloaded code at {local_code_path}")
+                except Exception as e:
+                    logger.warning(f"Error cleaning up code directory: {e}")
     
     async def _read_execution_strategy(self) -> Dict[str, Any]:
         """Read execution strategy from Strategist agent output."""
@@ -161,7 +231,8 @@ class CoordinatorAgent:
     def _create_mcp_invocation_plan(
         self,
         strategy: Dict[str, Any],
-        available_tools: Dict[str, List[Dict]]
+        available_tools: Dict[str, List[Dict]],
+        local_code_path: str
     ) -> List[Dict[str, Any]]:
         """
         Create MCP tool invocation plan from strategy.
@@ -169,12 +240,13 @@ class CoordinatorAgent:
         Args:
             strategy: Execution strategy from Strategist
             available_tools: Available MCP tools from registry
+            local_code_path: Local filesystem path where code is downloaded
             
         Returns:
             List of tool invocation specifications
         """
         invocations = []
-        source_path = f"unzipped/{self.mission_id}/"
+        source_path = local_code_path
         
         for tool_spec in strategy.get('tools', []):
             tool_name = tool_spec['name']
@@ -299,16 +371,22 @@ class CoordinatorAgent:
             }
             
             if result.get('success'):
-                # Extract findings from content
+                # Extract scan results from MCP response
                 content = result.get('content', [])
                 if content and isinstance(content, list) and len(content) > 0:
                     try:
+                        # Parse MCP JSON response
                         data = content[0] if isinstance(content[0], dict) else json.loads(content[0].get('text', '{}'))
+                        
+                        # Extract the actual scan results (MCPs now return 'results' field)
+                        scan_results = data.get('results', {})
+                        processed_result['raw_results'] = scan_results
                         processed_result['findings_count'] = data.get('findings_count', data.get('secrets_found', data.get('vulnerabilities_found', 0)))
-                        processed_result['storage'] = data.get('storage', {})
                         processed_result['summary'] = data.get('summary', {})
+                        
                     except Exception as e:
                         logger.warning(f"Could not parse result content: {e}")
+                        processed_result['error'] = f"Parse error: {e}"
             else:
                 processed_result['error'] = result.get('error', 'Unknown error')
             
@@ -317,9 +395,11 @@ class CoordinatorAgent:
         return processed
     
     async def _store_results(self, results: List[Dict[str, Any]]):
-        """Store processed results to S3."""
-        key = f"agent-outputs/coordinator/{self.mission_id}/execution-results.json"
+        """Store processed results to both S3 and DynamoDB."""
+        import hashlib
         
+        # Store coordinator summary to S3
+        key = f"agent-outputs/coordinator/{self.mission_id}/execution-results.json"
         results_json = json.dumps(results, indent=2)
         
         loop = asyncio.get_event_loop()
@@ -332,8 +412,76 @@ class CoordinatorAgent:
                 ContentType='application/json'
             )
         )
+        logger.info(f"Execution results stored to S3: s3://{self.s3_artifacts_bucket}/{key}")
         
-        logger.info(f"Execution results stored: s3://{self.s3_artifacts_bucket}/{key}")
+        # Store each tool's raw results to S3 and metadata to DynamoDB
+        for result in results:
+            if result.get('success') and result.get('raw_results'):
+                tool_server = result['server']
+                tool_name = result['tool']
+                timestamp = int(time.time())
+                
+                # Store raw results to S3
+                results_key = f"tool-results/{tool_server}/{self.mission_id}/{timestamp}/results.json"
+                results_data = json.dumps(result['raw_results'], indent=2, sort_keys=True)
+                
+                try:
+                    await loop.run_in_executor(
+                        None,
+                        lambda: self.s3_client.put_object(
+                            Bucket=self.s3_artifacts_bucket,
+                            Key=results_key,
+                            Body=results_data,
+                            ContentType='application/json'
+                        )
+                    )
+                    
+                    s3_uri = f"s3://{self.s3_artifacts_bucket}/{results_key}"
+                    digest = f"sha256:{hashlib.sha256(results_data.encode()).hexdigest()}"
+                    
+                    logger.info(f"Stored {tool_name} raw results to S3: {s3_uri}")
+                    
+                    # Store metadata to DynamoDB for Synthesizer
+                    await loop.run_in_executor(
+                        None,
+                        lambda: self.dynamodb_client.put_item(
+                            TableName=self.dynamodb_tool_results_table,
+                            Item={
+                                'mission_id': {'S': self.mission_id},
+                                'tool_name': {'S': f"{tool_server}:{tool_name}"},
+                                's3_uri': {'S': s3_uri},
+                                'digest': {'S': digest},
+                                'status': {'S': 'completed'},
+                                'timestamp': {'N': str(timestamp)},
+                                'findings_count': {'N': str(result.get('findings_count', 0))}
+                            }
+                        )
+                    )
+                    logger.info(f"Stored {tool_name} metadata to DynamoDB")
+                    
+                except Exception as e:
+                    logger.error(f"Failed to store {tool_name} results: {e}")
+            elif not result.get('success'):
+                # Store failure to DynamoDB
+                try:
+                    await loop.run_in_executor(
+                        None,
+                        lambda r=result: self.dynamodb_client.put_item(
+                            TableName=self.dynamodb_tool_results_table,
+                            Item={
+                                'mission_id': {'S': self.mission_id},
+                                'tool_name': {'S': f"{r['server']}:{r['tool']}"},
+                                's3_uri': {'S': ''},
+                                'digest': {'S': ''},
+                                'status': {'S': 'failed'},
+                                'timestamp': {'N': str(int(time.time()))},
+                                'error': {'S': r.get('error', 'Unknown error')},
+                                'findings_count': {'N': '0'}
+                            }
+                        )
+                    )
+                except Exception as e:
+                    logger.error(f"Failed to store failure for {result.get('tool')}: {e}")
     
     def _reflect_on_execution(self, results: List[Dict[str, Any]]) -> Dict[str, Any]:
         """Reflect on execution quality and outcomes."""

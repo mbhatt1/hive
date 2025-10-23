@@ -138,25 +138,23 @@ class SemgrepMCPServer:
         
         logger.info(f"Starting Semgrep scan: path={source_path}, config={config}")
         
-        # Download source if S3 path
-        if source_path.startswith("s3://") or source_path.startswith("unzipped/"):
-            local_path = await self._download_source_from_s3(source_path)
-        else:
-            local_path = Path(source_path)
+        # Source path is already local (downloaded by Coordinator)
+        local_path = Path(source_path)
+        
+        if not local_path.exists():
+            raise FileNotFoundError(f"Source path does not exist: {source_path}")
         
         # Execute Semgrep
         results = await self._run_semgrep(local_path, config, timeout)
         
-        # Store results in S3 and DynamoDB
-        storage_info = await self._store_results(results)
-        
-        # Return MCP-compliant response
+        # Return MCP-compliant response with results
+        # Coordinator will handle storing to S3/DynamoDB
         return {
             "success": True,
             "tool": "semgrep",
             "mission_id": self.mission_id,
             "findings_count": len(results.get('results', [])),
-            "storage": storage_info,
+            "results": results,
             "summary": {
                 "critical": sum(1 for r in results.get('results', []) if r.get('severity') == 'CRITICAL'),
                 "high": sum(1 for r in results.get('results', []) if r.get('severity') == 'HIGH'),

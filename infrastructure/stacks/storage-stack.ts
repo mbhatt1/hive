@@ -31,70 +31,67 @@ export class StorageStack extends cdk.Stack {
 
     // Uploads Bucket - for incoming code submissions
     const uploadsBucketName = `hivemind-uploads-${cdk.Stack.of(this).account}`;
-    this.uploadsBucket = s3.Bucket.fromBucketName(this, 'UploadsBucketImport', uploadsBucketName) as s3.Bucket ||
-      new s3.Bucket(this, 'UploadsBucket', {
-        bucketName: uploadsBucketName,
-        encryption: s3.BucketEncryption.KMS,
-        encryptionKey: props.kmsKey,
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-        versioned: true,
-        enforceSSL: true,
-        lifecycleRules: [
-          {
-            id: 'DeleteOldUploads',
-            prefix: 'uploads/',
-            enabled: true,
-            expiration: cdk.Duration.days(7),
-          },
-        ],
-        eventBridgeEnabled: true,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        autoDeleteObjects: true,
-      });
+    this.uploadsBucket = new s3.Bucket(this, 'UploadsBucket', {
+      bucketName: uploadsBucketName,
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: props.kmsKey,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      enforceSSL: true,
+      lifecycleRules: [
+        {
+          id: 'DeleteOldUploads',
+          prefix: 'uploads/',
+          enabled: true,
+          expiration: cdk.Duration.days(7),
+        },
+      ],
+      eventBridgeEnabled: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
 
     // Artifacts Bucket - for processing and tool results
     const artifactsBucketName = `hivemind-artifacts-${cdk.Stack.of(this).account}`;
-    this.artifactsBucket = s3.Bucket.fromBucketName(this, 'ArtifactsBucketImport', artifactsBucketName) as s3.Bucket ||
-      new s3.Bucket(this, 'ArtifactsBucket', {
-        bucketName: artifactsBucketName,
-        encryption: s3.BucketEncryption.KMS,
-        encryptionKey: props.kmsKey,
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-        versioned: true,
-        enforceSSL: true,
-        lifecycleRules: [
-          {
-            id: 'TransitionOldArtifacts',
-            enabled: true,
-            transitions: [
-              {
-                storageClass: s3.StorageClass.INTELLIGENT_TIERING,
-                transitionAfter: cdk.Duration.days(30),
-              },
-              {
-                storageClass: s3.StorageClass.GLACIER,
-                transitionAfter: cdk.Duration.days(90),
-              },
-            ],
-          },
-        ],
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        autoDeleteObjects: true,
-      });
+    this.artifactsBucket = new s3.Bucket(this, 'ArtifactsBucket', {
+      bucketName: artifactsBucketName,
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: props.kmsKey,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      enforceSSL: true,
+      lifecycleRules: [
+        {
+          id: 'TransitionOldArtifacts',
+          enabled: true,
+          transitions: [
+            {
+              storageClass: s3.StorageClass.INTELLIGENT_TIERING,
+              transitionAfter: cdk.Duration.days(30),
+            },
+            {
+              storageClass: s3.StorageClass.GLACIER,
+              transitionAfter: cdk.Duration.days(90),
+            },
+          ],
+        },
+      ],
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
 
     // Kendra Memories Bucket - for institutional memory
     const kendraBucketName = `hivemind-kendra-memories-${cdk.Stack.of(this).account}`;
-    this.kendraBucket = s3.Bucket.fromBucketName(this, 'KendraBucketImport', kendraBucketName) as s3.Bucket ||
-      new s3.Bucket(this, 'KendraBucket', {
-        bucketName: kendraBucketName,
-        encryption: s3.BucketEncryption.KMS,
-        encryptionKey: props.kmsKey,
-        blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
-        versioned: true,
-        enforceSSL: true,
-        removalPolicy: cdk.RemovalPolicy.DESTROY,
-        autoDeleteObjects: true,
-      });
+    this.kendraBucket = new s3.Bucket(this, 'KendraBucket', {
+      bucketName: kendraBucketName,
+      encryption: s3.BucketEncryption.KMS,
+      encryptionKey: props.kmsKey,
+      blockPublicAccess: s3.BlockPublicAccess.BLOCK_ALL,
+      versioned: true,
+      enforceSSL: true,
+      removalPolicy: cdk.RemovalPolicy.DESTROY,
+      autoDeleteObjects: true,
+    });
 
     // ========== DYNAMODB TABLES ==========
 

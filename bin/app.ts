@@ -86,6 +86,7 @@ const computeStack = new ComputeStack(app, `${stackPrefix}-Compute`, {
   vpc: networkStack.vpc,
   agentSecurityGroup: securityStack.agentSecurityGroup,
   mcpToolsSecurityGroup: securityStack.mcpToolsSecurityGroup,
+  lambdaSecurityGroup: securityStack.lambdaSecurityGroup,
   uploadsBucket: storageStack.uploadsBucket,
   artifactsBucket: storageStack.artifactsBucket,
   kendraBucket: storageStack.kendraBucket,

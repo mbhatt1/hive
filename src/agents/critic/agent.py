@@ -22,9 +22,37 @@ class CriticAgent:
         self.redis_endpoint = os.environ.get('REDIS_ENDPOINT', 'localhost')
         self.redis_port = int(os.environ.get('REDIS_PORT', '6379'))
         self.kendra_index_id = os.environ.get('KENDRA_INDEX_ID', 'test-kendra-index')
-        self.redis_client = redis.Redis(host=self.redis_endpoint, port=self.redis_port, decode_responses=True)
+        
+        # Connect to Redis with retry logic
+        self.redis_client = self._connect_redis_with_retry()
+        
         self.cognitive_kernel = CognitiveKernel(kendra_index_id=self.kendra_index_id)
         logger.info(f"CriticAgent initialized for mission: {self.mission_id}")
+    
+    def _connect_redis_with_retry(self, max_retries=3):
+        """Connect to Redis with exponential backoff retry."""
+        import time
+        for attempt in range(max_retries):
+            try:
+                client = redis.Redis(
+                    host=self.redis_endpoint,
+                    port=self.redis_port,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True
+                )
+                client.ping()
+                logger.info(f"Redis connection established")
+                return client
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Redis connection failed (attempt {attempt+1}/{max_retries}): {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"Redis connection failed after {max_retries} attempts")
+                    raise RuntimeError(f"Failed to connect to Redis at {self.redis_endpoint}:{self.redis_port}") from e
     
     def run(self):
         try:
@@ -46,7 +74,16 @@ class CriticAgent:
     
     def _read_proposals(self) -> List[Dict]:
         proposals = self.redis_client.lrange(f"negotiation:{self.mission_id}:proposals", 0, -1)
-        return [json.loads(p) for p in proposals if p]
+        parsed_proposals = []
+        for p in proposals:
+            if not p:
+                continue
+            try:
+                parsed_proposals.append(json.loads(p))
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse proposal from Redis: {e}. Skipping.")
+                continue
+        return parsed_proposals
     
     def _review_findings(self, proposals: List[Dict]) -> List[Dict]:
         system_prompt = """You are the CriticAgent. Challenge and validate security findings.
@@ -94,13 +131,25 @@ Provide review in JSON:
                 temperature=0.2
             )
             
-            review = json.loads(response.content)
-            review['finding_id'] = finding['finding_id']
-            reviews.append(review)
+            try:
+                review = json.loads(response.content)
+                review['finding_id'] = finding['finding_id']
+                reviews.append(review)
+            except json.JSONDecodeError as e:
+                logger.error(f"Failed to parse Claude response for finding {finding['finding_id']}: {e}")
+                # Create default CONFIRM review on parse failure
+                reviews.append({
+                    'finding_id': finding['finding_id'],
+                    'action': 'CONFIRM',
+                    'revised_severity': finding['severity'],
+                    'rationale': f'JSON parse error, confirming original assessment',
+                    'confidence': 0.5
+                })
         
         return reviews
     
     def _write_counterproposals(self, reviews: List[Dict]):
+        import time
         for review in reviews:
             self.redis_client.rpush(
                 f"negotiation:{self.mission_id}:proposals",
@@ -108,13 +157,14 @@ Provide review in JSON:
                     'agent': 'critic',
                     'action': review['action'],
                     'payload': review,
-                    'timestamp': int(os.times().elapsed)
+                    'timestamp': int(time.time())
                 })
             )
         logger.info(f"Wrote {len(reviews)} counterproposals")
     
     def _update_state(self, status: str, confidence: float = 0.0, error: str = None):
-        state = {'status': status, 'last_heartbeat': str(int(os.times().elapsed)), 'confidence_score': str(confidence)}
+        import time
+        state = {'status': status, 'last_heartbeat': str(int(time.time())), 'confidence_score': str(confidence)}
         if error:
             state['error_message'] = error
         self.redis_client.hset(f"agent:{self.mission_id}:critic", mapping=state)

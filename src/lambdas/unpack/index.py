@@ -17,9 +17,9 @@ logger.setLevel(logging.INFO)
 s3_client = boto3.client('s3')
 dynamodb_client = boto3.client('dynamodb')
 
-UPLOADS_BUCKET = os.environ.get('UPLOADS_BUCKET', 'hivemind-uploads')
-ARTIFACTS_BUCKET = os.environ.get('ARTIFACTS_BUCKET', 'hivemind-artifacts')
-MISSION_TABLE = os.environ.get('MISSION_TABLE', 'HivemindMissions')
+UPLOADS_BUCKET = os.environ['UPLOADS_BUCKET']
+ARTIFACTS_BUCKET = os.environ['ARTIFACTS_BUCKET']
+MISSION_TABLE = os.environ['MISSION_TABLE']
 
 def handler(event, context):
     """
@@ -46,15 +46,17 @@ def handler(event, context):
         
         logger.info(f"Processing mission: {mission_id}")
         
-        # Read metadata to get repo_name
+        # Read metadata to get repo_name and scan_type
         metadata_key = f"uploads/{mission_id}/metadata.json"
         try:
             metadata_obj = s3_client.get_object(Bucket=UPLOADS_BUCKET, Key=metadata_key)
             metadata = json.loads(metadata_obj['Body'].read())
             repo_name = metadata.get('repo_name', 'unknown')
+            scan_type = metadata.get('scan_type', 'code')  # Default to 'code' if not specified
         except Exception as e:
             logger.warning(f"Could not read metadata: {e}")
             repo_name = 'unknown'
+            scan_type = 'code'
         
         # Update mission status
         update_status(mission_id, 'UNPACKING')
@@ -100,7 +102,7 @@ def handler(event, context):
         return {
             'mission_id': mission_id,
             'status': 'success',
-            'scan_type': 'code',
+            'scan_type': scan_type,
             'repo_name': repo_name,
             'unzipped_path': f"unzipped/{mission_id}/",
             'file_count': upload_count,

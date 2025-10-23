@@ -176,17 +176,15 @@ class ScoutSuiteMCPServer:
         # Execute ScoutSuite
         results = await self._run_scoutsuite(aws_profile, services, regions, report_name, timeout)
         
-        # Store results
-        storage_info = await self._store_results(results, report_name)
-        
-        # Return MCP-compliant response
+        # Return MCP-compliant response with results
+        # Coordinator will handle storing to S3/DynamoDB
         return {
             "success": True,
             "tool": "scoutsuite",
             "mission_id": self.mission_id,
             "report_name": report_name,
             "findings_count": results.get('findings_count', 0),
-            "storage": storage_info,
+            "results": results,
             "summary": results.get('summary', {})
         }
     

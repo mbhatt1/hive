@@ -41,9 +41,11 @@ export class NetworkStack extends cdk.Stack {
     this.isolatedSubnets = this.vpc.isolatedSubnets;
 
     // Add VPC Gateway Endpoints for S3 and DynamoDB (no cost, better performance)
+    // Must include BOTH PRIVATE_WITH_EGRESS (where agents run) and PRIVATE_ISOLATED (where lambdas run)
     this.vpc.addGatewayEndpoint('S3Endpoint', {
       service: ec2.GatewayVpcEndpointAwsService.S3,
       subnets: [
+        { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
         { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       ],
     });
@@ -51,6 +53,7 @@ export class NetworkStack extends cdk.Stack {
     this.vpc.addGatewayEndpoint('DynamoDbEndpoint', {
       service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
       subnets: [
+        { subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS },
         { subnetType: ec2.SubnetType.PRIVATE_ISOLATED },
       ],
     });
@@ -107,16 +110,23 @@ export class NetworkStack extends cdk.Stack {
         name: 'Kms',
         service: ec2.InterfaceVpcEndpointAwsService.KMS,
       },
+      {
+        name: 'Lambda',
+        service: ec2.InterfaceVpcEndpointAwsService.LAMBDA,
+      },
+      {
+        name: 'Kendra',
+        service: ec2.InterfaceVpcEndpointAwsService.KENDRA,
+      },
     ];
 
+    // Interface endpoints - deploy to BOTH subnet types
+    // Agents run in PRIVATE_WITH_EGRESS, Lambdas run in PRIVATE_ISOLATED
     interfaceEndpoints.forEach((endpoint) => {
       this.vpc.addInterfaceEndpoint(endpoint.name, {
         service: endpoint.service,
         privateDnsEnabled: true,
         securityGroups: [vpcEndpointSecurityGroup],
-        subnets: {
-          subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-        },
       });
     });
 
@@ -128,9 +138,6 @@ export class NetworkStack extends cdk.Stack {
       ),
       privateDnsEnabled: true,
       securityGroups: [vpcEndpointSecurityGroup],
-      subnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-      },
     });
 
     // Add CloudWatch Monitoring endpoint
@@ -138,9 +145,6 @@ export class NetworkStack extends cdk.Stack {
       service: ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_MONITORING,
       privateDnsEnabled: true,
       securityGroups: [vpcEndpointSecurityGroup],
-      subnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-      },
     });
 
     // Add X-Ray endpoint for distributed tracing
@@ -148,9 +152,6 @@ export class NetworkStack extends cdk.Stack {
       service: ec2.InterfaceVpcEndpointAwsService.XRAY,
       privateDnsEnabled: true,
       securityGroups: [vpcEndpointSecurityGroup],
-      subnets: {
-        subnetType: ec2.SubnetType.PRIVATE_ISOLATED,
-      },
     });
 
     // Tag VPC and subnets

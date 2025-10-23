@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 class ArchivistAgent:
     def __init__(self, scan_id: str = None):
         self.mission_id = scan_id or os.environ.get('MISSION_ID', 'test-scan-123')
+        self.scan_type = os.environ.get('SCAN_TYPE', 'code')
         self.dynamodb_findings_table = os.environ.get('DYNAMODB_FINDINGS_TABLE', 'HivemindFindingsArchive')
         self.dynamodb_mission_table = os.environ.get('DYNAMODB_MISSION_TABLE', 'HivemindMissions')
         self.s3_kendra_bucket = os.environ.get('S3_KENDRA_BUCKET', 'hivemind-kendra')
@@ -36,7 +37,9 @@ class ArchivistAgent:
         self.dynamodb = boto3.client('dynamodb', region_name=region)
         self.s3_client = boto3.client('s3', region_name=region)
         self.lambda_client = boto3.client('lambda', region_name=region)
-        self.redis_client = redis.Redis(host=self.redis_endpoint, port=self.redis_port, decode_responses=True)
+        
+        # Connect to Redis with retry logic
+        self.redis_client = self._connect_redis_with_retry()
         
         # Initialize wiki generator
         self.wiki_generator = SecurityWikiGenerator(
@@ -44,7 +47,31 @@ class ArchivistAgent:
             s3_bucket=self.s3_artifacts_bucket
         )
         
-        logger.info(f"ArchivistAgent initialized for mission: {self.mission_id}")
+        logger.info(f"ArchivistAgent initialized for mission: {self.mission_id}, scan_type: {self.scan_type}")
+    
+    def _connect_redis_with_retry(self, max_retries=3):
+        """Connect to Redis with exponential backoff retry."""
+        for attempt in range(max_retries):
+            try:
+                client = redis.Redis(
+                    host=self.redis_endpoint,
+                    port=self.redis_port,
+                    decode_responses=True,
+                    socket_connect_timeout=5,
+                    socket_timeout=5,
+                    retry_on_timeout=True
+                )
+                client.ping()
+                logger.info(f"Redis connection established")
+                return client
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2 ** attempt
+                    logger.warning(f"Redis connection failed (attempt {attempt+1}/{max_retries}): {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    logger.error(f"Redis connection failed after {max_retries} attempts")
+                    raise RuntimeError(f"Failed to connect to Redis at {self.redis_endpoint}:{self.redis_port}") from e
     
     def run(self):
         try:
@@ -83,7 +110,12 @@ class ArchivistAgent:
         # Simple consensus: group by finding_id, take latest CONFIRM
         findings_map = {}
         for p_str in proposals:
-            p = json.loads(p_str)
+            try:
+                p = json.loads(p_str)
+            except json.JSONDecodeError as e:
+                logger.warning(f"Failed to parse proposal from Redis: {e}. Skipping.")
+                continue
+            
             if p['agent'] == 'synthesizer':
                 finding = p['payload']
                 findings_map[finding['finding_id']] = finding
@@ -136,7 +168,13 @@ class ArchivistAgent:
             logger.warning(f"Failed to trigger memory ingestor: {e}")
     
     def _load_context_manifest(self):
-        """Load context manifest from Archaeologist output."""
+        """Load context manifest from Archaeologist output (code scans only)."""
+        # AWS scans don't have Archaeologist output, skip S3 lookup
+        if self.scan_type == 'aws':
+            logger.info("AWS scan - creating minimal manifest (no Archaeologist)")
+            return self._create_aws_minimal_manifest()
+        
+        # Code scans - try to load from Archaeologist
         try:
             manifest_key = f"agent-outputs/archaeologist/{self.mission_id}/context-manifest.json"
             response = self.s3_client.get_object(
@@ -144,28 +182,54 @@ class ArchivistAgent:
                 Key=manifest_key
             )
             manifest = json.loads(response['Body'].read())
-            logger.info("Context manifest loaded")
+            logger.info("Context manifest loaded from Archaeologist")
             return manifest
         except Exception as e:
-            logger.warning(f"Could not load context manifest: {e}")
-            # Return minimal manifest
-            return {
-                'mission_id': self.mission_id,
-                'service_name': os.environ.get('REPO_NAME', 'Unknown'),
-                'criticality_tier': 2,
-                'handles_pii': False,
-                'handles_payment': False,
-                'authentication_present': False,
-                'primary_languages': [],
-                'file_count': 0,
-                'total_lines': 0,
-                'key_files': [],
-                'dependencies': [],
-                'data_flows': [],
-                'confidence_score': 0.5,
-                'research_artifacts_s3_key': '',
-                'security_patterns_count': 0
-            }
+            logger.warning(f"Could not load context manifest from Archaeologist: {e}")
+            logger.info("Falling back to minimal manifest")
+            return self._create_code_minimal_manifest()
+    
+    def _create_aws_minimal_manifest(self):
+        """Create minimal manifest for AWS scans."""
+        return {
+            'mission_id': self.mission_id,
+            'scan_type': 'aws',
+            'service_name': os.environ.get('REPO_NAME', 'AWS Infrastructure'),
+            'criticality_tier': 1,  # AWS is typically high criticality
+            'handles_pii': True,  # Assume true for conservative approach
+            'handles_payment': False,
+            'authentication_present': True,
+            'primary_languages': ['aws'],
+            'file_count': 0,
+            'total_lines': 0,
+            'key_files': [],
+            'dependencies': [],
+            'data_flows': [],
+            'confidence_score': 0.8,
+            'research_artifacts_s3_key': '',
+            'security_patterns_count': 0
+        }
+    
+    def _create_code_minimal_manifest(self):
+        """Create minimal manifest for code scans when Archaeologist data unavailable."""
+        return {
+            'mission_id': self.mission_id,
+            'scan_type': 'code',
+            'service_name': os.environ.get('REPO_NAME', 'Unknown'),
+            'criticality_tier': 2,
+            'handles_pii': False,
+            'handles_payment': False,
+            'authentication_present': False,
+            'primary_languages': [],
+            'file_count': 0,
+            'total_lines': 0,
+            'key_files': [],
+            'dependencies': [],
+            'data_flows': [],
+            'confidence_score': 0.5,
+            'research_artifacts_s3_key': '',
+            'security_patterns_count': 0
+        }
     
     def _generate_security_wiki(self, consensus_findings, context_manifest):
         """Generate comprehensive security wiki documentation."""
@@ -248,7 +312,7 @@ class ArchivistAgent:
         logger.info("Redis keys cleaned up")
     
     def _update_state(self, status: str, confidence: float = 0.0, error: str = None):
-        state = {'status': status, 'last_heartbeat': str(int(os.times().elapsed)), 'confidence_score': str(confidence)}
+        state = {'status': status, 'last_heartbeat': str(int(time.time())), 'confidence_score': str(confidence)}
         if error:
             state['error_message'] = error
         self.redis_client.hset(f"agent:{self.mission_id}:archivist", mapping=state)

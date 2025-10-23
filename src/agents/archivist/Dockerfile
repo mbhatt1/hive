@@ -16,6 +16,10 @@ COPY src/agents/archivist/ /app/agent/
 # Install Python dependencies
 COPY src/shared/requirements.txt /app/shared-requirements.txt
 RUN pip install --no-cache-dir -r /app/shared-requirements.txt
+
+COPY src/agents/archivist/requirements.txt /app/agent-requirements.txt
+RUN pip install --no-cache-dir -r /app/agent-requirements.txt
+
 RUN pip install --no-cache-dir mcp>=0.9.0
 
 # Set Python path to include shared modules

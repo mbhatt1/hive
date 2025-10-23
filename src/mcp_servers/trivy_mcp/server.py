@@ -166,26 +166,24 @@ class TrivyMCPServer:
         
         logger.info(f"Starting Trivy FS scan: path={source_path}, type={scan_type}, severity={severity}")
         
-        # Download source if S3 path
-        if source_path.startswith("s3://") or source_path.startswith("unzipped/"):
-            local_path = await self._download_source_from_s3(source_path)
-        else:
-            local_path = Path(source_path)
+        # Source path is already local (downloaded by Coordinator)
+        local_path = Path(source_path)
+        
+        if not local_path.exists():
+            raise FileNotFoundError(f"Source path does not exist: {source_path}")
         
         # Execute Trivy
         results = await self._run_trivy_fs(local_path, scan_type, severity, timeout)
         
-        # Store results
-        storage_info = await self._store_results(results, "fs_scan")
-        
-        # Return MCP-compliant response
+        # Return MCP-compliant response with results
+        # Coordinator will handle storing to S3/DynamoDB
         return {
             "success": True,
             "tool": "trivy",
             "scan_type": "filesystem",
             "mission_id": self.mission_id,
             "vulnerabilities_found": len(results.get('results', [])),
-            "storage": storage_info,
+            "results": results,
             "summary": self._create_summary(results)
         }
     
@@ -197,15 +195,16 @@ class TrivyMCPServer:
         logger.info(f"Starting Trivy image scan: image={image_name}, severity={severity}")
         
         results = await self._run_trivy_image(image_name, severity)
-        storage_info = await self._store_results(results, "image_scan")
         
+        # Return MCP-compliant response with results
+        # Coordinator will handle storing to S3/DynamoDB
         return {
             "success": True,
             "tool": "trivy",
             "scan_type": "image",
             "image_name": image_name,
             "vulnerabilities_found": len(results.get('results', [])),
-            "storage": storage_info,
+            "results": results,
             "summary": self._create_summary(results)
         }
     

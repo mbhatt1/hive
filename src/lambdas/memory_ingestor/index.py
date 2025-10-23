@@ -12,13 +12,13 @@ import time
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-dynamodb_client = boto3.client('dynamodb', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
-s3_client = boto3.client('s3', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
-kendra_client = boto3.client('kendra', region_name=os.environ.get('AWS_REGION', 'us-east-1'))
+dynamodb_client = boto3.client('dynamodb', region_name=os.environ['AWS_REGION'])
+s3_client = boto3.client('s3', region_name=os.environ['AWS_REGION'])
+kendra_client = boto3.client('kendra', region_name=os.environ['AWS_REGION'])
 
-FINDINGS_TABLE = os.environ.get('FINDINGS_TABLE', 'HivemindFindings')
-KENDRA_BUCKET = os.environ.get('KENDRA_BUCKET', 'hivemind-kendra')
-KENDRA_INDEX_ID = os.environ.get('KENDRA_INDEX_ID', 'test-index-123')
+FINDINGS_TABLE = os.environ['FINDINGS_TABLE']
+KENDRA_BUCKET = os.environ['KENDRA_BUCKET']
+KENDRA_INDEX_ID = os.environ['KENDRA_INDEX_ID']
 
 def handler(event, context):
     """
