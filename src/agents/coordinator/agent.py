@@ -453,6 +453,7 @@ class CoordinatorAgent:
                             TableName=self.dynamodb_tool_results_table,
                             Item={
                                 'mission_id': {'S': self.mission_id},
+                                'tool_timestamp': {'S': f"{tool_server}:{tool_name}:{timestamp}"},
                                 'tool_name': {'S': f"{tool_server}:{tool_name}"},
                                 's3_uri': {'S': s3_uri},
                                 'digest': {'S': digest},
@@ -469,17 +470,19 @@ class CoordinatorAgent:
             elif not result.get('success'):
                 # Store failure to DynamoDB
                 try:
+                    failure_timestamp = int(time.time())
                     await loop.run_in_executor(
                         None,
                         lambda r=result: self.dynamodb_client.put_item(
                             TableName=self.dynamodb_tool_results_table,
                             Item={
                                 'mission_id': {'S': self.mission_id},
+                                'tool_timestamp': {'S': f"{r['server']}:{r['tool']}:{failure_timestamp}"},
                                 'tool_name': {'S': f"{r['server']}:{r['tool']}"},
                                 's3_uri': {'S': ''},
                                 'digest': {'S': ''},
                                 'status': {'S': 'failed'},
-                                'timestamp': {'N': str(int(time.time()))},
+                                'timestamp': {'N': str(failure_timestamp)},
                                 'error': {'S': r.get('error', 'Unknown error')},
                                 'findings_count': {'N': '0'}
                             }
@@ -511,11 +514,14 @@ class CoordinatorAgent:
         
         # Log reflection
         if self.redis_client:
+            reflection_key = f"agent:{self.mission_id}:coordinator:reflections"
             try:
                 self.redis_client.rpush(
-                    f"agent:{self.mission_id}:coordinator:reflections",
+                    reflection_key,
                     json.dumps(reflection)
                 )
+                # Set 24-hour TTL on reflection list to prevent memory leak
+                self.redis_client.expire(reflection_key, 86400)
             except Exception as e:
                 logger.warning(f"Failed to log reflection to Redis: {e}")
         
@@ -542,18 +548,24 @@ class CoordinatorAgent:
         if error:
             state['error_message'] = error
         
+        state_key = f"agent:{self.mission_id}:coordinator"
         try:
             self.redis_client.hset(
-                f"agent:{self.mission_id}:coordinator",
+                state_key,
                 mapping=state
             )
+            # Set 24-hour TTL on agent state to prevent memory leak
+            self.redis_client.expire(state_key, 86400)
             
             # Add to active agents set
+            active_agents_key = f"mission:{self.mission_id}:active_agents"
             if status not in ['COMPLETED', 'FAILED']:
                 self.redis_client.sadd(
-                    f"mission:{self.mission_id}:active_agents",
+                    active_agents_key,
                     "coordinator"
                 )
+                # Set 24-hour TTL on active agents set to prevent memory leak
+                self.redis_client.expire(active_agents_key, 86400)
             else:
                 self.redis_client.srem(
                     f"mission:{self.mission_id}:active_agents",

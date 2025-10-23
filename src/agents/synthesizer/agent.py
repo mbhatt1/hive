@@ -217,9 +217,10 @@ Draft findings in JSON array:
     def _write_proposals(self, findings: List[DraftFinding]):
         """Write draft findings to Redis for negotiation."""
         import time
+        proposal_key = f"negotiation:{self.mission_id}:proposals"
         for finding in findings:
             self.redis_client.rpush(
-                f"negotiation:{self.mission_id}:proposals",
+                proposal_key,
                 json.dumps({
                     'agent': 'synthesizer',
                     'action': 'PROPOSE',
@@ -227,6 +228,9 @@ Draft findings in JSON array:
                     'timestamp': int(time.time())
                 })
             )
+        
+        # Set 24-hour TTL on proposal key to prevent memory leak
+        self.redis_client.expire(proposal_key, 86400)
         
         key = f"agent-outputs/synthesizer/{self.mission_id}/draft-findings.json"
         self.s3_client.put_object(
@@ -242,7 +246,11 @@ Draft findings in JSON array:
         state = {'status': status, 'last_heartbeat': str(int(time.time())), 'confidence_score': str(confidence)}
         if error:
             state['error_message'] = error
-        self.redis_client.hset(f"agent:{self.mission_id}:synthesizer", mapping=state)
+        
+        state_key = f"agent:{self.mission_id}:synthesizer"
+        self.redis_client.hset(state_key, mapping=state)
+        # Set 24-hour TTL on agent state to prevent memory leak
+        self.redis_client.expire(state_key, 86400)
     
     def _format_kendra(self, context) -> str:
         if not context or not context.documents:

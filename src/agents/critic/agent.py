@@ -150,9 +150,10 @@ Provide review in JSON:
     
     def _write_counterproposals(self, reviews: List[Dict]):
         import time
+        proposal_key = f"negotiation:{self.mission_id}:proposals"
         for review in reviews:
             self.redis_client.rpush(
-                f"negotiation:{self.mission_id}:proposals",
+                proposal_key,
                 json.dumps({
                     'agent': 'critic',
                     'action': review['action'],
@@ -160,6 +161,9 @@ Provide review in JSON:
                     'timestamp': int(time.time())
                 })
             )
+        
+        # Set 24-hour TTL on proposal key to prevent memory leak
+        self.redis_client.expire(proposal_key, 86400)
         logger.info(f"Wrote {len(reviews)} counterproposals")
     
     def _update_state(self, status: str, confidence: float = 0.0, error: str = None):
@@ -167,7 +171,11 @@ Provide review in JSON:
         state = {'status': status, 'last_heartbeat': str(int(time.time())), 'confidence_score': str(confidence)}
         if error:
             state['error_message'] = error
-        self.redis_client.hset(f"agent:{self.mission_id}:critic", mapping=state)
+        
+        state_key = f"agent:{self.mission_id}:critic"
+        self.redis_client.hset(state_key, mapping=state)
+        # Set 24-hour TTL on agent state to prevent memory leak
+        self.redis_client.expire(state_key, 86400)
     
     def _format_kendra(self, ctx) -> str:
         if not ctx or not ctx.documents:

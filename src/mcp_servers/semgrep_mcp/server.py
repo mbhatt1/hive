@@ -230,7 +230,7 @@ class SemgrepMCPServer:
             )
             stdout, _ = await process.communicate()
             return stdout.decode().strip()
-        except:
+        except Exception:
             return 'unknown'
     
     async def _store_results(self, results: dict) -> dict:

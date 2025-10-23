@@ -207,7 +207,7 @@ class GitleaksMCPServer:
                 try:
                     with open(report_path, 'r') as f:
                         findings = json.load(f)
-                except:
+                except Exception:
                     findings = []
                 
                 # Format results
@@ -249,7 +249,7 @@ class GitleaksMCPServer:
             )
             stdout, _ = await process.communicate()
             return stdout.decode().strip()
-        except:
+        except Exception:
             return 'unknown'
     
     async def _store_results(self, results: dict) -> dict:

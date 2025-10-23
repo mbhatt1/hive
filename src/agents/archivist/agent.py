@@ -319,7 +319,11 @@ class ArchivistAgent:
         state = {'status': status, 'last_heartbeat': str(int(time.time())), 'confidence_score': str(confidence)}
         if error:
             state['error_message'] = error
-        self.redis_client.hset(f"agent:{self.mission_id}:archivist", mapping=state)
+        
+        state_key = f"agent:{self.mission_id}:archivist"
+        self.redis_client.hset(state_key, mapping=state)
+        # Set 24-hour TTL on agent state to prevent memory leak
+        self.redis_client.expire(state_key, 86400)
     
     def _generate_wiki(self):
         """Alias for _generate_security_wiki for backward compatibility."""

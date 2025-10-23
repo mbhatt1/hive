@@ -163,8 +163,14 @@ class ArchaeologistAgent:
         if self.redis_client:
             try:
                 self.redis_client.hset(self.agent_state_key, mapping=state)
+                # Set 24-hour TTL on agent state to prevent memory leak
+                self.redis_client.expire(self.agent_state_key, 86400)
+                
+                active_agents_key = f"mission:{self.mission_id}:active_agents"
                 if status not in ['COMPLETED', 'FAILED']:
-                    self.redis_client.sadd(f"mission:{self.mission_id}:active_agents", "archaeologist")
+                    self.redis_client.sadd(active_agents_key, "archaeologist")
+                    # Set 24-hour TTL on active agents set to prevent memory leak
+                    self.redis_client.expire(active_agents_key, 86400)
             except Exception as e:
                 logger.warning(f"Redis state update failed: {e}")
     
@@ -437,11 +443,14 @@ Provide your analysis in JSON format:
         }
         
         if self.redis_client:
+            decision_key = f"agent:{self.mission_id}:archaeologist:decisions"
             try:
                 self.redis_client.rpush(
-                    f"agent:{self.mission_id}:archaeologist:decisions",
+                    decision_key,
                     json.dumps(decision_log)
                 )
+                # Set 24-hour TTL on decision list to prevent memory leak
+                self.redis_client.expire(decision_key, 86400)
             except Exception as e:
                 logger.warning(f"Failed to log decision to Redis: {e}")
         
@@ -474,7 +483,7 @@ Provide your analysis in JSON format:
             try:
                 pkg = json.loads(package_json.read_text())
                 dependencies.extend(pkg.get('dependencies', {}).keys())
-            except:
+            except Exception:
                 pass
         
         return dependencies[:50]
@@ -487,7 +496,7 @@ Provide your analysis in JSON format:
             try:
                 content = f.read_text(errors='ignore')
                 samples.append(f"File: {f.name}\n{content[:500]}...\n")
-            except:
+            except Exception:
                 continue
         
         return "\n".join(samples)

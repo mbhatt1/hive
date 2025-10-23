@@ -40,6 +40,13 @@ export class SecurityStack extends cdk.Stack {
       allowAllOutbound: true,
     });
 
+    // ElastiCache Security Group (create BEFORE agent SG that references it)
+    this.elastiCacheSecurityGroup = new ec2.SecurityGroup(this, 'ElastiCacheSg', {
+      vpc: props.vpc,
+      description: 'Security group for ElastiCache Redis cluster',
+      allowAllOutbound: false,
+    });
+
     // Agent Tasks Security Group
     this.agentSecurityGroup = new ec2.SecurityGroup(this, 'AgentTasksSg', {
       vpc: props.vpc,
@@ -89,14 +96,7 @@ export class SecurityStack extends cdk.Stack {
       'Allow HTTPS to VPC endpoints'
     );
 
-    // ElastiCache Security Group
-    this.elastiCacheSecurityGroup = new ec2.SecurityGroup(this, 'ElastiCacheSg', {
-      vpc: props.vpc,
-      description: 'Security group for ElastiCache Redis cluster',
-      allowAllOutbound: false,
-    });
-
-    // Allow agents to access Redis
+    // Allow agents to access Redis (ingress rule for ElastiCache)
     this.elastiCacheSecurityGroup.addIngressRule(
       this.agentSecurityGroup,
       ec2.Port.tcp(6379),

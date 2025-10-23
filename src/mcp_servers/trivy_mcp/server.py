@@ -252,7 +252,7 @@ class TrivyMCPServer:
                 try:
                     with open(report_path, 'r') as f:
                         trivy_output = json.load(f)
-                except:
+                except Exception:
                     trivy_output = {}
                 
                 # Format results
@@ -342,7 +342,7 @@ class TrivyMCPServer:
             )
             stdout, _ = await process.communicate()
             return stdout.decode().strip().split('\n')[0]
-        except:
+        except Exception:
             return 'unknown'
     
     def _create_summary(self, results: dict) -> dict:

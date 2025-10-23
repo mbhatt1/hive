@@ -79,6 +79,19 @@ class MCPToolClient:
                 logger.warning(f"Error during disconnect from {self.server_name}: {e}")
             finally:
                 self.session = None
+        
+        # Explicitly close stdio streams to prevent resource leaks
+        if hasattr(self, '_read_stream') and self._read_stream:
+            try:
+                self._read_stream.close()
+            except Exception as e:
+                logger.warning(f"Error closing read stream for {self.server_name}: {e}")
+        
+        if hasattr(self, '_write_stream') and self._write_stream:
+            try:
+                self._write_stream.close()
+            except Exception as e:
+                logger.warning(f"Error closing write stream for {self.server_name}: {e}")
     
     async def list_tools(self) -> List[Dict[str, Any]]:
         """

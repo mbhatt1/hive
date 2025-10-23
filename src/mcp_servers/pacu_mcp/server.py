@@ -332,7 +332,7 @@ class PacuMCPServer:
             )
             stdout, _ = await process.communicate()
             return stdout.decode().strip()
-        except:
+        except Exception:
             return 'unknown'
     
     def _parse_pacu_output(self, output: str) -> dict:

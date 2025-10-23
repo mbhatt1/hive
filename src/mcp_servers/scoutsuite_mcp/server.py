@@ -262,7 +262,7 @@ class ScoutSuiteMCPServer:
             )
             stdout, _ = await process.communicate()
             return stdout.decode().strip()
-        except:
+        except Exception:
             return 'unknown'
     
     def _count_findings(self, scout_data: dict) -> int:

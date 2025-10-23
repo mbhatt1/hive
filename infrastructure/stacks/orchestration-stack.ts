@@ -52,6 +52,18 @@ export class OrchestrationStack extends cdk.Stack {
 
     // ========== STEP FUNCTIONS STATE MACHINE ==========
 
+    // 0. Failure Handler (declared early so it can be referenced by all tasks)
+    const handleFailure = new tasks.LambdaInvoke(this, 'HandleFailure', {
+      lambdaFunction: props.failureHandlerLambda,
+      payload: sfn.TaskInput.fromObject({
+        mission_id: sfn.JsonPath.stringAt('$.mission_id'),
+        error: sfn.JsonPath.stringAt('$.error'),
+      }),
+    });
+
+    const failureEnd = new sfn.Succeed(this, 'FailureRecorded');
+    handleFailure.next(failureEnd);
+
     // 1. Unpack and Validate
     const unpackTask = new tasks.LambdaInvoke(this, 'UnpackAndValidate', {
       lambdaFunction: props.unpackLambda,
@@ -79,6 +91,13 @@ export class OrchestrationStack extends cdk.Stack {
       props.agentTaskDefinitions.strategist,
       props
     );
+    
+    // Add error handling to strategistTaskAWS
+    strategistTaskAWS.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
     strategistTaskAWS.next(coordinatorTaskAWS);
 
     // 3b. Code Scan Path - Deploy Context Agents (Parallel)
@@ -87,12 +106,24 @@ export class OrchestrationStack extends cdk.Stack {
       props.agentTaskDefinitions.archaeologist,
       props
     );
+    
+    // Add error handling to archaeologistTask
+    archaeologistTask.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
 
     const strategistTask = this.createAgentTask(
       'StrategistTask',
       props.agentTaskDefinitions.strategist,
       props
     );
+    
+    // Add error handling to strategistTask
+    strategistTask.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
 
     const contextAgentsParallel = new sfn.Parallel(this, 'DeployContextAgents', {
       resultPath: '$.context_results',
@@ -100,6 +131,13 @@ export class OrchestrationStack extends cdk.Stack {
 
     contextAgentsParallel.branch(archaeologistTask);
     contextAgentsParallel.branch(strategistTask);
+    
+    // Add error handling to contextAgentsParallel
+    contextAgentsParallel.addCatch(handleFailure, {
+      errors: ['States.ALL'],
+      resultPath: '$.error',
+    });
+    
     contextAgentsParallel.next(coordinatorTaskCode);
 
     // 3c. Scan Type Decision - Branch to appropriate path
@@ -153,18 +191,6 @@ export class OrchestrationStack extends cdk.Stack {
         message: 'Analysis completed - check DynamoDB for findings',
       }),
     });
-
-    // 9. Failure Handler
-    const handleFailure = new tasks.LambdaInvoke(this, 'HandleFailure', {
-      lambdaFunction: props.failureHandlerLambda,
-      payload: sfn.TaskInput.fromObject({
-        mission_id: sfn.JsonPath.stringAt('$.mission_id'),
-        error: sfn.JsonPath.stringAt('$.error'),
-      }),
-    });
-
-    const failureEnd = new sfn.Succeed(this, 'FailureRecorded');
-    handleFailure.next(failureEnd);
 
     // Chain the states: unpack -> scan type choice -> (aws/code paths) -> coordinator -> synthesizer -> critic -> archivist
     const definition = unpackTask

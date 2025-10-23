@@ -282,6 +282,8 @@ For AWS scans, use scoutsuite-mcp (priority 1) and pacu-mcp (priority 2)."""
         if error:
             state['error_message'] = error
         self.redis_client.hset(self.agent_state_key, mapping=state)
+        # Set 24-hour TTL on agent state to prevent memory leak
+        self.redis_client.expire(self.agent_state_key, 86400)
     
     def _get_scoutsuite_findings_if_exist(self) -> List[Dict]:
         """Check if ScoutSuite findings exist from a previous scan."""

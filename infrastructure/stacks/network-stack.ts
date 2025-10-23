@@ -122,6 +122,7 @@ export class NetworkStack extends cdk.Stack {
 
     // Interface endpoints - deploy to BOTH subnet types
     // Agents run in PRIVATE_WITH_EGRESS, Lambdas run in PRIVATE_ISOLATED
+    // Default behavior creates ENIs in private subnets, accessible from both subnet types via VPC routing
     interfaceEndpoints.forEach((endpoint) => {
       this.vpc.addInterfaceEndpoint(endpoint.name, {
         service: endpoint.service,
