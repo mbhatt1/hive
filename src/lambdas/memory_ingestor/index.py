@@ -94,18 +94,31 @@ def handler(event, context):
 
 def create_finding_document(finding):
     """Create structured document for Kendra indexing."""
+    # Safely extract DynamoDB attributes with validation
+    finding_id = finding.get('finding_id', {}).get('S', 'unknown')
+    title = finding.get('title', {}).get('S', 'Unknown')
+    description = finding.get('description', {}).get('S', 'No description')
+    severity = finding.get('severity', {}).get('S', 'MEDIUM')
+    repo_name = finding.get('repo_name', {}).get('S', 'unknown')
+    file_path = finding.get('file_path', {}).get('S', 'unknown')
+    tool_source = finding.get('tool_source', {}).get('S', 'unknown')
+    evidence_digest = finding.get('evidence_digest', {}).get('S', 'unknown')
+    created_at = finding.get('created_at', {}).get('S', '')
+    mission_id = finding.get('mission_id', {}).get('S', 'unknown')
+    confidence_score = float(finding.get('confidence_score', {}).get('N', '0.0'))
+    
     return {
-        'finding_id': finding['finding_id']['S'],
-        'title': finding['title']['S'],
-        'description': finding['description']['S'],
-        'severity': finding['severity']['S'],
-        'repo_name': finding['repo_name']['S'],
-        'file_path': finding['file_path']['S'],
-        'tool_source': finding['tool_source']['S'],
-        'evidence_digest': finding['evidence_digest']['S'],
-        'created_at': finding['created_at']['S'],
-        'mission_id': finding['mission_id']['S'],
-        'confidence_score': float(finding['confidence_score']['N']),
+        'finding_id': finding_id,
+        'title': title,
+        'description': description,
+        'severity': severity,
+        'repo_name': repo_name,
+        'file_path': file_path,
+        'tool_source': tool_source,
+        'evidence_digest': evidence_digest,
+        'created_at': created_at,
+        'mission_id': mission_id,
+        'confidence_score': confidence_score,
         '_category': 'security_finding',
-        '_searchable_text': f"{finding['title']['S']} {finding['description']['S']} {finding['file_path']['S']}"
+        '_searchable_text': f"{title} {description} {file_path}"
     }

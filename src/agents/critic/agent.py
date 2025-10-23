@@ -96,10 +96,18 @@ For each finding:
 
         reviews = []
         for proposal in proposals:
-            if proposal['agent'] != 'synthesizer':
+            # Validate proposal structure
+            if not isinstance(proposal, dict):
+                logger.warning(f"Invalid proposal type: {type(proposal)}. Skipping.")
                 continue
             
-            finding = proposal['payload']
+            if proposal.get('agent') != 'synthesizer':
+                continue
+            
+            finding = proposal.get('payload')
+            if not finding:
+                logger.warning("Proposal missing payload. Skipping.")
+                continue
             
             # Query Kendra for counter-evidence
             kendra_ctx = self.cognitive_kernel.retrieve_from_kendra(

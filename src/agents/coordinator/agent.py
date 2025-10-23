@@ -254,7 +254,15 @@ class CoordinatorAgent:
         source_path = local_code_path
         
         for tool_spec in strategy.get('tools', []):
-            tool_name = tool_spec['name']
+            # Validate tool_spec structure
+            if not isinstance(tool_spec, dict):
+                logger.warning(f"Invalid tool_spec type: {type(tool_spec)}. Skipping.")
+                continue
+            
+            tool_name = tool_spec.get('name')
+            if not tool_name:
+                logger.warning("Tool spec missing 'name' field. Skipping.")
+                continue
             
             # Map tool name to MCP server and tool
             if tool_name == 'semgrep-mcp' or tool_name == 'semgrep':

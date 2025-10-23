@@ -116,14 +116,27 @@ class ArchivistAgent:
                 logger.warning(f"Failed to parse proposal from Redis: {e}. Skipping.")
                 continue
             
-            if p['agent'] == 'synthesizer':
-                finding = p['payload']
-                findings_map[finding['finding_id']] = finding
-            elif p['agent'] == 'critic' and p['action'] == 'CONFIRM':
-                finding_id = p['payload']['finding_id']
-                if finding_id in findings_map:
-                    findings_map[finding_id]['severity'] = p['payload'].get('revised_severity', findings_map[finding_id]['severity'])
-                    findings_map[finding_id]['confidence_score'] = p['payload']['confidence']
+            # Validate proposal structure
+            if not isinstance(p, dict):
+                logger.warning(f"Invalid proposal type: {type(p)}. Skipping.")
+                continue
+            
+            agent = p.get('agent')
+            payload = p.get('payload')
+            
+            if not payload or not isinstance(payload, dict):
+                logger.warning("Proposal missing valid payload. Skipping.")
+                continue
+            
+            if agent == 'synthesizer':
+                finding_id = payload.get('finding_id')
+                if finding_id:
+                    findings_map[finding_id] = payload
+            elif agent == 'critic' and p.get('action') == 'CONFIRM':
+                finding_id = payload.get('finding_id')
+                if finding_id and finding_id in findings_map:
+                    findings_map[finding_id]['severity'] = payload.get('revised_severity', findings_map[finding_id].get('severity', 'MEDIUM'))
+                    findings_map[finding_id]['confidence_score'] = payload.get('confidence', findings_map[finding_id].get('confidence_score', 0.0))
         
         return list(findings_map.values())
     
@@ -133,6 +146,11 @@ class ArchivistAgent:
             timestamp = int(time.time())
             
             try:
+                # Validate line_numbers before writing to DynamoDB
+                line_numbers = finding.get('line_numbers', [])
+                if not isinstance(line_numbers, list):
+                    line_numbers = []
+                
                 self.dynamodb.put_item(
                     TableName=self.dynamodb_findings_table,
                     Item={
@@ -140,14 +158,14 @@ class ArchivistAgent:
                         'timestamp': {'N': str(timestamp)},
                         'mission_id': {'S': self.mission_id},
                         'repo_name': {'S': os.environ.get('REPO_NAME', 'unknown')},
-                        'title': {'S': finding['title']},
-                        'description': {'S': finding['description']},
-                        'severity': {'S': finding['severity']},
-                        'confidence_score': {'N': str(finding['confidence_score'])},
-                        'file_path': {'S': finding['file_path']},
-                        'line_numbers': {'L': [{'N': str(ln)} for ln in finding['line_numbers']]},
+                        'title': {'S': finding.get('title', 'Unknown')},
+                        'description': {'S': finding.get('description', '')},
+                        'severity': {'S': finding.get('severity', 'MEDIUM')},
+                        'confidence_score': {'N': str(finding.get('confidence_score', 0.0))},
+                        'file_path': {'S': finding.get('file_path', 'unknown')},
+                        'line_numbers': {'L': [{'N': str(ln)} for ln in line_numbers]},
                         'evidence_digest': {'S': finding.get('evidence_digest', 'unknown')},
-                        'tool_source': {'S': finding['tool_source']},
+                        'tool_source': {'S': finding.get('tool_source', 'unknown')},
                         'created_at': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())},
                         'ttl': {'N': str(timestamp + (5 * 365 * 24 * 60 * 60))}  # 5 years
                     }

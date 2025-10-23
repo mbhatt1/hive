@@ -202,11 +202,11 @@ Draft findings in JSON array:
             finding_id = hashlib.sha256(f"{self.mission_id}{f['title']}".encode()).hexdigest()[:16]
             findings.append(DraftFinding(
                 finding_id=finding_id,
-                title=f['title'],
-                severity=f['severity'],
-                description=f['description'],
-                file_path=f['file_path'],
-                line_numbers=f['line_numbers'],
+                title=f.get('title', 'Unknown Issue'),
+                severity=f.get('severity', 'MEDIUM'),
+                description=f.get('description', 'No description provided'),
+                file_path=f.get('file_path', 'unknown'),
+                line_numbers=f.get('line_numbers', []),
                 evidence_digest=f.get('evidence_digest', 'unknown'),
                 tool_source=f['tool_source'],
                 confidence_score=f['confidence']
