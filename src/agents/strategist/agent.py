@@ -45,7 +45,16 @@ class StrategistAgent:
         self.kendra_index_id = os.environ.get('KENDRA_INDEX_ID', 'test-kendra-index')
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
-        self.s3_client = boto3.client('s3', region_name=region)
+        
+        # Configure boto3 client with retries and timeouts
+        boto_config = Config(
+            region_name=region,
+            retries={'max_attempts': 3, 'mode': 'adaptive'},
+            connect_timeout=10,
+            read_timeout=60
+        )
+        
+        self.s3_client = boto3.client('s3', config=boto_config)
         
         # Connect to Redis with retry logic
         self.redis_client = self._connect_redis_with_retry()

@@ -42,8 +42,17 @@ class CoordinatorAgent:
             raise RuntimeError(f"Invalid environment variable value: {e}")
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
-        self.s3_client = boto3.client('s3', region_name=region)
-        self.dynamodb_client = boto3.client('dynamodb', region_name=region)
+        
+        # Configure boto3 clients with retries and timeouts
+        boto_config = Config(
+            region_name=region,
+            retries={'max_attempts': 3, 'mode': 'adaptive'},
+            connect_timeout=10,
+            read_timeout=60
+        )
+        
+        self.s3_client = boto3.client('s3', config=boto_config)
+        self.dynamodb_client = boto3.client('dynamodb', config=boto_config)
         
         try:
             self.redis_client = redis.Redis(

@@ -109,18 +109,27 @@ For each finding:
                 logger.warning("Proposal missing payload. Skipping.")
                 continue
             
+            # Safely extract finding fields with defaults
+            finding_title = finding.get('title', 'Unknown')
+            finding_severity = finding.get('severity', 'MEDIUM')
+            finding_description = finding.get('description', 'No description')
+            finding_file_path = finding.get('file_path', 'unknown')
+            finding_line_numbers = finding.get('line_numbers', [])
+            finding_confidence = finding.get('confidence_score', 0.0)
+            finding_id = finding.get('finding_id', 'unknown')
+            
             # Query Kendra for counter-evidence
             kendra_ctx = self.cognitive_kernel.retrieve_from_kendra(
-                query=f"{finding['title']} false positive patterns",
+                query=f"{finding_title} false positive patterns",
                 top_k=3
             )
             
             user_prompt = f"""Review this finding:
-Title: {finding['title']}
-Severity: {finding['severity']}
-Description: {finding['description']}
-File: {finding['file_path']} (lines {finding['line_numbers']})
-Confidence: {finding['confidence_score']}
+Title: {finding_title}
+Severity: {finding_severity}
+Description: {finding_description}
+File: {finding_file_path} (lines {finding_line_numbers})
+Confidence: {finding_confidence}
 
 Historical Context:
 {self._format_kendra(kendra_ctx)}
@@ -141,13 +150,13 @@ Provide review in JSON:
             
             try:
                 review = json.loads(response.content)
-                review['finding_id'] = finding['finding_id']
+                review['finding_id'] = finding_id
                 reviews.append(review)
             except json.JSONDecodeError as e:
-                logger.error(f"Failed to parse Claude response for finding {finding['finding_id']}: {e}")
+                logger.error(f"Failed to parse Claude response for finding {finding_id}: {e}")
                 # Create default CONFIRM review on parse failure
                 reviews.append({
-                    'finding_id': finding['finding_id'],
+                    'finding_id': finding_id,
                     'action': 'CONFIRM',
                     'revised_severity': finding['severity'],
                     'rationale': f'JSON parse error, confirming original assessment',

@@ -19,8 +19,16 @@ except KeyError as e:
     logger.error(f"Missing required environment variable: {e}")
     raise RuntimeError(f"Configuration error: Missing environment variable {e}")
 
-dynamodb_client = boto3.client('dynamodb', region_name=AWS_REGION)
-sns_client = boto3.client('sns', region_name=AWS_REGION)
+# Configure boto3 clients with retries and timeouts
+boto_config = Config(
+    region_name=AWS_REGION,
+    retries={'max_attempts': 3, 'mode': 'adaptive'},
+    connect_timeout=10,
+    read_timeout=60
+)
+
+dynamodb_client = boto3.client('dynamodb', config=boto_config)
+sns_client = boto3.client('sns', config=boto_config)
 
 SNS_TOPIC_ARN = os.environ.get('SNS_TOPIC_ARN', '')  # Optional - may not be set
 

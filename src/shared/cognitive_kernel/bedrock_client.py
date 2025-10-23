@@ -24,6 +24,7 @@ class BedrockResponse:
     stop_reason: str
     usage: Dict[str, int]
     model_id: str
+    tool_uses: Optional[List[Dict[str, Any]]] = None
 
 @dataclass
 class KendraContext:
@@ -155,19 +156,35 @@ class CognitiveKernel:
             # Parse response
             response_body = json.loads(response['body'].read())
             
-            # Extract content
+            # Extract content and handle tool_use blocks
             content = ""
+            tool_uses = []
+            
             if response_body.get("content"):
                 for block in response_body["content"]:
-                    if block.get("type") == "text":
+                    block_type = block.get("type")
+                    
+                    if block_type == "text":
                         content += block.get("text", "")
+                    elif block_type == "tool_use":
+                        # Claude wants to invoke a tool
+                        tool_uses.append({
+                            "id": block.get("id"),
+                            "name": block.get("name"),
+                            "input": block.get("input", {})
+                        })
             
+            # Attach tool_uses to response for MCP integration
             bedrock_response = BedrockResponse(
                 content=content,
                 stop_reason=response_body.get("stop_reason", "unknown"),
                 usage=response_body.get("usage", {}),
                 model_id=self.model_id
             )
+            
+            # Store tool uses for caller to handle
+            if tool_uses:
+                bedrock_response.tool_uses = tool_uses
             
             logger.info(f"Bedrock invocation successful. Tokens used: {bedrock_response.usage}")
             

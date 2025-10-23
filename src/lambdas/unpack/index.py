@@ -14,8 +14,15 @@ from pathlib import Path
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-s3_client = boto3.client('s3')
-dynamodb_client = boto3.client('dynamodb')
+# Configure boto3 clients with retries and timeouts
+boto_config = Config(
+    retries={'max_attempts': 3, 'mode': 'adaptive'},
+    connect_timeout=10,
+    read_timeout=60
+)
+
+s3_client = boto3.client('s3', config=boto_config)
+dynamodb_client = boto3.client('dynamodb', config=boto_config)
 
 try:
     UPLOADS_BUCKET = os.environ['UPLOADS_BUCKET']
@@ -44,7 +51,11 @@ def handler(event, context):
     else:
         raise ValueError(f"Unknown event structure: {event}")
     
-    mission_id = s3_key.split('/')[1]  # uploads/{mission_id}/source.tar.gz
+    # Extract mission_id with validation - expects: uploads/{mission_id}/source.tar.gz
+    key_parts = s3_key.split('/')
+    if len(key_parts) < 2:
+        raise ValueError(f"Invalid S3 key format: {s3_key}. Expected: uploads/{{mission_id}}/source.tar.gz")
+    mission_id = key_parts[1]
     
     try:
         

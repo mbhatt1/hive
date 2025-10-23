@@ -34,9 +34,18 @@ class ArchivistAgent:
         self.redis_port = int(os.environ.get('REDIS_PORT', '6379'))
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
-        self.dynamodb = boto3.client('dynamodb', region_name=region)
-        self.s3_client = boto3.client('s3', region_name=region)
-        self.lambda_client = boto3.client('lambda', region_name=region)
+        
+        # Configure boto3 clients with retries and timeouts
+        boto_config = Config(
+            region_name=region,
+            retries={'max_attempts': 3, 'mode': 'adaptive'},
+            connect_timeout=10,
+            read_timeout=60
+        )
+        
+        self.dynamodb = boto3.client('dynamodb', config=boto_config)
+        self.s3_client = boto3.client('s3', config=boto_config)
+        self.lambda_client = boto3.client('lambda', config=boto_config)
         
         # Connect to Redis with retry logic
         self.redis_client = self._connect_redis_with_retry()
@@ -141,38 +150,66 @@ class ArchivistAgent:
         return list(findings_map.values())
     
     def _archive_findings(self, findings):
-        """Write findings to DynamoDB."""
-        for finding in findings:
-            timestamp = int(time.time())
+        """Write findings to DynamoDB using batch operations for efficiency."""
+        timestamp = int(time.time())
+        
+        # Process findings in batches of 25 (DynamoDB batch_write_item limit)
+        batch_size = 25
+        for i in range(0, len(findings), batch_size):
+            batch = findings[i:i + batch_size]
             
             try:
-                # Validate line_numbers before writing to DynamoDB
-                line_numbers = finding.get('line_numbers', [])
-                if not isinstance(line_numbers, list):
-                    line_numbers = []
+                # Prepare batch write request
+                request_items = []
+                for finding in batch:
+                    # Validate line_numbers before writing to DynamoDB
+                    line_numbers = finding.get('line_numbers', [])
+                    if not isinstance(line_numbers, list):
+                        line_numbers = []
+                    
+                    request_items.append({
+                        'PutRequest': {
+                            'Item': {
+                                'finding_id': {'S': finding['finding_id']},
+                                'timestamp': {'N': str(timestamp)},
+                                'mission_id': {'S': self.mission_id},
+                                'repo_name': {'S': os.environ.get('REPO_NAME', 'unknown')},
+                                'title': {'S': finding.get('title', 'Unknown')},
+                                'description': {'S': finding.get('description', '')},
+                                'severity': {'S': finding.get('severity', 'MEDIUM')},
+                                'confidence_score': {'N': str(finding.get('confidence_score', 0.0))},
+                                'file_path': {'S': finding.get('file_path', 'unknown')},
+                                'line_numbers': {'L': [{'N': str(ln)} for ln in line_numbers]},
+                                'evidence_digest': {'S': finding.get('evidence_digest', 'unknown')},
+                                'tool_source': {'S': finding.get('tool_source', 'unknown')},
+                                'created_at': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())},
+                                'ttl': {'N': str(timestamp + (5 * 365 * 24 * 60 * 60))}  # 5 years
+                            }
+                        }
+                    })
                 
-                self.dynamodb.put_item(
-                    TableName=self.dynamodb_findings_table,
-                    Item={
-                        'finding_id': {'S': finding['finding_id']},
-                        'timestamp': {'N': str(timestamp)},
-                        'mission_id': {'S': self.mission_id},
-                        'repo_name': {'S': os.environ.get('REPO_NAME', 'unknown')},
-                        'title': {'S': finding.get('title', 'Unknown')},
-                        'description': {'S': finding.get('description', '')},
-                        'severity': {'S': finding.get('severity', 'MEDIUM')},
-                        'confidence_score': {'N': str(finding.get('confidence_score', 0.0))},
-                        'file_path': {'S': finding.get('file_path', 'unknown')},
-                        'line_numbers': {'L': [{'N': str(ln)} for ln in line_numbers]},
-                        'evidence_digest': {'S': finding.get('evidence_digest', 'unknown')},
-                        'tool_source': {'S': finding.get('tool_source', 'unknown')},
-                        'created_at': {'S': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())},
-                        'ttl': {'N': str(timestamp + (5 * 365 * 24 * 60 * 60))}  # 5 years
-                    }
+                # Execute batch write with retry for unprocessed items
+                response = self.dynamodb.batch_write_item(
+                    RequestItems={self.dynamodb_findings_table: request_items}
                 )
+                
+                # Handle unprocessed items (retry up to 3 times)
+                retries = 0
+                while response.get('UnprocessedItems') and retries < 3:
+                    retries += 1
+                    logger.warning(f"Retrying {len(response['UnprocessedItems'])} unprocessed items (attempt {retries})")
+                    import time
+                    time.sleep(2 ** retries)  # Exponential backoff
+                    response = self.dynamodb.batch_write_item(
+                        RequestItems=response['UnprocessedItems']
+                    )
+                
+                if response.get('UnprocessedItems'):
+                    logger.error(f"Failed to process {len(response['UnprocessedItems'])} items after retries")
+                    
             except Exception as e:
-                logger.error(f"Failed to archive finding {finding['finding_id']} to DynamoDB: {e}")
-                # Continue with other findings
+                logger.error(f"Failed to archive batch of findings: {e}")
+                raise
         
         logger.info(f"Archived {len(findings)} findings to DynamoDB")
         return len(findings)

@@ -21,9 +21,17 @@ except KeyError as e:
     logger.error(f"Missing required environment variable: {e}")
     raise RuntimeError(f"Configuration error: Missing environment variable {e}")
 
-dynamodb_client = boto3.client('dynamodb', region_name=AWS_REGION)
-s3_client = boto3.client('s3', region_name=AWS_REGION)
-kendra_client = boto3.client('kendra', region_name=AWS_REGION)
+# Configure boto3 clients with retries and timeouts
+boto_config = Config(
+    region_name=AWS_REGION,
+    retries={'max_attempts': 3, 'mode': 'adaptive'},
+    connect_timeout=10,
+    read_timeout=60
+)
+
+dynamodb_client = boto3.client('dynamodb', config=boto_config)
+s3_client = boto3.client('s3', config=boto_config)
+kendra_client = boto3.client('kendra', config=boto_config)
 
 def handler(event, context):
     """
@@ -35,19 +43,33 @@ def handler(event, context):
         mission_id = event['mission_id']
         logger.info(f"Creating memories for mission: {mission_id}")
         
-        # Query findings for this mission
+        # Query findings for this mission with pagination
+        findings = []
+        last_evaluated_key = None
+        
         try:
-            response = dynamodb_client.query(
-                TableName=FINDINGS_TABLE,
-                IndexName='mission_id-timestamp-index',
-                KeyConditionExpression='mission_id = :mid',
-                ExpressionAttributeValues={':mid': {'S': mission_id}}
-            )
+            while True:
+                query_params = {
+                    'TableName': FINDINGS_TABLE,
+                    'IndexName': 'mission_id-timestamp-index',
+                    'KeyConditionExpression': 'mission_id = :mid',
+                    'ExpressionAttributeValues': {':mid': {'S': mission_id}}
+                }
+                
+                if last_evaluated_key:
+                    query_params['ExclusiveStartKey'] = last_evaluated_key
+                
+                response = dynamodb_client.query(**query_params)
+                findings.extend(response.get('Items', []))
+                
+                last_evaluated_key = response.get('LastEvaluatedKey')
+                if not last_evaluated_key:
+                    break
+                    
         except Exception as e:
             logger.error(f"Failed to query findings from DynamoDB: {e}")
             raise
         
-        findings = response.get('Items', [])
         logger.info(f"Found {len(findings)} findings to process")
         
         # Create memory documents

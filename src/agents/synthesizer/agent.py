@@ -40,8 +40,17 @@ class SynthesizerAgent:
         self.kendra_index_id = os.environ.get('KENDRA_INDEX_ID', 'test-kendra-index')
         
         region = os.environ.get('AWS_REGION', 'us-east-1')
-        self.s3_client = boto3.client('s3', region_name=region)
-        self.dynamodb_client = boto3.client('dynamodb', region_name=region)
+        
+        # Configure boto3 clients with retries and timeouts
+        boto_config = Config(
+            region_name=region,
+            retries={'max_attempts': 3, 'mode': 'adaptive'},
+            connect_timeout=10,
+            read_timeout=60
+        )
+        
+        self.s3_client = boto3.client('s3', config=boto_config)
+        self.dynamodb_client = boto3.client('dynamodb', config=boto_config)
         
         # Connect to Redis with retry logic
         self.redis_client = self._connect_redis_with_retry()
@@ -97,52 +106,76 @@ class SynthesizerAgent:
     
     def _read_tool_results(self) -> List[Dict]:
         """Read all MCP tool results from DynamoDB with evidence chain verification."""
+        # Query with pagination to handle large result sets
+        results = []
+        last_evaluated_key = None
+        
         try:
-            response = self.dynamodb_client.query(
-                TableName=self.dynamodb_tool_results_table,
-                KeyConditionExpression='mission_id = :mid',
-                ExpressionAttributeValues={':mid': {'S': self.mission_id}}
-            )
+            while True:
+                query_params = {
+                    'TableName': self.dynamodb_tool_results_table,
+                    'KeyConditionExpression': 'mission_id = :mid',
+                    'ExpressionAttributeValues': {':mid': {'S': self.mission_id}}
+                }
+                
+                if last_evaluated_key:
+                    query_params['ExclusiveStartKey'] = last_evaluated_key
+                
+                response = self.dynamodb_client.query(**query_params)
+                
+                # Collect items from this page
+                items = response.get('Items', [])
+                logger.info(f"Retrieved {len(items)} tool results (page)")
+                # Process items immediately to avoid memory buildup
+                for item in items:
+                    s3_uri = item['s3_uri']['S']
+                    stored_digest = item.get('digest', {}).get('S', '')
+                    tool_name = item.get('tool_name', {}).get('S', 'unknown')
+                    status = item.get('status', {}).get('S', 'unknown')
+                    
+                    # Skip failed tools (they have empty S3 URIs)
+                    if status == 'failed' or not s3_uri:
+                        logger.warning(f"Skipping failed tool result: {tool_name}")
+                        continue
+                    
+                    try:
+                        # Validate and parse S3 URI
+                        uri_parts = s3_uri.replace('s3://', '').split('/', 1)
+                        if len(uri_parts) != 2:
+                            logger.error(f"Invalid S3 URI format: {s3_uri}")
+                            continue
+                        bucket, key = uri_parts
+                        
+                        obj = self.s3_client.get_object(Bucket=bucket, Key=key)
+                        content = obj['Body'].read()
+                        
+                        # Verify evidence chain
+                        if stored_digest:
+                            computed_digest = f"sha256:{hashlib.sha256(content).hexdigest()}"
+                            if computed_digest != stored_digest:
+                                logger.error(f"Evidence chain verification FAILED for {tool_name}: {s3_uri}")
+                                logger.error(f"Expected: {stored_digest}, Got: {computed_digest}")
+                                continue  # Skip this result
+                            else:
+                                logger.info(f"Evidence chain verified for {tool_name}: {stored_digest}")
+                        
+                        result_data = json.loads(content)
+                        result_data['_verified'] = True
+                    except Exception as e:
+                        logger.error(f"Failed to read tool result {tool_name} from {s3_uri}: {e}")
+                        continue
+                    result_data['_digest'] = stored_digest
+                    result_data['_tool'] = tool_name
+                    results.append(result_data)
+                
+                # Check for more pages
+                last_evaluated_key = response.get('LastEvaluatedKey')
+                if not last_evaluated_key:
+                    break
+                    
         except Exception as e:
             logger.error(f"Failed to query tool results from DynamoDB: {e}")
             raise
-        
-        results = []
-        for item in response.get('Items', []):
-            s3_uri = item['s3_uri']['S']
-            stored_digest = item.get('digest', {}).get('S', '')
-            tool_name = item.get('tool_name', {}).get('S', 'unknown')
-            status = item.get('status', {}).get('S', 'unknown')
-            
-            # Skip failed tools (they have empty S3 URIs)
-            if status == 'failed' or not s3_uri:
-                logger.warning(f"Skipping failed tool result: {tool_name}")
-                continue
-            
-            try:
-                bucket, key = s3_uri.replace('s3://', '').split('/', 1)
-                
-                obj = self.s3_client.get_object(Bucket=bucket, Key=key)
-                content = obj['Body'].read()
-                
-                # Verify evidence chain
-                if stored_digest:
-                    computed_digest = f"sha256:{hashlib.sha256(content).hexdigest()}"
-                    if computed_digest != stored_digest:
-                        logger.error(f"Evidence chain verification FAILED for {tool_name}: {s3_uri}")
-                        logger.error(f"Expected: {stored_digest}, Got: {computed_digest}")
-                        continue  # Skip this result
-                    else:
-                        logger.info(f"Evidence chain verified for {tool_name}: {stored_digest}")
-                
-                result_data = json.loads(content)
-                result_data['_verified'] = True
-            except Exception as e:
-                logger.error(f"Failed to read tool result {tool_name} from {s3_uri}: {e}")
-                continue
-            result_data['_digest'] = stored_digest
-            result_data['_tool'] = tool_name
-            results.append(result_data)
         
         logger.info(f"Read {len(results)} verified MCP tool results")
         return results
@@ -208,8 +241,8 @@ Draft findings in JSON array:
                 file_path=f.get('file_path', 'unknown'),
                 line_numbers=f.get('line_numbers', []),
                 evidence_digest=f.get('evidence_digest', 'unknown'),
-                tool_source=f['tool_source'],
-                confidence_score=f['confidence']
+                tool_source=f.get('tool_source', 'unknown'),
+                confidence_score=f.get('confidence', 0.5)
             ))
         
         return findings

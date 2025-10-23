@@ -62,7 +62,15 @@ class SecurityWikiGenerator:
         """
         self.mission_id = mission_id
         self.s3_bucket = s3_bucket
-        self.s3 = boto3.client('s3')
+        
+        # Configure boto3 client with retries and timeouts
+        boto_config = Config(
+            retries={'max_attempts': 3, 'mode': 'adaptive'},
+            connect_timeout=10,
+            read_timeout=60
+        )
+        
+        self.s3 = boto3.client('s3', config=boto_config)
         
         logger.info(f"SecurityWikiGenerator initialized for mission {mission_id}")
     

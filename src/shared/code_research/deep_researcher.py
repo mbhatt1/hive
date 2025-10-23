@@ -110,8 +110,17 @@ class DeepCodeResearcher:
         
         # AWS clients
         region = os.environ.get('AWS_REGION', 'us-east-1')
-        self.kendra = boto3.client('kendra', region_name=region) if kendra_index_id else None
-        self.s3 = boto3.client('s3', region_name=region) if s3_bucket else None
+        
+        # Configure boto3 clients with retries and timeouts
+        boto_config = Config(
+            region_name=region,
+            retries={'max_attempts': 3, 'mode': 'adaptive'},
+            connect_timeout=10,
+            read_timeout=60
+        )
+        
+        self.kendra = boto3.client('kendra', config=boto_config) if kendra_index_id else None
+        self.s3 = boto3.client('s3', config=boto_config) if s3_bucket else None
         
         # Research state
         self.file_catalog: Dict[str, FileMetadata] = {}
